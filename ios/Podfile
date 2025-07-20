@@ -13,8 +13,9 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
-# @generated begin @rnmapbox/maps-rnmapboxmapsimpl - expo prebuild (DO NOT MODIFY) sync-8fa1dc7765dc2c64f3b4adc00dff1edc612bf634
+# @generated begin @rnmapbox/maps-rnmapboxmapsimpl - expo prebuild (DO NOT MODIFY) sync-9e9158741624278ff33b3e51bdd5c73994296187
 $RNMapboxMapsDownloadToken = 'sk.ey..'
+$RNMapboxMapsVersion = '11.0.0'
 # @generated end @rnmapbox/maps-rnmapboxmapsimpl
 target 'citystat2' do
   use_expo_modules!

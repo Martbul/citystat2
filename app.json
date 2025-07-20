@@ -31,6 +31,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
@@ -43,11 +44,11 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "sk.ey..",
+          "RNMapboxMapsImpl": "mapbox",
+          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoibWFydGJ1bCIsImEiOiJjbWRiZWo5emwwNmsxMmtzYWdqbjd0bWpqIn0.BNgJuQPv6he0G4-HRXrO7Q",
           "RNMapboxMapsVersion": "11.0.0"
         }
       ],
-      "expo-maps",
       [
         "expo-location",
         {
@@ -57,6 +58,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4ca0b313-c020-4c24-916b-3465086427ef"
+      }
     }
   }
 }
