@@ -5,8 +5,10 @@ export default function TutorialRoutesLayout() {
   const { isSignedIn } = useAuth()
 
   if (isSignedIn) {
-    return <Redirect href={'/'} />
+    return <Redirect href={'/(tabs)'} />
   }
+
+  
 
   return (<Stack >
         <Stack.Screen 
