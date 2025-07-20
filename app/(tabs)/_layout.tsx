@@ -14,9 +14,9 @@ export default function TabLayout() {
     const { isSignedIn } = useAuth()
   
     if (!isSignedIn) {
-      return <Redirect href={'/(auth)/sign-up'} />
+      return <Redirect href={'/(tutorial)/tutorial'} />
     }
-
+//check if user has completed tutorila and if it has -> gi ti home page
   return (
     <Tabs
       screenOptions={{

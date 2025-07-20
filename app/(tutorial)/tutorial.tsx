@@ -73,6 +73,10 @@ const TutorialScreen = () => {
     console.log('Getting started...');
   };
 
+  const handleSkipTutorial = () => {
+
+  }
+
   const renderPage = (item: TutorialItem, index: number) => (
     <View key={item.id} style={[styles.page, { backgroundColor: item.backgroundColor }]}>
       <View style={styles.content}>
@@ -120,7 +124,7 @@ const TutorialScreen = () => {
       </View>
 
       <TouchableOpacity style={styles.skipButton} onPress={handleGetStarted}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text onPress={handleSkipTutorial} style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
     </View>
   );

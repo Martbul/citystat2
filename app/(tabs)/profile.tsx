@@ -102,12 +102,7 @@ const UserProfileScreen = () => {
     Alert.alert('Tapped', `You tapped: ${id}`);
   };
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => console.log('Logged out') },
-    ]);
-  };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -171,7 +166,7 @@ const UserProfileScreen = () => {
           ))}
         </View>
 
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <TouchableOpacity  style={styles.logoutButton}>
 
            <SignOutButton>
          
