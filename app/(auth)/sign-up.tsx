@@ -1,16 +1,16 @@
-import * as React from 'react'
 import { Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native'
-import { useSignUp } from '@clerk/clerk-expo'
+import { useAuth, useSignUp } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
+import { useState } from 'react'
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
 
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [pendingVerification, setPendingVerification] = React.useState(false)
-  const [code, setCode] = React.useState('')
+  const [emailAddress, setEmailAddress] = useState('')
+  const [password, setPassword] = useState('')
+  const [pendingVerification, setPendingVerification] = useState(false)
+  const [code, setCode] = useState('')
 
   const onSignUpPress = async () => {
     if (!isLoaded) return
@@ -19,6 +19,7 @@ export default function SignUpScreen() {
       await signUp.create({ emailAddress, password })
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       setPendingVerification(true)
+
     } catch (err) {
       console.error(JSON.stringify(err, null, 2))
     }

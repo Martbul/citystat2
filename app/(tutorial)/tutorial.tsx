@@ -1,3 +1,4 @@
+import { Redirect, router } from 'expo-router';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -70,10 +71,10 @@ const TutorialScreen = () => {
   };
 
   const handleGetStarted = () => {
-    console.log('Getting started...');
+    router.replace("/(auth)/sign-up"); 
   };
-
   const handleSkipTutorial = () => {
+    router.replace("/(auth)/sign-up"); 
 
   }
 

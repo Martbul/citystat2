@@ -8,13 +8,21 @@ export default function AuthRoutesLayout() {
     return <Redirect href={'/'} />
   }
 
-  return (<Stack >
-        <Stack.Screen 
-        name="sign-up" 
-        options={{ 
-          headerShown: false 
-        }} 
+  return (
+    <Stack>
+      <Stack.Screen
+        name="sign-up"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="sign-in"
+        options={{
+          headerShown: false,
+        }}
       />
       {/* Add headerShown: false to other screens too */}
-    </Stack>)
+    </Stack>
+  );
 }
