@@ -1,24 +1,21 @@
-import { SignOutButton } from '@/components/clerk/SignOutButton';
-import { useSession, useUser } from '@clerk/clerk-expo';
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Switch,
-  Alert,
-  StatusBar,
-  StyleSheet,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {  Animated, Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRef, useState } from "react";
+import SettingsDrawer from "@/components/screens/Settings";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Feather from "@expo/vector-icons/Feather";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { useUser } from "@clerk/clerk-expo";
 
-const UserProfileScreen = () => {
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  const [locationServices, setLocationServices] = useState(true);
+const { width: screenWidth } = Dimensions.get("window");
 
+export default function ProfileScreen() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  
+  
   const { isSignedIn, user, isLoaded } = useUser();
   if (!isLoaded) {
     // Handle loading state
@@ -29,222 +26,130 @@ const UserProfileScreen = () => {
     return null;
   }
 
-  
-  const settingsItems = [
-    {
-      id: 'edit-profile',
-      title: 'Edit Profile',
-      subtitle: 'Update your personal information',
-      icon: '👤',
-      showArrow: true,
-    },
-    {
-      id: 'notifications',
-      title: 'Push Notifications',
-      subtitle: 'Receive updates and alerts',
-      icon: '🔔',
-      hasSwitch: true,
-    },
-    {
-      id: 'dark-mode',
-      title: 'Dark Mode',
-      subtitle: 'Toggle dark theme',
-      icon: '🌙',
-      hasSwitch: true,
-    },
-    {
-      id: 'location',
-      title: 'Location Services',
-      subtitle: 'Allow location access',
-      icon: '📍',
-      hasSwitch: true,
-    },
-    {
-      id: 'privacy',
-      title: 'Privacy & Security',
-      subtitle: 'Manage your privacy settings',
-      icon: '🔒',
-      showArrow: true,
-    },
-    {
-      id: 'help',
-      title: 'Help & Support',
-      subtitle: 'Get help and contact support',
-      icon: '❓',
-      showArrow: true,
-    },
-    {
-      id: 'about',
-      title: 'About',
-      subtitle: 'App version and information',
-      icon: 'ℹ️',
-      showArrow: true,
-    },
-  ];
+    const openDrawer = () => {
+      setIsDrawerOpen(true);
 
-  const getSwitchValue = (id:string) => {
-    return {
-      'notifications': notifications,
-      'dark-mode': darkMode,
-      'location': locationServices,
-    }[id];
-  };
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0.5,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    };
 
-  const handleSwitchToggle = (id:string, value:boolean) => {
-    switch (id) {
-      case 'notifications': setNotifications(value); break;
-      case 'dark-mode': setDarkMode(value); break;
-      case 'location': setLocationServices(value); break;
-    }
-  };
-
-  const handleSettingPress = (id:string) => {
-    Alert.alert('Tapped', `You tapped: ${id}`);
-  };
-
-  
+    const closeDrawer = () => {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: screenWidth,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsDrawerOpen(false);
+      });
+    };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView>
-
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-
-        {/* User Info */}
-        <View style={styles.profileCard}>
-          <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-          <View style={styles.profileText}>
-            <Text style={styles.name}>{user.fullName}</Text>
-            <Text style={styles.email}>{user.emailAddresses.toString()}</Text>
-            <Text style={styles.meta}>Member since {user.createdAt?.toString()}</Text>
-          </View>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>24</Text>
-            <Text style={styles.statLabel}>Orders</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>5.0</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>12</Text>
-            <Text style={styles.statLabel}>Reviews</Text>
-          </View>
-        </View>
-
-        {/* Settings */}
-        <View style={styles.settingsCard}>
-          {settingsItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.settingRow}
-              onPress={() => handleSettingPress(item.id)}
-              disabled={item.hasSwitch}
-            >
-              <Text style={styles.icon}>{item.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingTitle}>{item.title}</Text>
-                {item.subtitle && <Text style={styles.settingSubtitle}>{item.subtitle}</Text>}
-              </View>
-              {item.hasSwitch ? (
-                <Switch
-                  value={getSwitchValue(item.id)}
-                  onValueChange={(value) => handleSwitchToggle(item.id, value)}
-                />
-              ) : item.showArrow ? (
-                <Text style={{ fontSize: 18, color: '#999' }}>›</Text>
-              ) : null}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity  style={styles.logoutButton}>
-
-           <SignOutButton>
-         
-    </SignOutButton>
+    <View className="flex flex-col h-screen bg-gray-900 text-white">
+      {isDrawerOpen && (
+        <SettingsDrawer
+          isDrawerOpen={isDrawerOpen}
+          slideAnim={slideAnim}
+          overlayOpacity={overlayOpacity}
+          closeDrawer={closeDrawer}
+        />
+      )}
+      {/* Header */}
+      <View className="flex flex-row items-center justify-end gap-4 items-center px-4 pt-10 bg-gray-700">
+        <TouchableOpacity className="flex justify-center items-center w-10 h-10 bg-gray-800 rounded-full my-4">
+          <FontAwesome5 name="store" size={18} color="white" />{" "}
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+        <TouchableOpacity
+          onPress={openDrawer}
+          className="flex justify-center items-center w-10 h-10 bg-gray-800 rounded-full "
+        >
+          <Ionicons name="settings" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Scrollable Content */}
+      <View className="flex-1 overflow-y-auto px-4 pb-20">
+        <View className="flex flex-row items-center space-x-3 pt-6">
+          <View className="relative">
+            <View className="w-28 h-28 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+              MB
+            </View>
+            <View className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></View>
+          </View>
+          <TouchableOpacity className="bg-gray-700 mt-20 px-2 py-2 rounded-full flex items-center text-sm">
+            <Feather name="plus" size={16} color="white" /> Add Status
+          </TouchableOpacity>
+        </View>
+        {/* Profile Info */}
+        <View className="mt-6">
+          <Text className="text-white text-3xl font-bold mb-1">
+            {user.firstName} {user.lastName} {user.emailAddresses.toString()}
+          </Text>
+          <View className="flex flex-row">
+            <Text className="text-gray-400 text-lg">{user.username}</Text>
+            <View className="w-6 h-6 bg-teal-900 rounded ml-2 flex items-center justify-center">
+              <Feather name="hash" size={16} color="white" />{" "}
+            </View>
+          </View>
+        </View>
+        {/* Edit Profile TouchableOpacity */}
+        <TouchableOpacity
+          onPress={openDrawer}
+          className="w-full bg-indigo-600 mt-6 py-3 rounded-lg flex flex-row items-center justify-center gap-2 font-semibold"
+        >
+          <FontAwesome name="pencil" size={24} color="white" />
+          <Text className="text-white">Edit Profile</Text>
+        </TouchableOpacity>
+
+        <View className="mt-6 bg-gray-800 rounded-xl p-4">
+          <Text className="text-gray-400 text-lg font-medium mb-3">
+            Member Since
+          </Text>
+          <View className="flex items-center">
+            {/* //TODO : ADD YOUR LOGO*/}
+            {/* <View className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center mr-3">
+              <Text className="text-white text-sm">D</Text>
+            </View> */}
+            <Text className="text-white text-lg">29 Jan 2021</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity>
+          <View className="flex flex-row justify-between items-center mt-6 bg-gray-800 rounded-xl p-4">
+            <Text className="text-gray-400 text-lg font-medium">
+              Your Friends
+            </Text>
+
+            <View className="flex items-center">
+              <AntDesign name="arrowright" size={24} color="white" />
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity className="flex flex-row w-full mt-6 bg-gray-800 rounded-xl p-4  items-center justify-between mb-6">
+          <Text className="text-gray-400 text-lg">
+            Note (only visible to you)
+          </Text>
+          <FontAwesome name="sticky-note-o" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  header: { padding: 16, backgroundColor: '#fff', borderBottomColor: '#eee', borderBottomWidth: 1 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
-
-  profileCard: {
-    flexDirection: 'row',
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  avatar: { width: 80, height: 80, borderRadius: 40, marginRight: 16, backgroundColor: '#ddd' },
-  profileText: { flex: 1 },
-  name: { fontSize: 18, fontWeight: '600', color: '#111' },
-  email: { fontSize: 14, color: '#666', marginTop: 2 },
-  meta: { fontSize: 12, color: '#aaa', marginTop: 2 },
-
-  statsRow: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12 },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    marginHorizontal: 4,
-    padding: 12,
-    alignItems: 'center',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: '#111' },
-  statLabel: { fontSize: 12, color: '#666' },
-
-  settingsCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    paddingVertical: 4,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomColor: '#eee',
-    borderBottomWidth: 1,
-  },
-  icon: { fontSize: 20, width: 30, textAlign: 'center', marginRight: 8 },
-  settingTitle: { fontSize: 16, fontWeight: '500', color: '#111' },
-  settingSubtitle: { fontSize: 12, color: '#888' },
-
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    margin: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  logoutText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-});
-
-export default UserProfileScreen;
+}

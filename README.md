@@ -1,3 +1,18 @@
+
+## To-Do List
+
+- [x] Fix clerk webhhoks for persisting users into neon db
+- [] When onboarding user chooses the city to play
+- [] Make a conetext for the lo0ged user data 
+- [] make a speed cap(if user is faster thatn x do not save the data to db) - walk only game
+- [] make a leaderboard
+
+- [] v2 - mutyple cities
+
+
+
+
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
@@ -48,3 +63,4 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
