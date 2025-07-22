@@ -2,6 +2,8 @@
 ## To-Do List
 
 - [x] Fix clerk webhhoks for persisting users into neon db
+- [ ] Add error handlig in signin and sign up(wrong emeil, wrong passwrds ....)
+- [ ] Add google auth sigin
 - [] When onboarding user chooses the city to play
 - [] Make a conetext for the lo0ged user data 
 - [] make a speed cap(if user is faster thatn x do not save the data to db) - walk only game

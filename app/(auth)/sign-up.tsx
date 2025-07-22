@@ -1,5 +1,5 @@
 import { Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native'
-import { useAuth, useSignUp } from '@clerk/clerk-expo'
+import { useSignUp } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
 
@@ -11,6 +11,8 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [code, setCode] = useState('')
+
+  
 
   const onSignUpPress = async () => {
     if (!isLoaded) return
@@ -42,33 +44,52 @@ export default function SignUpScreen() {
     }
   }
 
+
   if (pendingVerification) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Verify your email</Text>
+      <View className="flex-1 p-8 justify-center bg-lightBackground">
+        <Text
+          className="mb-3 text-3xl justify-center text-center text-lightBlackText  mb-6  text-2xl
+ font-bold"
+        >
+          Verify your email
+        </Text>{" "}
         <TextInput
           value={code}
           placeholder="Verification code"
           onChangeText={setCode}
-          style={styles.input}
+          className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
           placeholderTextColor="#aaa"
         />
-        <TouchableOpacity onPress={onVerifyPress} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
+        <TouchableOpacity
+          onPress={onVerifyPress}
+          className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg "
+        >
+          <Text
+            className="text-lg
+ font-medium text-lightBlackText"
+          >
+            Verify
+          </Text>
         </TouchableOpacity>
       </View>
-    )
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign up</Text>
+    <View className="flex-1 p-8 justify-center bg-lightBackground ">
+      <Text
+        className="mb-3 text-3xl justify-center text-center text-lightBlackText  mb-6  text-2xl
+ font-bold"
+      >
+        Create your account
+      </Text>
 
       <TextInput
         value={emailAddress}
         placeholder="Email"
         onChangeText={setEmailAddress}
-        style={styles.input}
+        className="bg-white px-4 py-3 rounded-lg font-medium mb-4 text-base border border-neutral-300"
         placeholderTextColor="#aaa"
       />
 
@@ -77,70 +98,30 @@ export default function SignUpScreen() {
         placeholder="Password"
         onChangeText={setPassword}
         secureTextEntry
-        style={styles.input}
+        className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
         placeholderTextColor="#aaa"
       />
 
-      <TouchableOpacity onPress={onSignUpPress} style={styles.button}>
-        <Text style={styles.buttonText}>Continue</Text>
+      <TouchableOpacity
+        onPress={onSignUpPress}
+        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-1"
+      >
+        <Text
+          className="text-base font-semibold text-lightBlackText
+
+
+"
+        >
+          Continue
+        </Text>
       </TouchableOpacity>
 
-      <View style={styles.linkContainer}>
-        <Text style={styles.linkText}>Already have an account?</Text>
+      <View className='flex flex-row justify-center items-center mt-6'>
+        <Text className="font-sm ">Already have an account?</Text>
         <Link href="/sign-in">
-          <Text style={[styles.linkText, styles.link]}> Sign in</Text>
+          <Text className="font-sm text-lightPrimaryAccent"> Sign in</Text>
         </Link>
       </View>
     </View>
-  )
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#f4f4f4',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    fontSize: 16,
-    borderColor: '#ccc',
-    borderWidth: 1,
-  },
-  button: {
-    backgroundColor: '#4f46e5',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  link: {
-    color: '#4f46e5',
-    fontWeight: 'bold',
-  },
-})

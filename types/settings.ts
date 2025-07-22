@@ -7,7 +7,7 @@ export interface Settings {
   updatedAt: string;
 }
 
-export type Theme = "Light" | "Dark";
+export type Theme = "light" | "dark";
 export type Language = "En" | "Es" | "Fr" | "De" | "It" | "Pt"| "Ru" | "Bg"; 
 
 export interface SettingsProviderInterface {

@@ -46,9 +46,9 @@ const SettingsDrawer = ({
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         pointerEvents={isDrawerOpen ? "auto" : "none"}
       >
-        <SafeAreaView className="flex-1 bg-gray-900">
+        <SafeAreaView className="flex-1 bg-lightBackground">
           {/* Header */}
-          <View className="relative flex-row items-center p-4 py-8 mt-10 border-b border-gray-800">
+          <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-gray-800">
             <TouchableOpacity
               onPress={closeDrawer}
               className="absolute left-4"
@@ -57,11 +57,11 @@ const SettingsDrawer = ({
               <AntDesign
                 onPress={closeDrawer}
                 name="arrowleft"
-                size={24}
-                color="white"
+                size={28}
+                color="#333333ff"
               />
             </TouchableOpacity>
-            <Text className="flex-1 text-center text-white font-bold text-2xl">
+            <Text className="flex-1 text-center text-lightBlackText font-bold text-2xl">
               Settings
             </Text>
           </View>
@@ -74,17 +74,19 @@ const SettingsDrawer = ({
               keyExtractor={(item) => item.label}
               contentContainerStyle={{ padding: 16 }}
               renderItem={({ item }) => (
-                <TouchableOpacity className="flex-row items-center justify-between bg-[#1e1e1e] rounded-xl px-4 py-4 mb-2">
+                <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface border-lightContainerBg rounded-xl px-4 py-4 mb-2">
                   <View className="flex-row items-center space-x-4">
                     {item.icon()}
-                    <Text className="text-white text-base">{item.label}</Text>
+                    <Text className="text-lightBlackText text-base">
+                      {item.label}
+                    </Text>
                   </View>
                   <AntDesign name="right" size={16} color="#999" />
                 </TouchableOpacity>
               )}
               ListFooterComponent={() => (
-                <TouchableOpacity className="flex-row items-center justify-between bg-[#1e1e1e] rounded-xl px-4 py-4 mb-2">
-                  <SignOutButton  />
+                <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface rounded-xl px-4 py-4 mb-2">
+                  <SignOutButton />
                 </TouchableOpacity>
               )}
             />
