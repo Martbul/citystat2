@@ -1,17 +1,6 @@
-// /** @type {import('tailwindcss').Config} */
-// module.exports = {
-//   // NOTE: Update this to include the paths to all files that contain Nativewind classes.
-//   content: ["./App.tsx", "./components/**/*.{js,jsx,ts,tsx}"],
-//   presets: [require("nativewind/preset")],
-//   theme: {
-//     extend: {},
-//   },
-//   plugins: [],
-// }
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // NOTE: Update this to include the paths to all files that contain Nativewind classes.
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
@@ -49,34 +38,3 @@ module.exports = {
   },
   plugins: [],
 };
-
-
-//TODO: USE LATER FOR THEME CHANGE
-
-// // tailwind.config.js
-// module.exports = {
-//   content: [
-//     "./App.{js,jsx,ts,tsx}",
-//     "./src/**/*.{js,jsx,ts,tsx}",
-//   ],
-//   darkMode: 'class', // important!
-//   theme: {
-//     extend: {
-//       colors: {
-//         background: '#f0f0f0',
-//         darkBackground: '#111111',
-//         surface: '#ffffff',
-//         darkSurface: '#1a1a1a',
-//         text: '#111111',
-//         darkText: '#ffffff',
-//         muted: '#cecece',
-//         accent: '#c8f751',
-//       },
-//       fontFamily: {
-//         anybody: ['Anybody-Regular'],
-//         anybodyBold: ['Anybody-Bold'],
-//       },
-//     },
-//   },
-//   plugins: [],
-// };

@@ -12,7 +12,7 @@ import {
 
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { settings } from "@/data/settingsData";
-import { SignOutButton } from "../clerk/SignOutButton";
+import { SignOutButton } from "@/components/clerk/SignOutButton";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: screenWidth ,
+    width: screenWidth,
     backgroundColor: "#000", // black background
     zIndex: 20,
     elevation: 5,

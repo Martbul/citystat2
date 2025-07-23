@@ -6,14 +6,15 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
-import SettingsDrawer from "@/components/screens/Settings";
+import { useRef } from "react";
+
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useUser } from "@clerk/clerk-expo";
 import { useSettingsDrawer } from "@/Providers/SettingsDrawerProvider";
+import SettingsDrawer from "@/components/ui/drawers/SettingsDrawer";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -101,7 +102,7 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Add Status Button - Positioned next to profile picture */}
+      {/* Add Status Button - acc next to profile picture */}
       <View className="absolute top-44 left-36 z-10">
         <TouchableOpacity className="bg-lightContainerBg px-3 py-2 rounded-full flex flex-row items-center gap-1">
           <Feather name="plus" size={16} color="white" />

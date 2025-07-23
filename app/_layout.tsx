@@ -11,6 +11,7 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache'
 import { TailwindProvider } from "tailwindcss-react-native";
 import { SettingsProvider } from '@/Providers/SettingsProvider';
 import { DrawerProvider } from '@/Providers/SettingsDrawerProvider';
+import { SideMenuDrawerProvider } from '@/Providers/SideMenuDrawerProvider';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -26,20 +27,27 @@ export default function RootLayout() {
   return (
     <ClerkProvider tokenCache={tokenCache}>
       <TailwindProvider>
-        <SettingsProvider>
-          <DrawerProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(tutorial)"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </DrawerProvider>
-        </SettingsProvider>
+        <SideMenuDrawerProvider>
+          <SettingsProvider>
+            <DrawerProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(screens)"
+                  options={{ headerShown: false }}
+                />
+
+                <Stack.Screen
+                  name="(tutorial)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </DrawerProvider>
+          </SettingsProvider>
+        </SideMenuDrawerProvider>
       </TailwindProvider>
     </ClerkProvider>
   );
