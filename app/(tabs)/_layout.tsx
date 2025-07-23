@@ -13,17 +13,17 @@ import { useSettingsDrawer } from '@/Providers/SettingsDrawerProvider';
 export default function TabLayout() {
   const { isSettingsDrawerOpen } = useSettingsDrawer(); 
 
-  const colorScheme = useColorScheme();
   const { isSignedIn } = useAuth();
 
   if (!isSignedIn) {
     return <Redirect href={"/(auth)/sign-in"} />;
   }
-  //check if user has completed tutorila and if it has -> gi ti home page
+  //TODO: check if user has completed tutorila and if it has -> gi ti home page
   return (
     <Tabs
       screenOptions={{
-        // tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: "#bddc62",
+
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -35,7 +35,6 @@ export default function TabLayout() {
             },
             default: {},
           }),
-          // Hide tab bar when drawer is open
           isSettingsDrawerOpen && { display: "none" },
         ],
       }}
@@ -54,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Map",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <IconSymbol size={28} name="location.fill" color={color} />
           ),
         }}
       />
@@ -72,7 +71,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <IconSymbol size={28} name="person.fill" color={color} />
           ),
         }}
       />

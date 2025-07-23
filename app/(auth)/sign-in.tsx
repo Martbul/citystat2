@@ -2,6 +2,7 @@ import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -42,7 +43,7 @@ export default function Page() {
         className="mb-3 text-3xl justify-center text-center text-lightBlackText  mb-6  text-2xl
  font-bold"
       >
-        Sign in{" "}
+        Sign in
       </Text>{" "}
       <TextInput
         autoCapitalize="none"

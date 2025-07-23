@@ -8,8 +8,6 @@ export default function TutorialRoutesLayout() {
     return <Redirect href={'/(tabs)'} />
   }
 
-  
-
   return (<Stack >
         <Stack.Screen 
         name="tutorial" 

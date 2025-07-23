@@ -1,7 +1,8 @@
 import { Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native'
-import { useSignUp } from '@clerk/clerk-expo'
+import { useSignUp  } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
+import { isClerkRuntimeError } from "@clerk/clerk-expo";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -11,10 +12,11 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [code, setCode] = useState('')
-
-  
+  const [errors, setErrors] = useState<any>();
 
   const onSignUpPress = async () => {
+        setErrors(undefined);
+
     if (!isLoaded) return
 
     try {
@@ -24,6 +26,9 @@ export default function SignUpScreen() {
 
     } catch (err) {
       console.error(JSON.stringify(err, null, 2))
+  if (isClerkRuntimeError(err)) {
+    setErrors(err.message); 
+  }
     }
   }
 
@@ -61,6 +66,10 @@ export default function SignUpScreen() {
           className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
           placeholderTextColor="#aaa"
         />
+        {errors &&
+          errors.map((error:any, index:number) => (
+            <Text key={index}>{error.longMessage}</Text>
+          ))}
         <TouchableOpacity
           onPress={onVerifyPress}
           className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg "
@@ -72,12 +81,14 @@ export default function SignUpScreen() {
             Verify
           </Text>
         </TouchableOpacity>
+        {/* <GoogleOneTap /> */}
       </View>
     );
   }
 
   return (
     <View className="flex-1 p-8 justify-center bg-lightBackground ">
+
       <Text
         className="mb-3 text-3xl justify-center text-center text-lightBlackText  mb-6  text-2xl
  font-bold"
@@ -116,7 +127,7 @@ export default function SignUpScreen() {
         </Text>
       </TouchableOpacity>
 
-      <View className='flex flex-row justify-center items-center mt-6'>
+      <View className="flex flex-row justify-center items-center mt-6">
         <Text className="font-sm ">Already have an account?</Text>
         <Link href="/sign-in">
           <Text className="font-sm text-lightPrimaryAccent"> Sign in</Text>
