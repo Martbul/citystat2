@@ -1,22 +1,19 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { ClerkProvider } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { TailwindProvider } from "tailwindcss-react-native";
+import { SideMenuDrawerProvider } from "@/Providers/SideMenuDrawerProvider";
+import { UserDataProvider } from "@/Providers/UserDataProvider";
+import "react-native-reanimated";
+
 import "../global.css";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { ClerkProvider } from '@clerk/clerk-expo'
-import { tokenCache } from '@clerk/clerk-expo/token-cache'
-import { TailwindProvider } from "tailwindcss-react-native";
-import { SettingsProvider } from '@/Providers/SettingsProvider';
-import { DrawerProvider } from '@/Providers/SettingsDrawerProvider';
-import { SideMenuDrawerProvider } from '@/Providers/SideMenuDrawerProvider';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   if (!loaded) {
@@ -26,29 +23,37 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider tokenCache={tokenCache}>
-      <TailwindProvider>
-        <SideMenuDrawerProvider>
-          <SettingsProvider>
-            <DrawerProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(screens)"
-                  options={{ headerShown: false }}
-                />
+      <UserDataProvider>
+        <TailwindProvider>
+          <SideMenuDrawerProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(screens)"
+                    options={{ headerShown: false }}
+                  /> 
+                    <Stack.Screen
+                    name="(settings)"
+                    options={{ headerShown: false }}
+                  />
 
-                <Stack.Screen
-                  name="(tutorial)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
-            </DrawerProvider>
-          </SettingsProvider>
-        </SideMenuDrawerProvider>
-      </TailwindProvider>
+                  <Stack.Screen
+                    name="(tutorial)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar style="auto" />
+          </SideMenuDrawerProvider>
+        </TailwindProvider>
+      </UserDataProvider>
     </ClerkProvider>
   );
 }

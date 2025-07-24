@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import {
   ScrollView,
@@ -17,85 +16,70 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { cn } from "@/utils/cn";
-import { useSettingsContext } from "@/Providers/SettingsProvider";
 import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import SideMenuDrawer from "@/components/ui/drawers/SideMenuDrawer";
 import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 const { width: screenWidth } = Dimensions.get("window");
 const { width } = Dimensions.get("window");
 
-
 export default function HomeScreen() {
-  const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } = useSideMenusDrawer();
+  const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
+    useSideMenusDrawer();
   const { isSignedIn, user, isLoaded } = useUser();
   const [activeTab, setActiveTab] = useState("friends");
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [selectedTab, setSelectedTab] = useState<string>("General");
+  const router = useRouter();
 
-  const { settings, updateTheme } = useSettingsContext();
-  const theme = settings?.theme ?? "light";
-  console.log(theme);
+  const openDrawer = () => {
+    setIsSideMenuDrawerOpen(true);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    console.log("Toggling theme to:", newTheme);
-    updateTheme(newTheme);
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 0.5,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
-
-
-   const openDrawer = () => {
-     setIsSideMenuDrawerOpen(true);
-
-     Animated.parallel([
-       Animated.timing(slideAnim, {
-         toValue: 0, 
-         duration: 300,
-         useNativeDriver: true,
-       }),
-       Animated.timing(overlayOpacity, {
-         toValue: 0.5,
-         duration: 300,
-         useNativeDriver: true,
-       }),
-     ]).start();
-   };
-
-   const closeDrawer = () => {
-     Animated.parallel([
-       Animated.timing(slideAnim, {
-         toValue: -screenWidth * 0.80,
-         duration: 300,
-         useNativeDriver: true,
-       }),
-       Animated.timing(overlayOpacity, {
-         toValue: 0,
-         duration: 300,
-         useNativeDriver: true,
-       }),
-     ]).start(() => {
-       setIsSideMenuDrawerOpen(false);
-     });
-   };
+  const closeDrawer = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -screenWidth * 0.8,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsSideMenuDrawerOpen(false);
+    });
+  };
 
   //TODO: sett the theme swwithcing intop settings and make a db call to save it
 
-
- if (!isLoaded) {
-   // Hand state
-   return null;
- }
- if (!isSignedIn) {
-   // Handle signed out state
-   return null;
- }
+  if (!isLoaded) {
+    // Hand state
+    return null;
+  }
+  if (!isSignedIn) {
+    // Handle signed out state
+    return null;
+  }
   return (
-    <SafeAreaView
-      className={cn("flex-1", theme === "dark" ? "bg-bddc62" : "bg-background")}
-    >
+    <SafeAreaView className={cn("flex-1 bg-bddc62")}>
       {isSideMenuDrawerOpen && (
         <SideMenuDrawer
           isSideMenuDrawerOpen={isSideMenuDrawerOpen}
@@ -116,24 +100,22 @@ export default function HomeScreen() {
               <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
                 <Fontisto name="search" size={18} color="white" />
               </TouchableOpacity>
-            
 
-                <Link href="/(screens)/notifications">
-                    <View className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
+              <TouchableOpacity
+                className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
+                onPress={() => router.push("/(screens)/notifications")}
+              >
+                <MaterialIcons
+                  name="notifications-active"
+                  size={20}
+                  color="white"
+                />
+              </TouchableOpacity>
 
-                  <MaterialIcons
-                    name="notifications-active"
-                    size={20}
-                    color="white"
-                  />
-</View>
-
-                </Link>
-                
-              
-           
-
-              <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
+              <TouchableOpacity
+                className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
+                onPress={() => router.push("/(tabs)/profile")}
+              >
                 <Feather name="user" size={20} color="white" />
               </TouchableOpacity>
             </View>
@@ -372,42 +354,35 @@ const StatCard = ({
   </View>
 );
 
-
-
- const FriendCard = ({ friend }:{friend:any}) => (
-   <TouchableOpacity style={styles.friendCard}>
-     <View style={styles.friendInfo}>
-       <Text style={styles.friendAvatar}>{friend.avatar}</Text>
-       <View style={styles.friendDetails}>
-         <Text style={styles.friendName}>{friend.name}</Text>
-         <Text style={styles.friendCity}>{friend.city}</Text>
-       </View>
-     </View>
-     <View style={styles.friendStats}>
-       <Text style={styles.friendKm}>{friend.kilometers} km</Text>
-     </View>
-   </TouchableOpacity>
- );
-
-
- 
-
-  const LeaderboardCard = ({ entry }:{entry:any}) => (
-    <View style={styles.leaderboardCard}>
-      <View style={styles.leaderboardRank}>
-        <Text style={styles.rankNumber}>#{entry.rank}</Text>
+const FriendCard = ({ friend }: { friend: any }) => (
+  <TouchableOpacity style={styles.friendCard}>
+    <View style={styles.friendInfo}>
+      <Text style={styles.friendAvatar}>{friend.avatar}</Text>
+      <View style={styles.friendDetails}>
+        <Text style={styles.friendName}>{friend.name}</Text>
+        <Text style={styles.friendCity}>{friend.city}</Text>
       </View>
-      <View style={styles.leaderboardInfo}>
-        <Text style={styles.leaderboardName}>{entry.name}</Text>
-        <Text style={styles.leaderboardLocation}>
-          {entry.city}, {entry.country}
-        </Text>
-      </View>
-      <Text style={styles.leaderboardKm}>{entry.kilometers} km</Text>
     </View>
-  );
+    <View style={styles.friendStats}>
+      <Text style={styles.friendKm}>{friend.kilometers} km</Text>
+    </View>
+  </TouchableOpacity>
+);
 
-
+const LeaderboardCard = ({ entry }: { entry: any }) => (
+  <View style={styles.leaderboardCard}>
+    <View style={styles.leaderboardRank}>
+      <Text style={styles.rankNumber}>#{entry.rank}</Text>
+    </View>
+    <View style={styles.leaderboardInfo}>
+      <Text style={styles.leaderboardName}>{entry.name}</Text>
+      <Text style={styles.leaderboardLocation}>
+        {entry.city}, {entry.country}
+      </Text>
+    </View>
+    <Text style={styles.leaderboardKm}>{entry.kilometers} km</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -469,10 +444,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
   },
- 
 
-  
-  
   fullWidthStatCard: {
     height: 100,
     marginTop: 8,

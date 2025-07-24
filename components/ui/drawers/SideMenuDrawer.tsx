@@ -110,16 +110,11 @@ const SideMenuDrawer = ({
                   <AntDesign name="right" size={16} color="#999" />
                 </TouchableOpacity>
               )}
-              ListFooterComponent={() => (
-                <View className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <TouchableOpacity className="flex-row items-center bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-4">
-                    <MaterialIcons name="logout" size={24} color="#ef4444" />
-                    <View className="ml-4">
-                      <SignOutButton />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              )}
+               ListFooterComponent={() => (
+                             <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface rounded-xl px-4 py-4 mb-2">
+                               <SignOutButton />
+                             </TouchableOpacity>
+                           )}
             />
           </View>
         </SafeAreaView>

@@ -7,8 +7,24 @@ export interface Settings {
   updatedAt: string;
 }
 
-export type Theme = "light" | "dark";
-export type Language = "En" | "Es" | "Fr" | "De" | "It" | "Pt"| "Ru" | "Bg"; 
+
+export enum Theme {
+  Light = 'light',
+  Dark = 'dark',
+  Auto = 'auto'
+}
+
+
+export enum Language {
+  En = 'En',
+  Es = 'Es',
+  Fr = 'Fr',
+  De = 'De',
+  Zh = 'Zh',
+  Ja = 'Ja',
+  Ru = 'Ru',
+  Bg = 'Bg'
+}
 
 export interface SettingsProviderInterface {
    settings: Settings | null;

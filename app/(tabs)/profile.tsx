@@ -1,29 +1,17 @@
-import {
-  Animated,
-  Dimensions,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRef } from "react";
-
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useUser } from "@clerk/clerk-expo";
-import { useSettingsDrawer } from "@/Providers/SettingsDrawerProvider";
-import SettingsDrawer from "@/components/ui/drawers/SettingsDrawer";
-
-const { width: screenWidth } = Dimensions.get("window");
+import { useRouter } from "expo-router";
+import { useUserData } from "@/Providers/UserDataProvider";
 
 export default function ProfileScreen() {
-  const { isSettingsDrawerOpen, setIsSettingsDrawerOpen } = useSettingsDrawer();
-  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-
   const { isSignedIn, user, isLoaded } = useUser();
+  const {userData} = useUserData()
+  const router = useRouter();
   if (!isLoaded) {
     // Handle loading state
     return null;
@@ -33,66 +21,23 @@ export default function ProfileScreen() {
     return null;
   }
 
-  const openDrawer = () => {
-    setIsSettingsDrawerOpen(true);
 
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(overlayOpacity, {
-        toValue: 0.5,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const closeDrawer = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: screenWidth,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setIsSettingsDrawerOpen(false);
-    });
-  };
-
+  //Wheno
   return (
     <View className="flex flex-col h-screen bg-lightBackground">
-      {isSettingsDrawerOpen && (
-        <SettingsDrawer
-          isDrawerOpen={isSettingsDrawerOpen}
-          slideAnim={slideAnim}
-          overlayOpacity={overlayOpacity}
-          closeDrawer={closeDrawer}
-        />
-      )}
-
-      {/* Header */}
       <View className="flex flex-row items-center justify-end gap-4 items-center px-4 pt-10 pb-8 bg-lightNeutralGray">
         <TouchableOpacity className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
           <FontAwesome5 name="store" size={18} color="white" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={openDrawer}
-          className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
+          className = "flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
+          onPress={() => router.push("/(settings)/settings")}
         >
           <Ionicons name="settings" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Profile Picture - Positioned to overlap header and content */}
       <View className="absolute top-20 left-4 z-10">
         <View className="relative">
           <View className="w-28 h-28 bg-lightPrimaryAccent rounded-full flex items-center justify-center">
@@ -116,6 +61,7 @@ export default function ProfileScreen() {
         <View className="mt-20">
           <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
             {user.firstName} {user.lastName}
+            {userData?.email}
           </Text>
           <View className="flex flex-row items-center">
             <Text className="text-lightNeutralGray text-lg">
@@ -127,15 +73,14 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Edit Profile Button */}
         <TouchableOpacity
-          onPress={openDrawer}
           className="w-full bg-lightPrimaryAccent mt-6 py-3 rounded-lg flex flex-row items-center justify-center gap-2 font-semibold"
+          onPress={() => router.push("/(settings)/editProfile")}
         >
           <FontAwesome name="pencil" size={24} color="#111111" />
           <Text className="text-lightPrimaryText font-semibold">
             Edit Profile
-          </Text>
+          </Text>{" "}
         </TouchableOpacity>
 
         <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
