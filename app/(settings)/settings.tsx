@@ -13,7 +13,7 @@ import { settings } from "@/data/settingsData";
 import { useRouter } from "expo-router";
 
 
-const SettingsDrawer = () => {
+const Settings = () => {
   const [search, setSearch] = useState('');
    const router = useRouter()
 
@@ -58,7 +58,7 @@ const SettingsDrawer = () => {
     <>
         <SafeAreaView className="flex-1 bg-lightBackground">
           {/* Header */}
-          <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-gray-800">
+          <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-lightNeutralGray">
             <TouchableOpacity
               className="absolute left-4"
               style={{ zIndex: 10 }}
@@ -110,5 +110,5 @@ const SettingsDrawer = () => {
   );
 };
 
-export default SettingsDrawer;
+export default Settings;
 

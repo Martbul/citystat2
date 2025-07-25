@@ -1,3 +1,5 @@
+import { Language, Settings, Theme } from "@/types/settings";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import React, {
   createContext,
   useContext,
@@ -5,86 +7,31 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { useAuth, useUser } from "@clerk/clerk-expo";
-import { CityStat, Role, Status, StreetWalk, UserData } from "@/types/user";
-import { Language, Settings, Theme } from "@/types/settings";
-
-interface UserDataContextType {
-  // Core data
-  userData: UserData | null;
-  isLoading: boolean;
-  error: string | null;
-
-  // General user methods
-  updateUser: (
-    updates: Partial<
-      Omit<
-        UserData,
-        "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
-      >
-    >
-  ) => Promise<void>;
-  refreshUserData: () => Promise<void>;
-
-  // Tutorial methods
-  completedTutorial: boolean;
-  setCompletedTutorial: (completed: boolean) => Promise<void>;
-
-  // Settings methods
-  theme: Theme;
-  language: Language;
-  updateTheme: (theme: Theme) => Promise<void>;
-  updateLanguage: (language: Language) => Promise<void>;
-  updateSettings: (
-    settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
-  ) => Promise<void>;
-
-  // Status methods
-  status: Status;
-  setStatus: (status: Status) => Promise<void>;
-
-  // Friends methods
-  friendIds: string[];
-  addFriend: (friendId: string) => Promise<void>;
-  removeFriend: (friendId: string) => Promise<void>;
-
-  // City stats methods
-  cityStats: CityStat | null;
-  totalStreetsWalked: number;
-  totalKilometers: number;
-  cityCoveragePct: number;
-  daysActive: number;
-  longestStreakDays: number;
-  streetWalks: StreetWalk[];
-  updateCityStats: (
-    cityStats: Partial<
-      Omit<CityStat, "id" | "createdAt" | "updatedAt" | "streetWalks">
-    >
-  ) => Promise<void>;
-  addStreetWalk: (
-    streetWalk: Omit<StreetWalk, "id" | "cityStatId">
-  ) => Promise<void>;
-  incrementStreetsWalked: () => Promise<void>;
-  addKilometers: (km: number) => Promise<void>;
-}
+import {
+  CityStat,
+  Friend,
+  Role,
+  Status,
+  StreetWalk,
+  UserData,
+  UserDataContextType,
+} from "@/types/user";
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
   undefined
 );
 
-// Default user data structure
-const defaultSettings: Omit<Settings, "id" | "createdAt" | "updatedAt"> = {
+const defaultSettings: Omit<Settings, "id" | "userId" | "createdAt" | "updatedAt"> = {
   theme: Theme.Light,
   language: Language.En,
 };
 
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const { user, isSignedIn } = useUser();
-    const { getToken } = useAuth(); 
-      const [userData, setUserData] = useState<UserData | null>(null);
+  const { getToken } = useAuth();
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  console.log(user?.getSessions())
 
   const API_BASE_URL =
     process.env.EXPO_PUBLIC_CITYSTAT_API_URL || "http://localhost:3000/api";
@@ -137,16 +84,15 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isSignedIn]);
 
-
   const fetchUserData = async (): Promise<UserData> => {
-      const token = await getToken();
+    const token = await getToken();
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/user`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Clerk JWT token required
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -165,7 +111,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Create user data in your database (for new users)
   const createUserData = async (clerkUser: any): Promise<UserData> => {
     try {
       const newUserData = {
@@ -204,12 +149,11 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Generic method to update user data
   const updateUserInDB = async (
     endpoint: string,
     data: any
   ): Promise<UserData> => {
-          const token = await getToken();
+    const token = await getToken();
 
     const response = await fetch(`${API_BASE_URL}/api/user`, {
       method: "PUT",
@@ -227,7 +171,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     return await response.json();
   };
 
-  // Update user data
   const updateUser = async (
     updates: Partial<
       Omit<
@@ -252,12 +195,10 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Tutorial methods
   const setCompletedTutorial = async (completed: boolean): Promise<void> => {
     await updateUser({ completedTutorial: completed });
   };
 
-  // Settings methods
   const updateSettings = async (
     settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
   ): Promise<void> => {
@@ -288,24 +229,177 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     await updateSettings({ language });
   };
 
-  // Status methods
   const setStatus = async (status: Status): Promise<void> => {
     await updateUser({ status });
   };
 
-  // Friends methods
+  const getFriendIds = (userData: UserData | null): string[] => {
+    if (!userData) return [];
+
+    const fromFriends = userData.friends?.map((f) => f.friendId) || [];
+    const toFriends = userData.friendOf?.map((f) => f.userId) || [];
+
+    // Remove duplicates and return unique friend IDs
+    return [...new Set([...fromFriends, ...toFriends])];
+  };
+
+  // Check if two users are friends
+  const isFriend = (friendId: string): boolean => {
+    const friendIds = getFriendIds(userData);
+    return friendIds.includes(friendId);
+  };
+
+  // Add friend method - creates a Friend relation in the backend
   const addFriend = async (friendId: string): Promise<void> => {
-    if (!userData?.friendIds.includes(friendId)) {
-      await updateUser({
-        friendIds: [...(userData?.friendIds ?? []), friendId],
+    if (!userData?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    // Check if already friends
+    if (isFriend(friendId)) {
+      console.log("Already friends with this user");
+      return;
+    }
+
+    try {
+      // Call your backend API to create the friendship
+      const response = await fetch(`/api/users/${userData.id}/friends`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Add your auth headers here
+        },
+        body: JSON.stringify({
+          friendId: friendId,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to add friend");
+      }
+
+      // Refresh user data to get updated friends list
+      await refreshUserData();
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      throw error;
     }
   };
 
+  // Remove friend method - deletes the Friend relation in the backend
   const removeFriend = async (friendId: string): Promise<void> => {
-    await updateUser({
-      friendIds: userData?.friendIds.filter((id) => id !== friendId) ?? [],
-    });
+    if (!userData?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      // Call your backend API to remove the friendship
+      const response = await fetch(
+        `/api/users/${userData.id}/friends/${friendId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            // Add your auth headers here
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to remove friend");
+      }
+
+      // Refresh user data to get updated friends list
+      await refreshUserData();
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      throw error;
+    }
+  };
+
+  // Get all friends with their full user data
+  const getFriends = async (): Promise<UserData[]> => {
+    if (!userData?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userData.id}/friends`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          // Add your auth headers here
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch friends");
+      }
+
+      const friends: UserData[] = await response.json();
+      return friends;
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      throw error;
+    }
+  };
+
+  // Alternative approach: if you want to update the local state optimistically
+  const addFriendOptimistic = async (friendId: string): Promise<void> => {
+    if (!userData?.id) {
+      throw new Error("User not authenticated");
+    }
+
+    // Check if already friends
+    if (isFriend(friendId)) {
+      console.log("Already friends with this user");
+      return;
+    }
+
+    // Optimistically update local state
+    const newFriend: Friend = {
+      id: `temp_${Date.now()}`, // Temporary ID
+      userId: userData.id,
+      username: userData.userName as string,
+            imageUrl: userData.imageUrl as string,
+
+      friendId: friendId,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update local state immediately
+    const updatedUserData = {
+      ...userData,
+      friends: [...(userData.friends || []), newFriend],
+    };
+
+    // Update your local state here (depends on your state management)
+    // setUserData(updatedUserData);
+
+    try {
+      // Call backend API
+      const response = await fetch(`/api/users/${userData.id}/friends`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ friendId }),
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        // setUserData(userData);
+        throw new Error("Failed to add friend");
+      }
+
+      // Refresh to get the real data from backend
+      await refreshUserData();
+    } catch (error) {
+      // Revert optimistic update on error
+      // setUserData(userData);
+      console.error("Error adding friend:", error);
+      throw error;
+    }
   };
 
   // City stats methods
@@ -420,7 +514,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     status: userData?.status ?? Status.ACTIVE,
     setStatus,
 
-    friendIds: userData?.friendIds ?? [],
+    friends: userData?.friends ?? [],
     addFriend,
     removeFriend,
 

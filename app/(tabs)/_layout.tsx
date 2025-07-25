@@ -9,16 +9,20 @@ import { useUserData } from "@/Providers/UserDataProvider";
 
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
-  const { userData } = useUserData();
+  const { userData} = useUserData();
   const router = useRouter();
 
   if (!isSignedIn) {
     return <Redirect href={"/(auth)/sign-in"} />;
   }
 
-  // if (!userData?.completedTutorial) {
-  //   router.replace("/(tutorial)/tutorial");
-  // }
+  
+
+
+  if ( userData && !userData.completedTutorial){
+    router.replace("/(tutorial)/tutorial")
+  }
+
 
   return (
     <Tabs

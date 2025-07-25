@@ -35,7 +35,7 @@ const TutorialScreen = () => {
   const [userDetails, setUserDetails] = useState({
     firstName: '',
     lastName: '',
-    username: '',
+    userName: '',
     imageURL: '',
     completedTutorial:true
   });
@@ -117,8 +117,8 @@ try {
             className="w-full border border-lightNeutralGray rounded-xl px-4 py-3 text-base bg-lightSurface text-lightBlackText mb-3"
             placeholder="Username"
             placeholderTextColor="#999"
-            value={userDetails.username}
-            onChangeText={text => handleInputChange('username', text)}
+            value={userDetails.userName}
+            onChangeText={text => handleInputChange('userName', text)}
           />
         </KeyboardAvoidingView>
 
