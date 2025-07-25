@@ -9,10 +9,11 @@ import { useRouter } from "expo-router";
 import { useUserData } from "@/Providers/UserDataProvider";
 
 export default function ProfileScreen() {
-  const { isSignedIn, user, isLoaded } = useUser();
-  const {userData} = useUserData()
+  const { isSignedIn } = useUser();
+  const { userData, isLoading } = useUserData();
   const router = useRouter();
-  if (!isLoaded) {
+
+  if (isLoading) {
     // Handle loading state
     return null;
   }
@@ -21,17 +22,16 @@ export default function ProfileScreen() {
     return null;
   }
 
-
-  //Wheno
+  
   return (
     <View className="flex flex-col h-screen bg-lightBackground">
-      <View className="flex flex-row items-center justify-end gap-4 items-center px-4 pt-10 pb-8 bg-lightNeutralGray">
+      <View className="flex flex-row items-center justify-end gap-3 items-center px-4 pt-8 pb-9 bg-lightNeutralGray">
         <TouchableOpacity className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
           <FontAwesome5 name="store" size={18} color="white" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          className = "flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
+          className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
           onPress={() => router.push("/(settings)/settings")}
         >
           <Ionicons name="settings" size={20} color="white" />
@@ -47,7 +47,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Add Status Button - acc next to profile picture */}
       <View className="absolute top-44 left-36 z-10">
         <TouchableOpacity className="bg-lightContainerBg px-3 py-2 rounded-full flex flex-row items-center gap-1">
           <Feather name="plus" size={16} color="white" />
@@ -55,17 +54,14 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Scrollable Content */}
       <View className="flex-1 overflow-y-auto px-4 pb-20">
-        {/* Profile Info - Add top margin to account for overlapping profile picture */}
         <View className="mt-20">
           <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
-            {user.firstName} {user.lastName}
-            {userData?.email}
+            {userData?.firstName} {userData?.lastName}
           </Text>
           <View className="flex flex-row items-center">
             <Text className="text-lightNeutralGray text-lg">
-              {user.username}
+              {userData?.userName}
             </Text>
             <View className="w-6 h-6 bg-lightSecondaryAccent rounded ml-2 flex items-center justify-center">
               <Feather name="hash" size={16} color="white" />
@@ -96,7 +92,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/(screens)/friends")}>
           <View className="flex flex-row justify-between items-center mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
             <Text className="text-lightNeutralGray text-lg font-medium">
               Your Friends
@@ -107,9 +103,9 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText">
+        <TouchableOpacity onPress={() => router.push("/(screens)/editNote")} className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText">
           <Text className="text-lightNeutralGray text-lg">
-            Note (only visible to you)
+            {"Note (only visible to you)"}
           </Text>
           <FontAwesome name="sticky-note-o" size={24} color="#111111" />
         </TouchableOpacity>

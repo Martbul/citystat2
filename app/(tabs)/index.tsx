@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   StyleSheet,
+  FlatList,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -27,12 +28,29 @@ const { width } = Dimensions.get("window");
 export default function HomeScreen() {
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
-  const { isSignedIn, user, isLoaded } = useUser();
-  const [activeTab, setActiveTab] = useState("friends");
+  const { isSignedIn, isLoaded } = useUser();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [selectedTab, setSelectedTab] = useState<string>("General");
   const router = useRouter();
+  const [leaderboardTab, setLeaderbardTab] = useState<"friends" | "global">(
+    "friends"
+  );
+  const mockData = {
+    friends: [
+      { id: "1", name: "Alice", score: 1200 },
+      { id: "2", name: "Bob", score: 1100 },
+      { id: "3", name: "Carol", score: 980 },
+    ],
+    global: [
+      { id: "1", name: "PlayerOne", score: 2200 },
+      { id: "2", name: "GamerDude", score: 1980 },
+      { id: "3", name: "ProMax", score: 1750 },
+       { id: "4", name: "didpsdf", score: 190 },
+      { id: "5", name: "dfds", score: 17 },
+    ],
+  };
+  const data = mockData[leaderboardTab];
 
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
@@ -89,14 +107,14 @@ export default function HomeScreen() {
         />
       )}
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        <View className="bg-lightNeutralGray px-5 pt-12 pb-9 rounded-2xl">
+        <View className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-2xl">
           {/* Header Top */}
           <View className="flex-row justify-between items-center">
             <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
               <Entypo name="menu" size={26} color="#333333" />
             </TouchableOpacity>
 
-            <View className="flex-row gap-2">
+            <View className="flex-row gap-3">
               <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
                 <Fontisto name="search" size={18} color="white" />
               </TouchableOpacity>
@@ -112,12 +130,12 @@ export default function HomeScreen() {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
                 onPress={() => router.push("/(tabs)/profile")}
               >
                 <Feather name="user" size={20} color="white" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
 
@@ -160,13 +178,13 @@ export default function HomeScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setSelectedTab("Friends")}>
+              <TouchableOpacity onPress={() => setSelectedTab("Leaderboard")}>
                 <Text
                   className={`${
                     selectedTab === "Friends" ? "font-bold" : "font-medium"
                   } text-lightBlackText text-base`}
                 >
-                  Friends
+                  Leaderboard
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setSelectedTab("Other")}>
@@ -186,98 +204,57 @@ export default function HomeScreen() {
                 <Text>GENERAL</Text>
               </View>
             )}
-            {selectedTab === "Friends" && (
-              <View>
-                <View className="flex-row bg-white dark:bg-darkSurface rounded-xl p-1 mb-5 shadow-sm">
+
+            {selectedTab === "Leaderboard" && (
+              <SafeAreaView className="flex flex-1 px-4 pt-4">
+                <View className="flex-row justify-center space-x-4 mb-4">
                   <TouchableOpacity
-                    className={cn(
-                      "flex-1 py-3 rounded-lg items-center",
-                      activeTab === "friends" ? "bg-accent" : ""
-                    )}
-                    onPress={() => setActiveTab("friends")}
+                    onPress={() => setLeaderbardTab("friends")}
+                    className={`px-4 py-2 rounded-full ${
+                      leaderboardTab === "friends"
+                        ? "bg-lightSecondaryAccent"
+                        : "bg-lightSurface border border-lightMutedText"
+                    }`}
                   >
                     <Text
-                      className={cn(
-                        "font-anybody text-sm",
-                        activeTab === "friends" ? "text-white" : "text-muted"
-                      )}
+                      className={`font-anybodyBold ${
+                        leaderboardTab === "friends"
+                          ? "text-darkText"
+                          : "text-muted"
+                      }`}
                     >
                       Friends
                     </Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    className={cn(
-                      "flex-1 py-3 rounded-lg items-center",
-                      activeTab === "leaderboard" ? "bg-accent" : ""
-                    )}
-                    onPress={() => setActiveTab("leaderboard")}
+                    onPress={() => setLeaderbardTab("global")}
+                    className={`px-4 py-2 rounded-full ${
+                      leaderboardTab === "global"
+                        ? "bg-lightSecondaryAccent"
+                        : "bg-lightSurface border border-lightMutedText"
+                    }`}
                   >
                     <Text
-                      className={cn(
-                        "font-anybody text-sm",
-                        activeTab === "leaderboard"
-                          ? "text-white"
+                      className={`font-anybodyBold ${
+                        leaderboardTab === "global"
+                          ? "text-darkText"
                           : "text-muted"
-                      )}
+                      }`}
                     >
-                      Global Leaderboard
+                      Global
                     </Text>
                   </TouchableOpacity>
                 </View>
-                {/* Content based on tab */}
-                {activeTab === "friends" ? (
-                  <View className="bg-white dark:bg-darkSurface p-5 rounded-xl shadow">
-                    <Text className="font-anybodyBold text-lg text-text dark:text-darkText mb-4">
-                      Friends Activity
-                    </Text>
-                    {/* map through friend cards here */}
-                  </View>
-                ) : (
-                  <View className="bg-white dark:bg-darkSurface p-5 rounded-xl shadow">
-                    <Text className="font-anybodyBold text-lg text-text dark:text-darkText mb-4">
-                      Top Global Walkers
-                    </Text>
-                    {/* map through leaderboard cards here */}
-                  </View>
-                )}
 
-                <View style={styles.socialContainer}>
-                  <View style={styles.tabContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.tab,
-                        activeTab === "friends" && styles.activeTab,
-                      ]}
-                      onPress={() => setActiveTab("friends")}
-                    >
-                      <Text
-                        style={[
-                          styles.tabText,
-                          activeTab === "friends" && styles.activeTabText,
-                        ]}
-                      >
-                        Friends
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.tab,
-                        activeTab === "leaderboard" && styles.activeTab,
-                      ]}
-                      onPress={() => setActiveTab("leaderboard")}
-                    >
-                      <Text
-                        style={[
-                          styles.tabText,
-                          activeTab === "leaderboard" && styles.activeTabText,
-                        ]}
-                      >
-                        Global Leaderboard
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
+                <FlatList
+                  data={data}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderItem}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  showsVerticalScrollIndicator={false}
+                />
+              </SafeAreaView>
             )}
 
             {selectedTab === "Other" && (
@@ -354,33 +331,14 @@ const StatCard = ({
   </View>
 );
 
-const FriendCard = ({ friend }: { friend: any }) => (
-  <TouchableOpacity style={styles.friendCard}>
-    <View style={styles.friendInfo}>
-      <Text style={styles.friendAvatar}>{friend.avatar}</Text>
-      <View style={styles.friendDetails}>
-        <Text style={styles.friendName}>{friend.name}</Text>
-        <Text style={styles.friendCity}>{friend.city}</Text>
-      </View>
-    </View>
-    <View style={styles.friendStats}>
-      <Text style={styles.friendKm}>{friend.kilometers} km</Text>
-    </View>
-  </TouchableOpacity>
-);
-
-const LeaderboardCard = ({ entry }: { entry: any }) => (
-  <View style={styles.leaderboardCard}>
-    <View style={styles.leaderboardRank}>
-      <Text style={styles.rankNumber}>#{entry.rank}</Text>
-    </View>
-    <View style={styles.leaderboardInfo}>
-      <Text style={styles.leaderboardName}>{entry.name}</Text>
-      <Text style={styles.leaderboardLocation}>
-        {entry.city}, {entry.country}
-      </Text>
-    </View>
-    <Text style={styles.leaderboardKm}>{entry.kilometers} km</Text>
+const renderItem = ({ item, index }: any) => (
+  <View className="flex-row justify-between items-center px-4 py-3 bg-surface rounded-xl mb-2">
+    <Text className="text-lightBlackText font-anybodyBold text-lg">
+      #{index + 1} {item.name}
+    </Text>
+    <Text className="text-lightSecondaryAccent font-anybodyBold text-lg">
+      {item.score}
+    </Text>
   </View>
 );
 

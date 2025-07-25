@@ -23,6 +23,32 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
+         <Stack.Screen
+        name="friends"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+       <Stack.Screen
+        name="editNote"
+        options={{
+          headerShown: false,
+        }}
+      />  
+      <Stack.Screen
+        name="addFriends"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+        <Stack.Screen
+        name="addByUsername"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
