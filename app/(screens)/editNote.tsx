@@ -11,7 +11,7 @@ import { useUserData } from "@/Providers/UserDataProvider";
 import { onBackPress } from "@/utils/navigation";
 
 
-const EditNote = () => {
+export default function EditNote () {
   const [newNote, setNewNote] = useState('');
    const {note} = useUserData()
    //TODO: Set newNote to note when the page ;loads
@@ -57,6 +57,4 @@ const EditNote = () => {
     </>
   );
 };
-
-export default EditNote;
 

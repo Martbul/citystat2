@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -25,6 +25,8 @@ export default function ProfileScreen() {
   
   return (
     <View className="flex flex-col h-screen bg-lightBackground">
+      <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
+
       <View className="flex flex-row items-center justify-end gap-3 items-center px-4 pt-8 pb-9 bg-lightNeutralGray">
         <TouchableOpacity className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
           <FontAwesome5 name="store" size={18} color="white" />
@@ -43,16 +45,21 @@ export default function ProfileScreen() {
           <View className="w-28 h-28 bg-lightPrimaryAccent rounded-full flex items-center justify-center">
             <Text className="text-lightPrimaryText text-xl font-bold">MB</Text>
           </View>
-          <View className="absolute -bottom-1 -right-1 w-4 h-4 bg-lightSecondaryAccent rounded-full border-2 border-lightSurface"></View>
+
+          {/* 
+         //TODO: v2 add the light
+         <View className="absolute -bottom-1 -right-1 w-4 h-4 bg-lightSecondaryAccent rounded-full border-2 border-lightSurface"></View> */}
         </View>
       </View>
 
+      {/* 
+      //TODO: v2 add the status
       <View className="absolute top-44 left-36 z-10">
         <TouchableOpacity className="bg-lightContainerBg px-3 py-2 rounded-full flex flex-row items-center gap-1">
           <Feather name="plus" size={16} color="white" />
           <Text className="text-white text-sm">Add Status</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <View className="flex-1 overflow-y-auto px-4 pb-20">
         <View className="mt-20">
@@ -76,7 +83,7 @@ export default function ProfileScreen() {
           <FontAwesome name="pencil" size={24} color="#111111" />
           <Text className="text-lightPrimaryText font-semibold">
             Edit Profile
-          </Text>{" "}
+          </Text>
         </TouchableOpacity>
 
         <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
@@ -84,7 +91,7 @@ export default function ProfileScreen() {
             Member Since
           </Text>
           <View className="flex items-center">
-            {/* //TODO : ADD YOUR LOGO*/}
+            {/*//TODO : ADD YOUR LOGO*/}
             {/* <View className="w-6 h-6 bg-lightPrimaryAccent rounded flex items-center justify-center mr-3">
               <Text className="text-lightPrimaryText text-sm">D</Text>
             </View> */}
@@ -103,7 +110,10 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/(screens)/editNote")} className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText">
+        <TouchableOpacity
+          onPress={() => router.push("/(screens)/editNote")}
+          className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText"
+        >
           <Text className="text-lightNeutralGray text-lg">
             {"Note (only visible to you)"}
           </Text>

@@ -6,11 +6,14 @@ import {
   SafeAreaView,
   FlatList,
   TextInput,
+  StatusBar,
 } from "react-native";
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { settings } from "@/data/settingsData";
 import { useRouter } from "expo-router";
+import BackArrow from "@/components/ui/backArrows";
+import Header from "@/components/ui/header";
 
 
 const Settings = () => {
@@ -56,56 +59,41 @@ const Settings = () => {
 
   return (
     <>
-        <SafeAreaView className="flex-1 bg-lightBackground">
-          {/* Header */}
-          <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-lightNeutralGray">
-            <TouchableOpacity
-              className="absolute left-4"
-              style={{ zIndex: 10 }}
-            >
-              <AntDesign
-                onPress={onBackPress}
-                name="arrowleft"
-                size={28}
-                color="#333333ff"
-              />
-            </TouchableOpacity>
-            <Text className="flex-1 text-center text-lightBlackText font-bold text-2xl">
-              Settings
-            </Text>
-          </View>
+      <SafeAreaView className="flex-1 bg-lightBackground">
+        <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
+     <Header title="Settings"/>
 
-          <View className="flex-1">
-            <FlatList
-              scrollEnabled={true}
-              data={filteredSettings}
-              keyExtractor={(item) => item.label}
-              contentContainerStyle={{ padding: 16 }}
-              ListHeaderComponent={SearchHeader}
-              renderItem={({ item }) => (
-                <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface border-lightContainerBg rounded-xl px-4 py-4 mb-2">
-                  <View className="flex-row items-center space-x-4">
-                    {item.icon()}
-                    <Text className="text-lightBlackText text-base">
-                      {item.label}
-                    </Text>
-                  </View>
-                  <AntDesign name="right" size={16} color="#999" />
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={() => (
-                search.trim() ? (
-                  <View className="flex-1 items-center justify-center py-8">
-                    <Text className="text-gray-500 text-base">
-                      No settings found for "{search}"
-                    </Text>
-                  </View>
-                ) : null
-              )}
-            
-            />
-          </View>
-        </SafeAreaView>
+
+        <View className="flex-1">
+          <FlatList
+            scrollEnabled={true}
+            data={filteredSettings}
+            keyExtractor={(item) => item.label}
+            contentContainerStyle={{ padding: 16 }}
+            ListHeaderComponent={SearchHeader}
+            renderItem={({ item }) => (
+              <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface border-lightContainerBg rounded-xl px-4 py-4 mb-2">
+                <View className="flex-row items-center space-x-4">
+                  {item.icon()}
+                  <Text className="text-lightBlackText text-base">
+                    {item.label}
+                  </Text>
+                </View>
+                <AntDesign name="right" size={16} color="#999" />
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={() =>
+              search.trim() ? (
+                <View className="flex-1 items-center justify-center py-8">
+                  <Text className="text-gray-500 text-base">
+                    No settings found for "{search}"
+                  </Text>
+                </View>
+              ) : null
+            }
+          />
+        </View>
+      </SafeAreaView>
     </>
   );
 };
