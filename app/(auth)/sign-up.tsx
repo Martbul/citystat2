@@ -57,7 +57,7 @@ export default function SignUpScreen() {
       <View className="flex-1 p-8 justify-center bg-lightBackground">
         <Text className="mb-3 text-3xl justify-center text-center text-lightBlackText mb-6 text-2xl font-bold">
           Verify your email
-        </Text>{" "}
+        </Text>
         <TextInput
           value={code}
           placeholder="Verification code"

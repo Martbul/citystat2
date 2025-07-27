@@ -10,7 +10,6 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Fontisto from "@expo/vector-icons/Fontisto";
@@ -21,21 +20,23 @@ import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import SideMenuDrawer from "@/components/ui/drawers/SideMenuDrawer";
 import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
-import { Link, useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
+
 const { width: screenWidth } = Dimensions.get("window");
-const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
   const { isSignedIn, isLoaded } = useUser();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [selectedTab, setSelectedTab] = useState<string>("General");
-  const router = useRouter();
   const [leaderboardTab, setLeaderbardTab] = useState<"friends" | "global">(
     "friends"
   );
+
   const mockData = {
     friends: [
       { id: "1", name: "Alice", score: 1200 },
@@ -46,15 +47,15 @@ export default function HomeScreen() {
       { id: "1", name: "PlayerOne", score: 2200 },
       { id: "2", name: "GamerDude", score: 1980 },
       { id: "3", name: "ProMax", score: 1750 },
-       { id: "4", name: "didpsdf", score: 190 },
+      { id: "4", name: "didpsdf", score: 190 },
       { id: "5", name: "dfds", score: 17 },
     ],
   };
+
   const data = mockData[leaderboardTab];
 
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
-
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -86,27 +87,23 @@ export default function HomeScreen() {
     });
   };
 
-  //TODO: sett the theme swwithcing intop settings and make a db call to save it
-
   if (!isLoaded) {
-    // Hand state
     return null;
   }
   if (!isSignedIn) {
-    // Handle signed out state
     return null;
   }
-  return (
-    <SafeAreaView className={cn("flex-1 bg-bddc62")}>
-      {isSideMenuDrawerOpen && (
-        <SideMenuDrawer
-          isSideMenuDrawerOpen={isSideMenuDrawerOpen}
-          slideAnim={slideAnim}
-          overlayOpacity={overlayOpacity}
-          closeDrawer={closeDrawer}
-        />
-      )}
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+
+  // Create sections for FlatList
+  const sections = [
+    { id: "header", type: "header" },
+    { id: "tabs", type: "tabs" },
+    { id: "content", type: "content" },
+  ];
+
+  const renderSection = ({ item }:{item:any}) => {
+    if (item.type === "header") {
+      return (
         <View className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-2xl">
           {/* Header Top */}
           <View className="flex-row justify-between items-center">
@@ -129,13 +126,6 @@ export default function HomeScreen() {
                   color="white"
                 />
               </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
-                onPress={() => router.push("/(tabs)/profile")}
-              >
-                <Feather name="user" size={20} color="white" />
-              </TouchableOpacity> */}
             </View>
           </View>
 
@@ -164,136 +154,175 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+      );
+    }
 
+    if (item.type === "tabs") {
+      return (
         <View className="bg-lightSurface">
-          <View className="flex ">
-            <View className="flex-row gap-2 justify-evenly items-center p-4">
-              <TouchableOpacity onPress={() => setSelectedTab("General")}>
-                <Text
-                  className={`${
-                    selectedTab === "General" ? "font-bold" : "font-medium"
-                  } text-lightBlackText text-base`}
-                >
-                  General
-                </Text>
-              </TouchableOpacity>
+          <View className="flex-row gap-2 justify-evenly items-center p-4">
+            <TouchableOpacity onPress={() => setSelectedTab("General")}>
+              <Text
+                className={`${
+                  selectedTab === "General" ? "font-bold" : "font-medium"
+                } text-lightBlackText text-base`}
+              >
+                General
+              </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setSelectedTab("Leaderboard")}>
-                <Text
-                  className={`${
-                    selectedTab === "Friends" ? "font-bold" : "font-medium"
-                  } text-lightBlackText text-base`}
-                >
-                  Leaderboard
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSelectedTab("Other")}>
-                <Text
-                  className={`${
-                    selectedTab === "Other" ? "font-bold" : "font-medium"
-                  } text-lightBlackText text-base`}
-                >
-                  Other
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={() => setSelectedTab("Leaderboard")}>
+              <Text
+                className={`${
+                  selectedTab === "Leaderboard" ? "font-bold" : "font-medium"
+                } text-lightBlackText text-base`}
+              >
+                Leaderboard
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setSelectedTab("Other")}>
+              <Text
+                className={`${
+                  selectedTab === "Other" ? "font-bold" : "font-medium"
+                } text-lightBlackText text-base`}
+              >
+                Other
+              </Text>
+            </TouchableOpacity>
           </View>
-          <View className="px-5 py-4">
-            {selectedTab === "General" && (
-              <View>
-                <Text>GENERAL</Text>
-              </View>
-            )}
+        </View>
+      );
+    }
 
-            {selectedTab === "Leaderboard" && (
-              <SafeAreaView className="flex flex-1 px-4 pt-4">
-                <View className="flex-row justify-center space-x-4 mb-4">
-                  <TouchableOpacity
-                    onPress={() => setLeaderbardTab("friends")}
-                    className={`px-4 py-2 rounded-full ${
+    if (item.type === "content") {
+      return (
+        <View className="bg-lightSurface px-5 py-4 flex-1">
+          {selectedTab === "General" && (
+            <View>
+              <Text>GENERAL</Text>
+            </View>
+          )}
+
+          {selectedTab === "Leaderboard" && (
+            <View className="flex-1">
+              <View className="flex-row justify-center space-x-4 mb-4">
+                <TouchableOpacity
+                  onPress={() => setLeaderbardTab("friends")}
+                  className={`px-4 py-2 rounded-full ${
+                    leaderboardTab === "friends"
+                      ? "bg-lightSecondaryAccent"
+                      : "bg-lightSurface border border-lightMutedText"
+                  }`}
+                >
+                  <Text
+                    className={`font-anybodyBold ${
                       leaderboardTab === "friends"
-                        ? "bg-lightSecondaryAccent"
-                        : "bg-lightSurface border border-lightMutedText"
+                        ? "text-darkText"
+                        : "text-muted"
                     }`}
                   >
-                    <Text
-                      className={`font-anybodyBold ${
-                        leaderboardTab === "friends"
-                          ? "text-darkText"
-                          : "text-muted"
-                      }`}
-                    >
-                      Friends
-                    </Text>
-                  </TouchableOpacity>
+                    Friends
+                  </Text>
+                </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => setLeaderbardTab("global")}
-                    className={`px-4 py-2 rounded-full ${
+                <TouchableOpacity
+                  onPress={() => setLeaderbardTab("global")}
+                  className={`px-4 py-2 rounded-full ${
+                    leaderboardTab === "global"
+                      ? "bg-lightSecondaryAccent"
+                      : "bg-lightSurface border border-lightMutedText"
+                  }`}
+                >
+                  <Text
+                    className={`font-anybodyBold ${
                       leaderboardTab === "global"
-                        ? "bg-lightSecondaryAccent"
-                        : "bg-lightSurface border border-lightMutedText"
+                        ? "text-darkText"
+                        : "text-muted"
                     }`}
                   >
-                    <Text
-                      className={`font-anybodyBold ${
-                        leaderboardTab === "global"
-                          ? "text-darkText"
-                          : "text-muted"
-                      }`}
-                    >
-                      Global
+                    Global
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {data.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => router.push("/(screens)/userProfile")}
+                >
+                  <View className="flex-row justify-between items-center px-4 py-3 bg-surface rounded-xl mb-2">
+                    <Text className="text-lightBlackText font-anybodyBold text-lg">
+                      #{index + 1} {item.name}
                     </Text>
-                  </TouchableOpacity>
-                </View>
+                    <Text className="text-lightSecondaryAccent font-anybodyBold text-lg">
+                      {item.score}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
-                <FlatList
-                  data={data}
-                  keyExtractor={(item) => item.id}
-                  renderItem={renderItem}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  showsVerticalScrollIndicator={false}
-                />
-              </SafeAreaView>
-            )}
-
-            {selectedTab === "Other" && (
-              <View>
-                <View style={styles.fullWidthStatCard}>
-                  <View
-                    style={[
-                      styles.fullWidthGradient,
-                      { backgroundColor: "#29B6F6" },
-                    ]}
-                  >
-                    <View style={styles.fullWidthContent}>
-                      <View style={styles.fullWidthLeft}>
-                        <Text style={styles.fullWidthTitle}>
-                          Streets Explored
-                        </Text>
-                        <Text style={styles.fullWidthValue}>
-                          {mockUserData.streetsWalkedThisYear}
-                        </Text>
-                        <Text style={styles.fullWidthSubtitle}>
-                          in {mockUserData.city}
-                        </Text>
-                      </View>
-                      <View style={styles.fullWidthRight}>
-                        <Text style={styles.fullWidthSecondary}>
-                          Avg. Daily: {mockUserData.averageDaily} km
-                        </Text>
-                        <Text style={styles.fullWidthSecondary}>
-                          Favorite: {mockUserData.favoriteDistrict}
-                        </Text>
-                      </View>
+          {selectedTab === "Other" && (
+            <View>
+              <View style={styles.fullWidthStatCard}>
+                <View
+                  style={[
+                    styles.fullWidthGradient,
+                    { backgroundColor: "#29B6F6" },
+                  ]}
+                >
+                  <View style={styles.fullWidthContent}>
+                    <View style={styles.fullWidthLeft}>
+                      <Text style={styles.fullWidthTitle}>
+                        Streets Explored
+                      </Text>
+                      <Text style={styles.fullWidthValue}>
+                        {mockUserData.streetsWalkedThisYear}
+                      </Text>
+                      <Text style={styles.fullWidthSubtitle}>
+                        in {mockUserData.city}
+                      </Text>
+                    </View>
+                    <View style={styles.fullWidthRight}>
+                      <Text style={styles.fullWidthSecondary}>
+                        Avg. Daily: {mockUserData.averageDaily} km
+                      </Text>
+                      <Text style={styles.fullWidthSecondary}>
+                        Favorite: {mockUserData.favoriteDistrict}
+                      </Text>
                     </View>
                   </View>
                 </View>
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
-      </ScrollView>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <SafeAreaView className={cn("flex-1 bg-bddc62")}>
+      {isSideMenuDrawerOpen && (
+        <SideMenuDrawer
+          isSideMenuDrawerOpen={isSideMenuDrawerOpen}
+          slideAnim={slideAnim}
+          overlayOpacity={overlayOpacity}
+          closeDrawer={closeDrawer}
+        />
+      )}
+
+      <FlatList
+        data={sections}
+        renderItem={renderSection}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      />
     </SafeAreaView>
   );
 }
@@ -331,91 +360,13 @@ const StatCard = ({
   </View>
 );
 
-const renderItem = ({ item, index }: any) => (
-  <View className="flex-row justify-between items-center px-4 py-3 bg-surface rounded-xl mb-2">
-    <Text className="text-lightBlackText font-anybodyBold text-lg">
-      #{index + 1} {item.name}
-    </Text>
-    <Text className="text-lightSecondaryAccent font-anybodyBold text-lg">
-      {item.score}
-    </Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    paddingTop: 50,
-    backgroundColor: "#29B6F6",
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  welcomeText: {
-    fontSize: 16,
-    color: "#E0E7FF",
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 8,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  userLocation: {
-    fontSize: 14,
-    color: "#E0E7FF",
-    marginLeft: 4,
-  },
-  profileButton: {
-    padding: 4,
-  },
-  statsContainer: {
-    padding: 20,
-    paddingTop: 30,
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  fullWidthStatCard: {
     marginBottom: 16,
   },
-  statCard: {
-    width: (width - 52) / 2,
-    height: 120,
-  },
-
-  statCardContent: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-
-  fullWidthStatCard: {
-    height: 100,
-    marginTop: 8,
-  },
   fullWidthGradient: {
-    flex: 1,
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   fullWidthContent: {
     flexDirection: "row",
@@ -425,165 +376,30 @@ const styles = StyleSheet.create({
   fullWidthLeft: {
     flex: 1,
   },
-  fullWidthTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    opacity: 0.9,
-    marginBottom: 4,
-  },
-  fullWidthValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  fullWidthSubtitle: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    opacity: 0.8,
-    marginTop: 4,
-  },
   fullWidthRight: {
     alignItems: "flex-end",
   },
-  fullWidthSecondary: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    opacity: 0.9,
+  fullWidthTitle: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  fullWidthValue: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 4,
   },
-  socialContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  activeTab: {
-    backgroundColor: "#29B6F6",
-  },
-  tabText: {
+  fullWidthSubtitle: {
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: "600",
-    color: "#64748B",
+    opacity: 0.8,
   },
-  activeTabText: {
-    color: "#FFFFFF",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 16,
-  },
-  friendsContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  friendCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  friendInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  friendAvatar: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  friendDetails: {
-    flex: 1,
-  },
-  friendName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1E293B",
+  fullWidthSecondary: {
+    color: "#ffffff",
+    fontSize: 12,
+    opacity: 0.9,
     marginBottom: 2,
-  },
-  friendCity: {
-    fontSize: 14,
-    color: "#64748B",
-  },
-  friendStats: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  friendKm: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#29B6F6",
-    marginRight: 8,
-  },
-  leaderboardContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  leaderboardCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  leaderboardRank: {
-    width: 40,
-    marginRight: 12,
-  },
-  rankNumber: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#26C6DA",
-  },
-  leaderboardInfo: {
-    flex: 1,
-  },
-  leaderboardName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1E293B",
-    marginBottom: 2,
-  },
-  leaderboardLocation: {
-    fontSize: 14,
-    color: "#64748B",
-  },
-  leaderboardKm: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
   },
 });

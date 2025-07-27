@@ -8,6 +8,10 @@
 - [] Make a conetext for the lo0ged user data 
 - [] make a speed cap(if user is faster thatn x do not save the data to db) - walk only game
 - [] make a leaderboard
+- [] add users default profile pick
+- [] add image picker in the tutoriaol screen
+- [] order friends in alphabetical order 
+- [] fix share invite, copy link,....
 
 - [] v2 - mutyple cities
 

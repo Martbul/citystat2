@@ -27,6 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="citystat2"/>
+        <!-- <data android:scheme="exp+citystat2"/> -->
       </intent-filter>
     </activity>
   </application>

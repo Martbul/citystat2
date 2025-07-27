@@ -73,7 +73,7 @@ export interface Friend {
   id: string;
   userId: string;
   imageUrl: string;
-  username: string;
+  userName: string;
   friendId: string;
   createdAt: string;
   friend?: UserData;

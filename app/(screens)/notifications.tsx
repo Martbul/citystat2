@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, FlatList, SafeAreaView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Header from "@/components/ui/header";
 
 const COLORS = {
   lightBackground: "#ebebeb",
@@ -31,19 +32,8 @@ export default function NotificationsScreen() {
       style={{ backgroundColor: COLORS.lightBackground }}
     >
       <View className="px-4 py-6">
-        <View className="flex-row items-center mb-4">
-          <Ionicons
-            name="notifications-outline"
-            size={24}
-            color={COLORS.lightPrimaryText}
-          />
-          <Text
-            className="text-xl font-bold ml-2"
-            style={{ color: COLORS.lightPrimaryText }}
-          >
-            Notifications
-          </Text>
-        </View>
+           <Header title="Notifications"/>
+      
 
         <FlatList
           data={notifications}

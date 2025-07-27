@@ -13,16 +13,23 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { onBackPress } from "@/utils/navigation";
+import { useAuth } from "@clerk/clerk-expo";
+import Header from "@/components/ui/header";
 
-const AddByUsername = () => {
+export default function  AddByUsername  ()  {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingFriend, setAddingFriend] = useState(null);
   const { userData } = useUserData();
+    const { getToken } = useAuth();
+  
 
-  // Search for users by username
+    const API_BASE_URL = process.env.EXPO_PUBLIC_CITYSTAT_API_URL;
+
   const searchUsers = async () => {
+    const token = await getToken();
+
     if (!searchQuery.trim()) {
       Alert.alert("Error", "Please enter a username to search");
       return;
@@ -30,13 +37,16 @@ const AddByUsername = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/search?username=${encodeURIComponent(searchQuery)}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // Add your auth headers here
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/search?username=${encodeURIComponent(searchQuery)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to search users");
@@ -52,11 +62,11 @@ const AddByUsername = () => {
     }
   };
 
-  // Add friend functionality
   const addFriend = async (friendUser) => {
+        const token = await getToken();
+
     if (!friendUser || !userData) return;
 
-    // Check if trying to add themselves
     if (friendUser.id === userData.id) {
       Alert.alert("Error", "You cannot add yourself as a friend");
       return;
@@ -64,11 +74,11 @@ const AddByUsername = () => {
 
     setAddingFriend(friendUser.id);
     try {
-      const response = await fetch("/api/friends/add", {
+      const response = await fetch(`${API_BASE_URL}/api/friends/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add your auth headers here
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           friendId: friendUser.id,
@@ -138,19 +148,8 @@ const AddByUsername = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
-      <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-lightNeutralGray">
-        <TouchableOpacity className="absolute left-4" style={{ zIndex: 10 }}>
-          <AntDesign
-            onPress={onBackPress}
-            name="arrowleft"
-            size={28}
-            color="#333333ff"
-          />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-lightBlackText font-bold text-2xl">
-          Add by Username
-        </Text>
-      </View>
+    
+      <Header title="Add by Username"/>
 
       <View className="flex-1 p-4">
         {/* Search input */}
@@ -194,5 +193,3 @@ const AddByUsername = () => {
     </SafeAreaView>
   );
 };
-
-export default AddByUsername;

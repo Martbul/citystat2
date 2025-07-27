@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "citystat2",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.citystat2"
@@ -23,11 +22,6 @@
         "android.permission.ACCESS_FINE_LOCATION"
       ],
       "package": "com.anonymous.citystat2"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",

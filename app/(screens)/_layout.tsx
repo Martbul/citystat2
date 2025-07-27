@@ -16,39 +16,43 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
-
-         <Stack.Screen
+      <Stack.Screen
         name="martketplace"
         options={{
           headerShown: false,
         }}
       />
-         <Stack.Screen
+      <Stack.Screen
         name="friends"
         options={{
           headerShown: false,
         }}
       />
-
-       <Stack.Screen
+      <Stack.Screen
         name="editNote"
         options={{
           headerShown: false,
         }}
-      />  
+      />
       <Stack.Screen
         name="addFriends"
         options={{
           headerShown: false,
         }}
       />
-
-        <Stack.Screen
+      <Stack.Screen
         name="addByUsername"
         options={{
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="userProfile"
+        options={{
+          headerShown: false,
+        }}
+      />
+     
     </Stack>
   );
 }
