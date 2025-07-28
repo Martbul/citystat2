@@ -2,6 +2,7 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
+import InputBox from "@/components/inputBox";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -37,26 +38,23 @@ export default function Page() {
       <Text className="mb-3 text-3xl justify-center text-center text-lightBlackText mb-6 text-2xl font-bold">
         Sign in
       </Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Email"
-        className="bg-white px-4 py-3 rounded-lg font-medium mb-4 text-base border border-neutral-300"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-        placeholderTextColor="#aaa"
-      />
-      <TextInput
-        value={password}
-        placeholder="Password"
-        secureTextEntry={true}
-        className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
-        onChangeText={(password) => setPassword(password)}
-        placeholderTextColor="#aaa"
-      />
+      <View className="flex gap-2">
+        <InputBox
+          val={emailAddress}
+          valSetFunc={(emailAddress) => setEmailAddress(emailAddress)}
+          placeholderTest="Email"
+        />
+
+        <InputBox
+          val={password}
+          valSetFunc={(password) => setPassword(password)}
+          placeholderTest="Password"
+        />
+      </View>
 
       <TouchableOpacity
         onPress={onSignInPress}
-        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-1"
+        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
       >
         <Text className="text-base font-semibold text-lightBlackText">
           Continue

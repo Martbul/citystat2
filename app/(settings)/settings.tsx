@@ -5,64 +5,57 @@ import {
   TouchableOpacity,
   SafeAreaView,
   FlatList,
-  TextInput,
   StatusBar,
 } from "react-native";
-import EvilIcons from '@expo/vector-icons/EvilIcons';
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { settings } from "@/data/settingsData";
-import { useRouter } from "expo-router";
-import BackArrow from "@/components/ui/backArrows";
 import Header from "@/components/ui/header";
-
+import InputBox from "@/components/inputBox";
 
 const Settings = () => {
-  const [search, setSearch] = useState('');
-   const router = useRouter()
+  const [search, setSearch] = useState("");
 
   const filteredSettings = useMemo(() => {
     if (!search.trim()) {
       return settings;
     }
-    
-    return settings.filter(item =>
+
+    return settings.filter((item) =>
       item.label.toLowerCase().includes(search.toLowerCase().trim())
     );
   }, [search]);
 
-   const onBackPress = () => {
-    router.back()
-   }
+  const SearchHeader = useMemo(
+    () => (
+      <View className="relative mb-4">
+        <InputBox
+          val={search}
+          valSetFunc={setSearch}
+          placeholderTest="Search settings..."
+        />
 
-  const SearchHeader = useMemo(() => (
-    <View className="relative mb-4">
-      <TextInput
-        value={search}
-        placeholder="Search settings..."
-        onChangeText={setSearch}
-        className="bg-white pl-12 pr-4 py-3 rounded-lg font-medium text-base border border-neutral-300"
-        placeholderTextColor="#aaa"
-      />
-      <EvilIcons
-        name="search"
-        size={24}
-        color="#aaa"
-        style={{
-          position: 'absolute',
-          left: 12,
-          top: '50%',
-          transform: [{ translateY: -12 }],
-        }}
-      />
-    </View>
-  ), [search]);
+        <EvilIcons
+          name="search"
+          size={24}
+          color="#aaa"
+          style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: [{ translateY: -12 }],
+          }}
+        />
+      </View>
+    ),
+    [search]
+  );
 
   return (
     <>
       <SafeAreaView className="flex-1 bg-lightBackground">
         <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
-     <Header title="Settings"/>
-
+        <Header title="Settings" />
 
         <View className="flex-1">
           <FlatList
@@ -99,4 +92,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

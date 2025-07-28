@@ -3,6 +3,7 @@ import { isClerkRuntimeError } from "@clerk/clerk-expo";
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
+import InputBox from "@/components/inputBox";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -58,17 +59,13 @@ export default function SignUpScreen() {
         <Text className="mb-3 text-3xl justify-center text-center text-lightBlackText mb-6 text-2xl font-bold">
           Verify your email
         </Text>
-        <TextInput
-          value={code}
-          placeholder="Verification code"
-          onChangeText={setCode}
-          className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
-          placeholderTextColor="#aaa"
+
+        <InputBox
+          val={code}
+          valSetFunc={setCode}
+          placeholderTest="Verification code"
         />
-        {errors &&
-          errors.map((error: any, index: number) => (
-            <Text key={index}>{error.longMessage}</Text>
-          ))}
+
         <TouchableOpacity
           onPress={onVerifyPress}
           className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg"
@@ -88,26 +85,27 @@ export default function SignUpScreen() {
         Create your account
       </Text>
 
-      <TextInput
-        value={emailAddress}
-        placeholder="Email"
-        onChangeText={setEmailAddress}
-        className="bg-white px-4 py-3 rounded-lg font-medium mb-4 text-base border border-neutral-300"
-        placeholderTextColor="#aaa"
-      />
+      <View className="flex gap-2">
+        <InputBox
+          val={emailAddress}
+          valSetFunc={setEmailAddress}
+          placeholderTest="Email"
+        />
 
-      <TextInput
-        value={password}
-        placeholder="Password"
-        onChangeText={setPassword}
-        secureTextEntry
-        className="bg-white px-4 py-3 rounded-lg mb-4 font-medium text-base border border-neutral-300"
-        placeholderTextColor="#aaa"
-      />
+        <InputBox
+          val={password}
+          valSetFunc={setPassword}
+          placeholderTest="Password"
+        />
+      </View>
+      {errors &&
+        errors.map((error: any, index: number) => (
+          <Text key={index}>{error.longMessage}</Text>
+        ))}
 
       <TouchableOpacity
         onPress={onSignUpPress}
-        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-1"
+        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
       >
         <Text className="text-base font-semibold text-lightBlackText">
           Continue
