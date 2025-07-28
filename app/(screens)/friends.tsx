@@ -1,3 +1,4 @@
+import InputBox from "@/components/inputBox";
 import Header from "@/components/ui/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Friend, UserData } from "@/types/user";
@@ -90,14 +91,10 @@ export default function Friends() {
   const SearchHeader = useMemo(
     () => (
       <View className="relative mb-4">
-        <TextInput
-          value={search}
-          placeholder="Search friends..."
-          onChangeText={setSearch}
-          className="bg-white pl-12 pr-4 py-3 rounded-lg font-medium text-base border border-neutral-300"
-          placeholderTextColor="#aaa"
-          autoCorrect={false}
-          autoCapitalize="none"
+        <InputBox
+          val={search}
+          valSetFunc={setSearch}
+          placeholderTest="Search friends..."
         />
         <EvilIcons
           name="search"
@@ -137,7 +134,6 @@ export default function Friends() {
   };
 
   const renderEmptyComponent = () => {
-
     if (search.trim()) {
       return (
         <View className="flex-1 items-center justify-center py-8">
@@ -168,7 +164,11 @@ export default function Friends() {
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
-    <Header title="Friends" secondActionTitle="Add friends" secondOnPressAction={handleAddFriendPress} />
+      <Header
+        title="Friends"
+        secondActionTitle="Add friends"
+        secondOnPressAction={handleAddFriendPress}
+      />
 
       <View className="flex-1">
         <FlatList

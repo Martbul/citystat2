@@ -8,17 +8,17 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
+  Image,
 } from "react-native";
 
 import AntDesign from "@expo/vector-icons/AntDesign";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import Entypo from "@expo/vector-icons/Entypo";
+
 import { SignOutButton } from "@/components/clerk/SignOutButton";
 import { menuItems } from "@/data/sideMenuData";
+import { useUserData } from "@/Providers/UserDataProvider";
+import { Feather } from "@expo/vector-icons";
 
 const { width: screenWidth } = Dimensions.get("window");
-
 
 const SideMenuDrawer = ({
   isSideMenuDrawerOpen,
@@ -31,6 +31,8 @@ const SideMenuDrawer = ({
   overlayOpacity: Animated.Value;
   closeDrawer: () => void;
 }) => {
+  const { userData, isLoading } = useUserData();
+
   const handleMenuItemPress = (route: string) => {
     // TODO: Add navigation logic here
     console.log("Navigate to:", route);
@@ -56,9 +58,9 @@ const SideMenuDrawer = ({
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
       >
-        <SafeAreaView className="flex-1 bg-bddc62">
+        <SafeAreaView className="flex-1 bg-lightSurface">
           {/* Header */}
-          <View className="relative flex-row items-center p-4 py-6 mt-10 border-b border-gray-200 dark:border-gray-700">
+          <View className="relative flex-row items-center p-4 py-6  border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity
               onPress={closeDrawer}
               className="absolute left-4"
@@ -66,23 +68,31 @@ const SideMenuDrawer = ({
             >
               <AntDesign name="close" size={24} color="#333" />
             </TouchableOpacity>
-            <Text className="flex-1 text-center text-text dark:text-darkText font-anybodyBold text-xl">
-              Menu
+            <Text className="flex-1 text-center text-gray-900  font-anybodyBold text-xl">
+              CityStat
             </Text>
           </View>
 
           {/* User Info Section */}
           <View className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <View className="flex-row items-center">
-              <MaterialIcons name="account-circle" size={48} color="#666" />
+            <View className="flex-row items-center ">
+              <View className="flex items-center justify-center bg-lightNeutralGray rounded-full w-16 h-16">
+                <Image
+                  className="w-14 h-14"
+                  source={{ uri: userData?.imageUrl }}
+                ></Image>
+              </View>
+
               <View className="ml-3">
-                <Text className="text-text dark:text-darkText font-anybodyBold text-lg">
-                  Alex Petrov
+                <Text className="text-gray-900 font-anybodyBold text-lg">
+                  {userData?.firstName} {userData?.lastName}
                 </Text>
                 <View className="flex-row items-center mt-1">
-                  <Entypo name="location-pin" size={12} color="#666" />
+                  <View className="w-5 h-5 bg-lightSecondaryAccent rounded  flex items-center justify-center">
+                    <Feather name="hash" size={16} color="white" />
+                  </View>
                   <Text className="text-muted ml-1 text-sm font-anybody">
-                    Sofia, Bulgaria
+                    {userData?.userName}
                   </Text>
                 </View>
               </View>
@@ -98,7 +108,7 @@ const SideMenuDrawer = ({
               contentContainerStyle={{ padding: 16 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  className="flex-row items-center bg-white dark:bg-darkSurface rounded-xl px-4 py-4 mb-2 shadow-sm"
+                  className="flex-row items-center bg-lightNeutralGray rounded-xl px-4 py-4 mb-2 shadow-sm"
                   onPress={() => handleMenuItemPress(item.route)}
                 >
                   <View className="flex-row items-center flex-1">
@@ -110,11 +120,7 @@ const SideMenuDrawer = ({
                   <AntDesign name="right" size={16} color="#999" />
                 </TouchableOpacity>
               )}
-               ListFooterComponent={() => (
-                             <TouchableOpacity className="flex-row items-center justify-between bg-lightSurface rounded-xl px-4 py-4 mb-2">
-                               <SignOutButton />
-                             </TouchableOpacity>
-                           )}
+              ListFooterComponent={() => <SignOutButton />}
             />
           </View>
         </SafeAreaView>

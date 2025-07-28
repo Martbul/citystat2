@@ -2,26 +2,6 @@ import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 
 export const menuItems = [
   {
-    label: "Home",
-    icon: () => <MaterialIcons name="home" size={24} color="#333" />,
-    route: "/(tabs)/index",
-  },
-  {
-    label: "Map",
-    icon: () => <MaterialIcons name="map" size={24} color="#333" />,
-    route: "/(tabs)/mapscreen",
-  },
-  {
-    label: "Explore",
-    icon: () => <MaterialIcons name="explore" size={24} color="#333" />,
-    route: "/(tabs)/explore",
-  },
-  {
-    label: "Profile",
-    icon: () => <MaterialIcons name="person" size={24} color="#333" />,
-    route: "/(tabs)/profile",
-  },
-  {
     label: "Friends",
     icon: () => <FontAwesome5 name="user-friends" size={20} color="#333" />,
     route: "/friends",

@@ -31,12 +31,11 @@ const TutorialScreen = () => {
     //TODO: Handle loading state
   }
   const {updateUser} = useUserData()
-
   const [userDetails, setUserDetails] = useState({
     firstName: '',
     lastName: '',
     userName: '',
-    imageURL: '',
+     imageURL:"https://48htuluf59.ufs.sh/f/1NvBfFppWcZeWF2WCCi3zDay6IgjQLVNYHEhKiCJ8OeGwTon",
     completedTutorial:true
   });
 
@@ -113,35 +112,21 @@ try {
             value={userDetails.lastName}
             onChangeText={text => handleInputChange('lastName', text)}
           />
-          <TextInput
-            className="w-full border border-lightNeutralGray rounded-xl px-4 py-3 text-base bg-lightSurface text-lightBlackText mb-3"
-            placeholder="Username"
-            placeholderTextColor="#999"
-            value={userDetails.userName}
-            onChangeText={text => handleInputChange('userName', text)}
-          />
+      
         </KeyboardAvoidingView>
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="w-screen px-6 justify-center items-center bg-lightBackground"
         >
-          <Text className="text-2xl font-bold text-lightBlackText mb-4 text-center">
-            Choose your profile image
-          </Text>
-          <TextInput
-            className="w-full border border-lightNeutralGray rounded-xl px-4 py-3 text-base bg-lightSurface text-lightBlackText mb-4"
-            placeholder="Paste your image URL"
+       
+           <TextInput
+            className="w-full border border-lightNeutralGray rounded-xl px-4 py-3 text-base bg-lightSurface text-lightBlackText mb-3"
+            placeholder="Username"
             placeholderTextColor="#999"
-            value={userDetails.imageURL}
-            onChangeText={text => handleInputChange('imageURL', text)}
+            value={userDetails.userName}
+            onChangeText={text => handleInputChange('userName', text)}
           />
-          {userDetails.imageURL ? (
-            <Image
-              source={{ uri: userDetails.imageURL }}
-              className="w-28 h-28 rounded-full border-2 border-lightSecondaryAccent my-4"
-            />
-          ) : null}
           <TouchableOpacity
             onPress={handleGetStarted}
             className="bg-lightSecondaryAccent px-10 py-3 rounded-full mt-4"

@@ -1,4 +1,4 @@
-import { StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Image, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -22,7 +22,7 @@ export default function ProfileScreen() {
     return null;
   }
 
-  
+
   return (
     <View className="flex flex-col h-screen bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
@@ -42,8 +42,11 @@ export default function ProfileScreen() {
 
       <View className="absolute top-20 left-4 z-10">
         <View className="relative">
-          <View className="w-28 h-28 bg-lightPrimaryAccent rounded-full flex items-center justify-center">
-            <Text className="text-lightPrimaryText text-xl font-bold">MB</Text>
+          <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
+            <Image
+              className="w-28 h-28"
+              source={{ uri: userData?.imageUrl }}
+            ></Image>
           </View>
 
           {/* 
@@ -66,13 +69,14 @@ export default function ProfileScreen() {
           <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
             {userData?.firstName} {userData?.lastName}
           </Text>
-          <View className="flex flex-row items-center">
+          <View className="flex flex-row items-center gap-1">
+            <View className="w-6 h-6 bg-lightSecondaryAccent rounded  flex items-center justify-center">
+              <Feather name="hash" size={16} color="white" />
+            </View>
             <Text className="text-lightNeutralGray text-lg">
               {userData?.userName}
             </Text>
-            <View className="w-6 h-6 bg-lightSecondaryAccent rounded ml-2 flex items-center justify-center">
-              <Feather name="hash" size={16} color="white" />
-            </View>
+            
           </View>
         </View>
 
