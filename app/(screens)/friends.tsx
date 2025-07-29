@@ -1,8 +1,7 @@
 import InputBox from "@/components/inputBox";
 import Header from "@/components/ui/header";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { Friend, UserData } from "@/types/user";
-import { onBackPress } from "@/utils/navigation";
+import { Friend } from "@/types/user";
 import { useAuth } from "@clerk/clerk-expo";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
@@ -12,10 +11,8 @@ import {
   FlatList,
   SafeAreaView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 
@@ -95,17 +92,7 @@ export default function Friends() {
           val={search}
           valSetFunc={setSearch}
           placeholderTest="Search friends..."
-        />
-        <EvilIcons
-          name="search"
-          size={24}
-          color="#aaa"
-          style={{
-            position: "absolute",
-            left: 12,
-            top: "50%",
-            transform: [{ translateY: -12 }],
-          }}
+          icon={<EvilIcons name="search" size={28} color="#aaa" />}
         />
       </View>
     ),

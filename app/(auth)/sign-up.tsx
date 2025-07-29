@@ -4,6 +4,7 @@ import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import InputBox from "@/components/inputBox";
+import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -13,12 +14,21 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
-  const [errors, setErrors] = useState<any>();
+  const [errors, setErrors] = useState<any[]>([]);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  //TODO: Hnadle errors
+  const onEmailChange = (val: string) => {
+    setEmailAddress(val);
+    setErrors((prev) => prev.filter((e) => e.paramName !== "email_address"));
+  };
+
+  const onPasswordChange = (val: string) => {
+    setPassword(val);
+    setErrors((prev) => prev.filter((e) => e.paramName !== "password"));
+  };
 
   const onSignUpPress = async () => {
-    setErrors(undefined);
+    setErrors([]);
 
     if (!isLoaded) return;
 
@@ -26,10 +36,26 @@ export default function SignUpScreen() {
       await signUp.create({ emailAddress, password });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
-      if (isClerkRuntimeError(err)) {
-        setErrors(err.message);
+
+      // Try accessing err.errors directly (Clerk API error shape)
+      if (err?.errors && Array.isArray(err.errors)) {
+        // Map to ensure all have longMessage fallback
+        const formattedErrors = err.errors.map((e: any) => ({
+          ...e,
+          longMessage: e.longMessage || e.message || "An error occurred.",
+          paramName: e.meta?.paramName || e.paramName,
+        }));
+
+        setErrors(formattedErrors);
+      } else {
+        setErrors([
+          {
+            longMessage:
+              err?.message || "Something went wrong. Please try again.",
+          },
+        ]);
       }
     }
   };
@@ -48,15 +74,24 @@ export default function SignUpScreen() {
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
+      setErrors([{ longMessage: "Invalid verification code or other error." }]);
     }
   };
+
+  const emailErrors = errors?.filter((e) => e.paramName === "email_address");
+  const passwordErrors = errors?.filter((e) => e.paramName === "password");
+  const generalErrors = errors?.filter(
+    (e) =>
+      !e.paramName ||
+      (e.paramName !== "email_address" && e.paramName !== "password")
+  );
 
   if (pendingVerification) {
     return (
       <View className="flex-1 p-8 justify-center bg-lightBackground">
-        <Text className="mb-3 text-3xl justify-center text-center text-lightBlackText mb-6 text-2xl font-bold">
+        <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
           Verify your email
         </Text>
 
@@ -64,44 +99,72 @@ export default function SignUpScreen() {
           val={code}
           valSetFunc={setCode}
           placeholderTest="Verification code"
+          icon={<MaterialIcons name="verified-user" size={24} color="black" />}
         />
 
         <TouchableOpacity
           onPress={onVerifyPress}
-          className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg"
+          className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg mt-4"
         >
           <Text className="text-lg font-medium text-lightBlackText">
             Verify
           </Text>
         </TouchableOpacity>
-        {/* <GoogleOneTap /> */}
       </View>
     );
   }
 
+  const toggleShowPassword = () => {
+    setIsPasswordVisible((prev) => !prev);
+  };
+
   return (
-    <View className="flex-1 p-8 justify-center bg-lightBackground ">
-      <Text className="mb-3 text-3xl justify-center text-center text-lightBlackText  mb-6  text-2xl font-bold">
+    <View className="flex-1 p-8 justify-center bg-lightBackground">
+      <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
         Create your account
       </Text>
 
       <View className="flex gap-2">
         <InputBox
           val={emailAddress}
-          valSetFunc={setEmailAddress}
+          valSetFunc={onEmailChange}
           placeholderTest="Email"
+          icon={<Feather name="mail" size={20} color="black" />}
         />
+        {emailErrors?.map((error, index) => (
+          <Text key={`email-${index}`} className="text-red-500 text-sm">
+            {error.longMessage || error.message}
+          </Text>
+        ))}
 
         <InputBox
           val={password}
-          valSetFunc={setPassword}
+          valSetFunc={onPasswordChange}
           placeholderTest="Password"
+          icon={<Feather name="lock" size={24} color="black" />}
+          icon2={
+            isPasswordVisible ? (
+              <FontAwesome name="eye-slash" size={24} color="black" />
+            ) : (
+              <FontAwesome name="eye" size={24} color="black" />
+            )
+          }
+          icon2PressFunc={toggleShowPassword}
+          secureTextEntry={!isPasswordVisible}
         />
-      </View>
-      {errors &&
-        errors.map((error: any, index: number) => (
-          <Text key={index}>{error.longMessage}</Text>
+
+        {passwordErrors?.map((error, index) => (
+          <Text key={`pass-${index}`} className="text-red-500 text-sm">
+            {error.longMessage || error.message}
+          </Text>
         ))}
+      </View>
+
+      {generalErrors?.map((error, index) => (
+        <Text key={`gen-${index}`} className="text-red-500 text-sm mt-1">
+          {error.longMessage || error.message}
+        </Text>
+      ))}
 
       <TouchableOpacity
         onPress={onSignUpPress}
@@ -113,9 +176,11 @@ export default function SignUpScreen() {
       </TouchableOpacity>
 
       <View className="flex flex-row justify-center items-center mt-6">
-        <Text className="font-sm ">Already have an account?</Text>
+        <Text className="text-sm text-lightBlackText">
+          Already have an account?
+        </Text>
         <Link href="/sign-in">
-          <Text className="font-sm text-lightPrimaryAccent"> Sign in</Text>
+          <Text className="text-sm text-lightPrimaryAccent"> Sign in</Text>
         </Link>
       </View>
     </View>

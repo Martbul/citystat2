@@ -33,18 +33,7 @@ const Settings = () => {
           val={search}
           valSetFunc={setSearch}
           placeholderTest="Search settings..."
-        />
-
-        <EvilIcons
-          name="search"
-          size={24}
-          color="#aaa"
-          style={{
-            position: "absolute",
-            left: 12,
-            top: "50%",
-            transform: [{ translateY: -12 }],
-          }}
+          icon={<EvilIcons name="search" size={28} color="#aaa" />}
         />
       </View>
     ),
