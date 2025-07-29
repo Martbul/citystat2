@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, StyleSheet, Alert, Text } from "react-native";
-import Mapbox, { Camera, MapView, PointAnnotation } from "@rnmapbox/maps";
+import Mapbox, { Camera, MapView, PointAnnotation, ShapeSource } from "@rnmapbox/maps";
 import * as Location from 'expo-location';
 import * as turf from "@turf/turf";
 import { MIN_MOVEMENT_DISTANCE_METERS } from "@/constants/Location";
@@ -19,8 +19,8 @@ interface UserCoords {
 }
 
 interface Street {
+  type: "Feature"; 
   id: string;
-  name: string;
   geometry: {
     coordinates: number[][];
     type: "LineString";
@@ -31,6 +31,7 @@ interface Street {
     surface?: string;
   };
 }
+
 
 interface StreetData {
   type: "FeatureCollection";
@@ -48,7 +49,7 @@ interface VisitedStreet {
 
 
 
-const ProductionStreetTrackingMap = () => {
+const StreetTrackingMap = () => {
   const [userLocation, setUserLocation] = useState<UserCoords | null>(null);
   const [highlightedStreets, setHighlightedStreets] = useState<string[]>([]);
   const [streetData, setStreetData] = useState<StreetData | null>(null);
@@ -72,6 +73,17 @@ const ProductionStreetTrackingMap = () => {
     };
   }, []);
 
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (visitedStreets.length > 0) {
+        saveVisitedStreetsToDatabase();
+      }
+    }, 180000); // Save every 3 minutes
+
+    return () => clearInterval(interval);
+  }, [visitedStreets]);
 
 
   //TODO: Save req permisions in DB
@@ -120,7 +132,7 @@ const ProductionStreetTrackingMap = () => {
         {
           accuracy: Location.Accuracy.High,
           timeInterval: 7000, // Update every 7 seconds
-          distanceInterval: 15, // Update when user moves 5 meters
+          distanceInterval: 15, // Update when user moves 15 meters
         },
         (location) => {
           console.log('Location update received:', location);
@@ -145,72 +157,71 @@ const ProductionStreetTrackingMap = () => {
   };
 
  
-  // Fetch street data from Overpass API around user location
-  const fetchStreetData = useCallback(async (coords: UserCoords) => {
-    if (!mapToken) return;
+
+const fetchStreetData = useCallback(async (coords: UserCoords) => {
+  if (!mapToken) return;
+  
+  setIsLoadingStreets(true);
+  try {
+    // Create a bounding box around user location (roughly 1km radius)
+    const buffer = 0.01; // ~1km in degrees
+    const bbox = [
+      coords.longitude - buffer, // west
+      coords.latitude - buffer,  // south
+      coords.longitude + buffer, // east
+      coords.latitude + buffer   // north
+    ];
+
+    // Use Overpass API for OpenStreetMap data
+    const overpassQuery = `
+      [out:json][timeout:25];
+      (
+        way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified)$"]
+          (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
+      );
+      out geom;
+    `;
+
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `data=${encodeURIComponent(overpassQuery)}`,
+    });
+
+    const data = await response.json();
     
-    setIsLoadingStreets(true);
-    try {
-      // Create a bounding box around user location (roughly 1km radius)
-      const buffer = 0.01; // ~1km in degrees
-      const bbox = [
-        coords.longitude - buffer, // west
-        coords.latitude - buffer,  // south
-        coords.longitude + buffer, // east
-        coords.latitude + buffer   // north
-      ];
-
-      // Use Overpass API for OpenStreetMap data
-      const overpassQuery = `
-        [out:json][timeout:25];
-        (
-          way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified)$"]
-            (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
-        );
-        out geom;
-      `;
-
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+    // Convert Overpass data to proper GeoJSON format
+    const features: Street[] = data.elements
+      .filter((element: any) => element.type === 'way' && element.geometry)
+      .map((way: any) => ({
+        type: "Feature", // Now includes the required type property
+        id: way.id.toString(),
+        geometry: {
+          type: "LineString",
+          coordinates: way.geometry.map((node: any) => [node.lon, node.lat])
         },
-        body: `data=${encodeURIComponent(overpassQuery)}`,
-      });
+        properties: {
+          name: way.tags?.name,
+          highway: way.tags?.highway,
+          surface: way.tags?.surface,
+        }
+      }));
 
-      const data = await response.json();
-      
-      // Convert Overpass data to GeoJSON format
-      const features: Street[] = data.elements
-        .filter((element: any) => element.type === 'way' && element.geometry)
-        .map((way: any) => ({
-          id: way.id.toString(),
-          name: way.tags?.name || way.tags?.highway || `Street ${way.id}`,
-          geometry: {
-            type: "LineString",
-            coordinates: way.geometry.map((node: any) => [node.lon, node.lat])
-          },
-          properties: {
-            name: way.tags?.name,
-            highway: way.tags?.highway,
-            surface: way.tags?.surface,
-          }
-        }));
+    setStreetData({
+      type: "FeatureCollection",
+      features
+    });
 
-      setStreetData({
-        type: "FeatureCollection",
-        features
-      });
-
-      console.log(`Loaded ${features.length} streets in the area`);
-    } catch (error) {
-      console.error('Error fetching street data:', error);
-      Alert.alert('Error', 'Failed to load street data');
-    } finally {
-      setIsLoadingStreets(false);
-    }
-  }, [mapToken]);
-
+    console.log(`Loaded ${features.length} streets in the area`);
+  } catch (error) {
+    console.error('Error fetching street data:', error);
+    Alert.alert('Error', 'Failed to load street data');
+  } finally {
+    setIsLoadingStreets(false);
+  }
+}, [mapToken]);
 
 
   // Function to calculate distance between two points using Haversine formula
@@ -227,31 +238,6 @@ const ProductionStreetTrackingMap = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
     return R * c;
-  };
-
-  // Function to find the closest point on a line segment to a given point
-  const closestPointOnLineSegment = (
-    px: number, py: number,
-    x1: number, y1: number,
-    x2: number, y2: number
-  ) => {
-    const A = px - x1;
-    const B = py - y1;
-    const C = x2 - x1;
-    const D = y2 - y1;
-
-    const dot = A * C + B * D;
-    const lenSq = C * C + D * D;
-
-    if (lenSq === 0) return { x: x1, y: y1 };
-
-    let param = dot / lenSq;
-    param = Math.max(0, Math.min(1, param));
-
-    const xx = x1 + param * C;
-    const yy = y1 + param * D;
-
-    return { x: xx, y: yy };
   };
 
 
@@ -358,49 +344,6 @@ const ProductionStreetTrackingMap = () => {
     setHighlightedStreets(foundStreet ? [foundStreet] : []);
   }, [streetData, currentStreetId]);
 
-  // Handle when user enters/exits a street
-  const handleStreetChange = (newStreetId: string | null, coords: UserCoords) => {
-    const now = Date.now();
-
-    // User left a street
-    if (currentStreetId && currentStreetId !== newStreetId) {
-      const exitTime = now;
-      const entryTime = streetEntryTimeRef.current || now;
-      const duration = Math.floor((exitTime - entryTime) / 1000); // Duration in seconds
-
-      // Update the last visited street with duration
-      setVisitedStreets(prev => {
-        const updated = [...prev];
-        const lastStreet = updated[updated.length - 1];
-        if (lastStreet && lastStreet.streetId === currentStreetId) {
-          lastStreet.duration = duration;
-        }
-        return updated;
-      });
-
-      console.log(`User left street ${currentStreetId}, spent ${duration} seconds`);
-    }
-
-    // User entered a new street
-    if (newStreetId && newStreetId !== currentStreetId) {
-      const street = streetData?.features.find(s => s.id === newStreetId);
-      const streetName = street?.properties?.name || street?.name || `Unknown Street ${newStreetId}`;
-      
-      const visitedStreet: VisitedStreet = {
-        streetId: newStreetId,
-        streetName,
-        timestamp: now,
-        coordinates: coords,
-      };
-
-      setVisitedStreets(prev => [...prev, visitedStreet]);
-      streetEntryTimeRef.current = now;
-
-      console.log(`User entered street: ${streetName} (${newStreetId})`);
-    }
-
-    setCurrentStreetId(newStreetId);
-  };
 
   const saveVisitedStreetsToDatabase = async () => {
     try {
@@ -430,16 +373,51 @@ const ProductionStreetTrackingMap = () => {
     }
   };
 
-  // Auto-save to database periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (visitedStreets.length > 0) {
-        saveVisitedStreetsToDatabase();
-      }
-    }, 60000); // Save every minute
 
-    return () => clearInterval(interval);
-  }, [visitedStreets]);
+const handleStreetChange = (newStreetId: string | null, coords: UserCoords) => {
+  const now = Date.now();
+
+  // User left a street
+  if (currentStreetId && currentStreetId !== newStreetId) {
+    const exitTime = now;
+    const entryTime = streetEntryTimeRef.current || now;
+    const duration = Math.floor((exitTime - entryTime) / 1000); // Duration in seconds
+
+    // Update the last visited street with duration
+    setVisitedStreets(prev => {
+      const updated = [...prev];
+      const lastStreet = updated[updated.length - 1];
+      if (lastStreet && lastStreet.streetId === currentStreetId) {
+        lastStreet.duration = duration;
+      }
+      return updated;
+    });
+
+    console.log(`User left street ${currentStreetId}, spent ${duration} seconds`);
+  }
+
+  // User entered a new street
+  if (newStreetId && newStreetId !== currentStreetId) {
+    const street = streetData?.features.find(s => s.id === newStreetId);
+    const streetName = street?.properties?.name || `Unknown Street ${newStreetId}`;
+    
+    const visitedStreet: VisitedStreet = {
+      streetId: newStreetId,
+      streetName,
+      timestamp: now,
+      coordinates: coords,
+    };
+
+    setVisitedStreets(prev => [...prev, visitedStreet]);
+    streetEntryTimeRef.current = now;
+
+    console.log(`User entered street: ${streetName} (${newStreetId})`);
+  }
+
+  setCurrentStreetId(newStreetId);
+};
+
+
 
   // Generate street style based on highlight status
   const getStreetStyle = (streetId: string) => {
@@ -453,13 +431,14 @@ const ProductionStreetTrackingMap = () => {
     };
   };
 
-  // Get current street name
+
+
   const getCurrentStreetName = (): string => {
-    if (!currentStreetId || !streetData) return "Not on a street";
-    
-    const street = streetData.features.find(s => s.id === currentStreetId);
-    return street?.properties?.name || street?.name || "Unknown Street";
-  };
+  if (!currentStreetId || !streetData) return "Not on a street";
+  
+  const street = streetData.features.find(s => s.id === currentStreetId);
+  return street?.properties?.name || "Unknown Street";
+};
 
   return (
     <View style={styles.container}>
@@ -476,11 +455,10 @@ const ProductionStreetTrackingMap = () => {
           centerCoordinate={
             userLocation
               ? [userLocation.longitude, userLocation.latitude]
-              : [23.3219, 42.6977] // Sofia city center
+              : [23.3219, 42.6977]
           }
         />
 
-        {/* Custom user location marker */}
         {userLocation && hasLocationPermission && (
           <PointAnnotation
             id="userLocation"
@@ -494,9 +472,8 @@ const ProductionStreetTrackingMap = () => {
           </PointAnnotation>
         )}
 
-        {/* Render streets */}
         {streetData && (
-          <Mapbox.ShapeSource id="streetsSource" shape={streetData}>
+          <ShapeSource id="streetsSource" shape={streetData}>
             {streetData.features.map((street) => (
               <Mapbox.LineLayer
                 key={street.id}
@@ -508,11 +485,10 @@ const ProductionStreetTrackingMap = () => {
                 }}
               />
             ))}
-          </Mapbox.ShapeSource>
+          </ShapeSource>
         )}
       </MapView>
 
-      {/* Info panel */}
       <View style={styles.infoPanel}>
         {!hasLocationPermission && (
           <Text style={styles.permissionText}>
@@ -529,7 +505,7 @@ const ProductionStreetTrackingMap = () => {
               Lng: {userLocation.longitude.toFixed(6)}
             </Text>
             <Text style={styles.infoText}>
-              Tracking: {locationSubscription ? '✅ Active' : '❌ Inactive'}
+              Tracking: {locationSubscription ? 'Active' : 'Inactive'}
             </Text>
           </>
         )}
@@ -628,4 +604,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductionStreetTrackingMap;
+export default StreetTrackingMap;

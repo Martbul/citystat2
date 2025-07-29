@@ -31,7 +31,9 @@ const TutorialScreen = () => {
     //TODO: Handle loading state
   }
   const {updateUser} = useUserData()
-  const [userDetails, setUserDetails] = useState({
+  //TODO: Add a coice for a city to play, then set the default coords to that city center, 
+  //TODO: then fetch how many streets are in this city to calculate % coverage
+  const [userDetails, setUserDetails] = useState({  
     firstName: '',
     lastName: '',
     userName: '',
