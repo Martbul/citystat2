@@ -52,7 +52,6 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
-     
     </Stack>
   );
 }

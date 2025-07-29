@@ -1,10 +1,10 @@
 import { Text } from "@react-navigation/elements";
 import { View } from "react-native";
 
-export default function advanced() {
+export default function contentAndSocial() {
     return (
         <View>
-            <Text className="text-red-600">advanced</Text>
+            <Text>contentAndSocial</Text>
         </View>
     )
 }

@@ -1,5 +1,4 @@
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { isClerkRuntimeError } from "@clerk/clerk-expo";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -39,9 +38,7 @@ export default function SignUpScreen() {
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
 
-      // Try accessing err.errors directly (Clerk API error shape)
       if (err?.errors && Array.isArray(err.errors)) {
-        // Map to ensure all have longMessage fallback
         const formattedErrors = err.errors.map((e: any) => ({
           ...e,
           longMessage: e.longMessage || e.message || "An error occurred.",

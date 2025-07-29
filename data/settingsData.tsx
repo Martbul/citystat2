@@ -1,46 +1,72 @@
-import { FontAwesome5, Entypo, Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons, AntDesign, Feather, MaterialCommunityIcons, MaterialIcons, SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 
 export const settings = [
   {
-    label: "Get Nitro",
-    icon: () => <MaterialIcons name="speed" size={20} color="333333ff" />,
-  },
-  {
     label: "Account",
-    icon: () => <FontAwesome5 name="user-circle" size={20} color="333333ff" />,
+    icon: () => <FontAwesome name="user-circle-o" size={24} color="black" />,
+    route: "/(settings)/account",
   },
   {
     label: "Content & Social",
-    icon: () => <Entypo name="users" size={20} color="333333ff" />,
+    icon: () =><SimpleLineIcons name="social-instagram" size={24} color="black" />,
+    route: "/(settings)/contentAndSocial",
   },
   {
     label: "Data & Privacy",
-    icon: () => <Ionicons name="shield-checkmark" size={20} color="333333ff" />,
-  },
-  {
-    label: "Family Centre",
-    icon: () => <Ionicons name="people" size={20} color="333333ff" />,
-  },
-  {
-    label: "Authorised Apps",
-    icon: () => <Feather name="key" size={20} color="333333ff" />,
+    icon: () => <FontAwesome5 name="fingerprint" size={24} color="black" />,
+    route: "/(settings)/dataAndPrivacy",
   },
   {
     label: "Devices",
     icon: () => (
-      <Entypo name="tablet-mobile-combo" size={20} color="333333ff" />
+     <MaterialIcons name="devices" size={24} color="black" />
     ),
+    route: "/(settings)/devices",
   },
   {
     label: "Connections",
-    icon: () => <Entypo name="link" size={20} color="333333ff" />,
+    icon: () =><MaterialCommunityIcons name="connection" size={24} color="black" />,
+    route: "/(settings)/connections",
   },
   {
-    label: "Clips",
-    icon: () => <Feather name="film" size={20} color="333333ff" />,
+    label: "Appearance",
+    icon: () => <MaterialCommunityIcons name="palette-outline" size={24} color="black" />,
+    route: "/(settings)/appearance",
   },
   {
-    label: "Scan QR Code",
-    icon: () => <Ionicons name="qr-code" size={20} color="333333ff" />,
+    label: "Accessibility",
+    icon: () => <Ionicons name="accessibility-outline" size={24} color="black" />,
+    route: "/(settings)/accessibility",
+  },
+
+  {
+    label: "Language",
+    icon: () => <Ionicons name="language-outline" size={24} color="black" />,
+    route: "/(settings)/language",
+  },
+  {
+    label: "Notifications",
+    icon: () => <Feather name="bell" size={24} color="black" />,
+    route: "/(settings)/notifications",
+  },
+  {
+    label: "Advanced",
+    icon: () => <Ionicons name="settings-outline" size={24} color="black" />,
+    route: "/(settings)/advanced",
+  },
+  {
+    label: "Support",
+    icon: () => <AntDesign name="questioncircleo" size={24} color="black" />,
+    route: "/(settings)/support",
+  },
+  {
+    label: "Acknowledgements",
+    icon: () => <AntDesign name="exclamationcircleo" size={24} color="black" />,
+    route: "/(settings)/acknowledgements",
+  },
+  {
+    label: "What's New",
+    icon: () => <AntDesign name="infocirlceo" size={24} color="black" />,
+    route: "/(settings)/whatsNew",
   },
 ];

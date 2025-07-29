@@ -19,7 +19,7 @@ export const menuItems = [
   {
     label: "Settings",
     icon: () => <MaterialIcons name="settings" size={24} color="#333" />,
-    route: "/settings",
+    route: "/(settings)/settings",
   },
   {
     label: "Help & Support",
