@@ -1,5 +1,5 @@
 import React from "react";
-import { Redirect, Tabs, useRouter } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { Platform } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -9,20 +9,16 @@ import { useUserData } from "@/Providers/UserDataProvider";
 
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
-  const { userData} = useUserData();
+  const { userData } = useUserData();
   const router = useRouter();
 
   if (!isSignedIn) {
-    return <Redirect href={"/(auth)/sign-in"} />;
+    router.replace("/(auth)/sign-in");
   }
 
-  
-
-
-  if ( userData && !userData.completedTutorial){
-    router.replace("/(tutorial)/tutorial")
+  if (userData && !userData.completedTutorial) {
+    router.replace("/(tutorial)/tutorial");
   }
-
 
   return (
     <Tabs

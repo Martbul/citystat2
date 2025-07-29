@@ -17,6 +17,7 @@ import { SignOutButton } from "@/components/clerk/SignOutButton";
 import { menuItems } from "@/data/sideMenuData";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -32,6 +33,7 @@ const SideMenuDrawer = ({
   closeDrawer: () => void;
 }) => {
   const { userData, isLoading } = useUserData();
+  const router = useRouter()
 
   const handleMenuItemPress = (route: string) => {
     // TODO: Add navigation logic here
@@ -73,8 +75,7 @@ const SideMenuDrawer = ({
             </Text>
           </View>
 
-          {/* User Info Section */}
-          <View className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} className="p-4 border-b border-gray-200 dark:border-gray-700">
             <View className="flex-row items-center ">
               <View className="flex items-center justify-center bg-lightNeutralGray rounded-full w-16 h-16">
                 <Image
@@ -97,7 +98,7 @@ const SideMenuDrawer = ({
                 </View>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <View className="flex-1">
             {/* Menu List */}
@@ -109,7 +110,7 @@ const SideMenuDrawer = ({
               renderItem={({ item }) => (
                 <TouchableOpacity
                   className="flex-row items-center bg-lightNeutralGray rounded-xl px-4 py-4 mb-2 shadow-sm"
-                  onPress={() => handleMenuItemPress(item.route)}
+                  onPress={() => router.push(item.route)}
                 >
                   <View className="flex-row items-center flex-1">
                     {item.icon()}

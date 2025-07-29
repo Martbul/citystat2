@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  Image,
 } from "react-native";
 
 export default function Friends() {
@@ -106,11 +107,12 @@ export default function Friends() {
         className="flex-row items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-4 mb-2"
       >
         <View className="flex-row items-center space-x-4">
-          <View className="w-10 h-10 bg-gray-300 rounded-full items-center justify-center">
-            <Text className="text-xs font-bold text-gray-600">
-              {(item.userName || "U").charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <View className="w-14 h-14 bg-lightSurface rounded-full flex items-center justify-center">
+                       <Image
+                         className="w-12 h-12"
+                         source={{ uri: item.imageUrl }}
+                       ></Image>
+                     </View>
           <Text className="text-gray-800 text-base font-medium">
             {item.userName || "Unknown User"}
           </Text>

@@ -14,20 +14,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfileScreen = () => {
-  const {userData} = useUserData()
+  const { userData } = useUserData();
 
   useEffect(() => {
-    const dsName = userData?.firstName! + userData?.lastName
-    setDisplayName(dsName)
-    setUserProfilePic(userData?.imageUrl!)
+    const dsName = userData?.firstName! + userData?.lastName;
+    setDisplayName(dsName);
+    setUserProfilePic(userData?.imageUrl!);
     // setAboutMe(userData.)
-  },[userData])
-
+  }, [userData]);
 
   const [displayName, setDisplayName] = useState("");
   // const [pronouns, setPronouns] = useState("");
   const [aboutMe, setAboutMe] = useState("");
-  const [userProfilePic, setUserProfilePic] = useState("")
+  const [userProfilePic, setUserProfilePic] = useState("");
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
@@ -55,15 +54,15 @@ const EditProfileScreen = () => {
           </View>
         </View> */}
 
-              {/* //TODO: Change to flex */}
+        {/* //TODO: Change to flex */}
         <View className="absolute top-[20px] left-14 -ml-10 z-10">
           <View className="relative">
-              <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
-                       <Image
-                         className="w-28 h-28"
-                         source={{ uri: userProfilePic }}
-                       ></Image>
-                     </View>
+            <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
+              <Image
+                className="w-28 h-28"
+                source={{ uri: userProfilePic }}
+              ></Image>
+            </View>
 
             <TouchableOpacity className="absolute -top-1 -right-1 bg-darkSurface rounded-full p-2 border-2 border-lightBackground">
               <Ionicons name="pencil" size={14} color="#ffffff" />

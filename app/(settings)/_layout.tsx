@@ -38,7 +38,7 @@ export default function SettingsRoutesLayout() {
       />
 
       <Stack.Screen
-        name="dataPrivacy"
+        name="dataAndPrivacy"
         options={{
           headerShown: false,
         }}
@@ -70,6 +70,50 @@ export default function SettingsRoutesLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="account"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="contentAndSocial"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="devices"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+   <Stack.Screen
+        name="connections"
+        options={{
+          headerShown: false,
+        }}
+      />
+         <Stack.Screen
+        name="accessibility"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+          <Stack.Screen
+        name="notifications"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      
+
+      
     </Stack>
   );
 }

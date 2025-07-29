@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import {
-  ScrollView,
   SafeAreaView,
   TouchableOpacity,
   View,
@@ -20,7 +19,7 @@ import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import SideMenuDrawer from "@/components/ui/drawers/SideMenuDrawer";
 import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -94,7 +93,6 @@ export default function HomeScreen() {
     return null;
   }
 
-  // Create sections for FlatList
   const sections = [
     { id: "header", type: "header" },
     { id: "tabs", type: "tabs" },
