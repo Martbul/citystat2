@@ -11,6 +11,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
     "lint": "expo lint"
   },
   "dependencies": {
@@ -58,6 +59,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@jest/globals": "^30.0.5",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.2.1",
     "@types/react": "~19.0.10",
     "@types/react-native": "^0.72.8",
     "autoprefixer": "^10.4.21",
@@ -68,7 +71,8 @@
     "prettier-plugin-tailwindcss": "^0.5.14",
     "react-native-dotenv": "^3.4.11",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "jest-expo": "~53.0.9"
   },
   "private": true
 }
