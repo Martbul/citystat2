@@ -9,13 +9,13 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
   Alert,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Friends() {
   const [search, setSearch] = useState("");

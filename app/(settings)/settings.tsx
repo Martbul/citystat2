@@ -2,21 +2,19 @@ import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
-  SafeAreaView,
   FlatList,
   StatusBar,
 } from "react-native";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { settings } from "@/data/settingsData";
 import Header from "@/components/ui/header";
 import InputBox from "@/components/inputBox";
-import { useRouter } from "expo-router";
+import Panel from "@/components/ui/panel";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const [search, setSearch] = useState("");
-  const router = useRouter()
+  
 
   const filteredSettings = useMemo(() => {
     if (!search.trim()) {
@@ -27,6 +25,8 @@ const Settings = () => {
       item.label.toLowerCase().includes(search.toLowerCase().trim())
     );
   }, [search]);
+
+  //TODO: Make a SINGLE req for all the settings
 
   const SearchHeader = useMemo(
     () => (
@@ -55,15 +55,7 @@ const Settings = () => {
           contentContainerStyle={{ padding: 16 }}
           ListHeaderComponent={SearchHeader}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => router.push(item.route)} className="flex-row items-center justify-between bg-lightSurface border-lightContainerBg rounded-xl px-4 py-4 mb-2">
-              <View className="flex-row items-center space-x-4">
-                {item.icon()}
-                <Text className="text-lightBlackText text-base">
-                  {item.label}
-                </Text>
-              </View>
-              <AntDesign name="right" size={16} color="#999" />
-            </TouchableOpacity>
+            <Panel route={item.route} label={item.label} icon={item.icon()} />
           )}
           ListEmptyComponent={() =>
             search.trim() ? (
@@ -81,3 +73,114 @@ const Settings = () => {
 };
 
 export default Settings;
+
+
+
+
+
+// export default function Advanced() {
+//   const { userData } = useUserData();
+
+//   const [generalAvd, setGeneralAdv] = useState<any[]>([]);
+//   const [lauchPadAdv, setLauchPadAdv] = useState<any[]>([]);
+//   const [shortcutsAdv, setShortcutsAdv] = useState<any[]>([]);
+
+//   useEffect(() => {
+//     if (userData) {
+//       setGeneralAdv([
+//         {
+//           label: "Developer Mode",
+//           toggleFunc: userData?.userName,
+//         },
+//       ]);
+
+//       setLauchPadAdv([
+//         {
+//           label: "Reduced Motion",
+//         },
+//         {
+//           label: "Sync with Device Settings",
+//         },
+//         {
+//           label: "Automatically play GIFs when possible.",
+//         },
+//         {
+//           label: "Play animated emojis",
+//         },
+//       ]);
+
+//       setShortcutsAdv([
+//         {
+//           label: "Always animate",
+//           route: "/(settings)/disableA",
+//         },
+//         {
+//           label: "Animate on interaction",
+//           route: "/(settings)/deleteAccount",
+//         },
+//         {
+//           label: "Never animate",
+//           route: "/(settings)/deleteAccount",
+//         },
+//       ]);
+//     }
+//   }, [userData]);
+
+//   return (
+//     <SafeAreaView className="flex-1 bg-lightBackground">
+//       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
+//       <Header title="Advanced" />
+//       <AdvancedOptions
+//         generalAvd={generalAvd}
+//         lauchPadAdv={lauchPadAdv}
+//         shortcutsAdv={shortcutsAdv}
+//       />
+//     </SafeAreaView>
+//   );
+// }
+
+// const AdvancedOptions = ({
+//   generalAvd,
+//   lauchPadAdv,
+//   shortcutsAdv,
+// }: {
+//   generalAvd: any[];
+//   lauchPadAdv: any[];
+//   shortcutsAdv: any[];
+// }) => {
+//   const combinedData = [
+//     { type: "header", title: "General" },
+//     ...generalAvd.map((item) => ({ ...item, type: "item" })),
+//     { type: "header", title: "LaunchPad" },
+//     ...lauchPadAdv.map((item) => ({ ...item, type: "item" })),
+//     { type: "header", title: "Shortcuts" },
+//     ...shortcutsAdv.map((item) => ({ ...item, type: "item" })),
+//     ,
+//   ];
+
+//   return (
+//     <View className="flex-1 px-2">
+//       <FlatList
+//         data={combinedData}
+//         keyExtractor={(item, index) =>
+//           item.type === "header" ? `header-${item.title}` : `item-${item.label}`
+//         }
+//         contentContainerStyle={{ padding: 16 }}
+//         renderItem={({ item }) =>
+//           item.type === "header" ? (
+//             <Text className="text-lg font-semibold mt-4 mb-2 text-black">
+//               {item.title}
+//             </Text>
+//           ) : (
+//             <Panel
+//               route={item.route}
+//               label={item.label}
+//               icon={item.icon}
+//               seconLabel={item.seconLabel}
+//             />
+//           )
+//         }
+//       />
+//     </View>
+//   );
+// };
