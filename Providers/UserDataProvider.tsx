@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import {
   CityStat,
-  Friend,
   Role,
   Status,
   StreetWalk,

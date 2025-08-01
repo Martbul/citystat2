@@ -1,6 +1,6 @@
 import {
   Image,
-  SafeAreaView,
+  
   StatusBar,
   Text,
   TouchableOpacity,
@@ -13,6 +13,7 @@ import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const { userData, isLoading } = useUserData();

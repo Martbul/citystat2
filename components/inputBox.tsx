@@ -13,7 +13,6 @@ export default function InputBox(props: {
   return (
     <View style={styles.container}>
       {props.icon && <View style={styles.iconWrapper}>{props.icon}</View>}
-
       <TextInput
         value={props.val}
         placeholder={props.placeholderTest}
@@ -22,7 +21,6 @@ export default function InputBox(props: {
         style={styles.input}
         secureTextEntry={props.secureTextEntry}
       />
-
       {props.icon2 && (
         <TouchableOpacity
           onPress={props.icon2PressFunc}
@@ -43,18 +41,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#d4d4d4",
-    paddingVertical: 4,
+    paddingVertical: 8,
     paddingHorizontal: 12,
+    minHeight: 44,
   },
   iconWrapper: {
     marginRight: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#000",
+    paddingVertical: 0,
+    textAlignVertical: "center",
   },
   icon2Wrapper: {
     marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

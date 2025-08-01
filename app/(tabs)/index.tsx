@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import {
-  SafeAreaView,
   TouchableOpacity,
   View,
   Text,
@@ -20,6 +19,8 @@ import SideMenuDrawer from "@/components/ui/drawers/SideMenuDrawer";
 import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -102,7 +103,7 @@ export default function HomeScreen() {
   const renderSection = ({ item }:{item:any}) => {
     if (item.type === "header") {
       return (
-        <View className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-2xl">
+        <View className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-b-2xl">
           {/* Header Top */}
           <View className="flex-row justify-between items-center">
             <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">

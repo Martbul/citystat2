@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useAuth } from "@clerk/clerk-expo";
 import Header from "@/components/ui/header";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddByUsername() {
   const [searchQuery, setSearchQuery] = useState("");

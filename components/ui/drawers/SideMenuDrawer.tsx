@@ -18,6 +18,7 @@ import { menuItems } from "@/data/sideMenuData";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Panel from "../panel";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -33,7 +34,7 @@ const SideMenuDrawer = ({
   closeDrawer: () => void;
 }) => {
   const { userData, isLoading } = useUserData();
-  const router = useRouter()
+  const router = useRouter();
 
   const handleMenuItemPress = (route: string) => {
     // TODO: Add navigation logic here
@@ -55,13 +56,11 @@ const SideMenuDrawer = ({
         />
       </Animated.View>
 
-      {/* Drawer */}
       <Animated.View
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
       >
         <SafeAreaView className="flex-1 bg-lightSurface">
-          {/* Header */}
           <View className="relative flex-row items-center p-4 py-6  border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity
               onPress={closeDrawer}
@@ -75,7 +74,10 @@ const SideMenuDrawer = ({
             </Text>
           </View>
 
-          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/profile")}
+            className="p-4 border-b border-gray-200 dark:border-gray-700"
+          >
             <View className="flex-row items-center ">
               <View className="flex items-center justify-center bg-lightNeutralGray rounded-full w-16 h-16">
                 <Image
@@ -101,25 +103,18 @@ const SideMenuDrawer = ({
           </TouchableOpacity>
 
           <View className="flex-1">
-            {/* Menu List */}
             <FlatList
               scrollEnabled={true}
               data={menuItems}
               keyExtractor={(item) => item.label}
               contentContainerStyle={{ padding: 16 }}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="flex-row items-center bg-lightNeutralGray rounded-xl px-4 py-4 mb-2 shadow-sm"
-                  onPress={() => router.push(item.route)}
-                >
-                  <View className="flex-row items-center flex-1">
-                    {item.icon()}
-                    <Text className="text-text dark:text-darkText text-base font-anybody ml-4">
-                      {item.label}
-                    </Text>
-                  </View>
-                  <AntDesign name="right" size={16} color="#999" />
-                </TouchableOpacity>
+                <Panel
+                border={true}
+                  label={item.label}
+                  icon={item.icon()}
+                  route={item.route}
+                />
               )}
               ListFooterComponent={() => <SignOutButton />}
             />
