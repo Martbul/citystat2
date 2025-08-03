@@ -31,12 +31,12 @@ export default function Account() {
         },
         {
           label: "Email",
-          route: "/(settings)/email",
+          route: "/(settings)/account",
           seconLabel: userData?.email,
         },
         {
           label: "Phone",
-          route: "/(settings)/phone",
+          route: `/(settings)/editSetting?data=${userData?.phoneNumber}&header=Phone`,
           seconLabel: userData?.phoneNumber,
         },
       ]);
@@ -102,18 +102,13 @@ const Security = ({
   accountManagement: any[];
   signInManagement: any[];
 }) => {
- 
-
-   return (
-    <ScrollView 
-      className="flex-1" 
+  return (
+    <ScrollView
+      className="flex-1"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 32 }}
     >
-      <SettingsSection
-        title="Account Information"
-        data={accountInfo}
-      />
+      <SettingsSection title="Account Information" data={accountInfo} />
 
       <SettingsSection
         title="Security & Sign-in"
@@ -130,7 +125,6 @@ const Security = ({
   );
 };
 
-
 const Standing = () => {
   return (
     <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
@@ -140,7 +134,8 @@ const Standing = () => {
           Account Standing
         </Text>
         <Text className="text-base text-gray-600 leading-6">
-          Monitor your account status, compliance metrics, and standing within the platform.
+          Monitor your account status, compliance metrics, and standing within
+          the platform.
         </Text>
       </View>
 

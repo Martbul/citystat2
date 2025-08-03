@@ -19,6 +19,8 @@
 // import { useRouter } from "expo-router";
 // import { useAuth } from "@clerk/clerk-expo";
 
+import { Text, View } from "react-native";
+
 // export default function AddFriends() {
 //   const [loading, setLoading] = useState(false);
 //   const { userData } = useUserData();
@@ -192,3 +194,10 @@
 //     </SafeAreaView>
 //   );
 // }
+
+
+export default function AddFriends() {
+    <View>
+        <Text className="text-gray-100">Building...</Text>
+    </View>
+}

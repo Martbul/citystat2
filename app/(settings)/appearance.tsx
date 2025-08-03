@@ -48,11 +48,6 @@ export default function Appearance() {
           route: "/(settings)/fontStyle",
           seconLabel: "System Default",
         },
-        {
-          label: "Display Density",
-          route: "/(settings)/displayDensity",
-          seconLabel: "Comfortable",
-        },
       ]);
 
       setPreviewSettings([

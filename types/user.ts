@@ -1,3 +1,4 @@
+import { Settings } from "react-native";
 import { Language, Theme } from "./settings";
 
 export enum Status {
@@ -41,13 +42,7 @@ export interface CityStat {
   updatedAt: string;
 }
 
-export interface Settings {
-  id: string;
-  theme: Theme;
-  language: Language;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export interface UserData {
   id: string; 
@@ -82,6 +77,7 @@ export interface Friend {
 
 export interface UserDataContextType {
   userData: UserData | null;
+  setUserData:any;
   isLoading: boolean;
   error: string | null;
 

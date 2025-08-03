@@ -12,6 +12,8 @@
 // import { useAuth } from "@clerk/clerk-expo";
 // import AntDesign from "@expo/vector-icons/AntDesign";
 
+import { Text, View } from "react-native";
+
 // export default function InviteHandler() {
 //   const [loading, setLoading] = useState(false);
 //   const [inviteData, setInviteData] = useState(null);
@@ -232,3 +234,11 @@
 //     </SafeAreaView>
 //   );
 // }
+
+
+
+export default function Invite() {
+    <View>
+        <Text className="text-gray-100">Building...</Text>
+    </View>
+}

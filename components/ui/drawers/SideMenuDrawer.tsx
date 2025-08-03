@@ -6,7 +6,6 @@ import {
   Animated,
   Dimensions,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   Image,
 } from "react-native";
@@ -19,6 +18,7 @@ import { useUserData } from "@/Providers/UserDataProvider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Panel from "../panel";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -60,7 +60,8 @@ const SideMenuDrawer = ({
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
       >
-        <SafeAreaView className="flex-1 bg-lightSurface">
+        <SafeAreaView
+         className="flex-1 bg-lightSurface">
           <View className="relative flex-row items-center p-4 py-6  border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity
               onPress={closeDrawer}

@@ -7,6 +7,14 @@ export interface Settings {
   updatedAt: string;
 }
 
+// export interface Settings {
+//   id: string;
+//   theme: Theme;
+//   language: Language;
+//   createdAt: string;
+//   updatedAt: string;
+// }
+
 
 export enum Theme {
   Light = 'light',

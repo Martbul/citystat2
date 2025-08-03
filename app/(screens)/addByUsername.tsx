@@ -13,6 +13,7 @@ import { useUserData } from "@/Providers/UserDataProvider";
 import { useAuth } from "@clerk/clerk-expo";
 import Header from "@/components/ui/header";
 import { SafeAreaView } from "react-native-safe-area-context";
+import InputEditor from "@/components/ui/inputEditor";
 
 export default function AddByUsername() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,7 +146,7 @@ export default function AddByUsername() {
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
-      <Header title="Add by Username" />
+      <Header title="Add by Username"  secondActionTitle="Search" secondOnPressAction={searchUsers}/>
 
       <View className="flex-1 p-4">
         {/* Search input */}
@@ -171,6 +172,8 @@ export default function AddByUsername() {
             )}
           </TouchableOpacity>
         </View>
+
+        <InputEditor />
 
         {/* Search results */}
         {searchResults.length > 0 ? (

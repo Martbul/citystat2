@@ -1,9 +1,14 @@
 import Header from "@/components/ui/header";
+import InputEditor from "@/components/ui/inputEditor";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { useImageUploader } from "@/utils/uploadthing";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
+import { openSettings } from "expo-linking";
 import {
+  Alert,
   Image,
+  Pressable,
   ScrollView,
   StatusBar,
   Text,
@@ -17,16 +22,32 @@ const EditProfileScreen = () => {
   const { userData } = useUserData();
 
   useEffect(() => {
-    const dsName = userData?.firstName! + userData?.lastName;
+    const dsName = userData?.firstName! + " "+userData?.lastName;
     setDisplayName(dsName);
     setUserProfilePic(userData?.imageUrl!);
-    // setAboutMe(userData.)
+    // setAboutMe(userData.
   }, [userData]);
 
   const [displayName, setDisplayName] = useState("");
   // const [pronouns, setPronouns] = useState("");
   const [aboutMe, setAboutMe] = useState("");
   const [userProfilePic, setUserProfilePic] = useState("");
+
+  const abtMeClearData = () => {
+    setAboutMe("");
+  };
+  const displayNameClearData = () => {
+    setDisplayName("");
+  };
+
+   const { openImagePicker, isUploading } = useImageUploader("imageUploader", {
+    /**
+     * Any props here are forwarded to the underlying `useUploadThing` hook.
+     * Refer to the React API reference for more info.
+     */
+    onClientUploadComplete: () => Alert.alert("Upload Completed"),
+    onUploadError: (error) => Alert.alert("Upload Error", error.message),
+  });
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
@@ -53,7 +74,26 @@ const EditProfileScreen = () => {
             </View>
           </View>
         </View> */}
-
+ <Pressable
+        onPress={() => {
+          openImagePicker({
+            input, // Matches the input schema from the FileRouter endpoint
+            source: "library", // or "camera"
+            onInsufficientPermissions: () => {
+              Alert.alert(
+                "No Permissions",
+                "You need to grant permission to your Photos to use this",
+                [
+                  { text: "Dismiss" },
+                  { text: "Open Settings", onPress: openSettings },
+                ],
+              );
+            },
+          })
+        }}
+      >
+        <Text>Select Image</Text>
+      </Pressable>
         {/* //TODO: Change to flex */}
         <View className="absolute top-[20px] left-14 -ml-10 z-10">
           <View className="relative">
@@ -81,7 +121,7 @@ const EditProfileScreen = () => {
             </TouchableOpacity>
           </View> */}
 
-          <View className="mb-6">
+          {/* <View className="mb-6">
             <Text className="text-lightBlackText font-anybody mb-2">
               Display Name
             </Text>
@@ -96,10 +136,21 @@ const EditProfileScreen = () => {
                 <Ionicons name="close" size={20} color="#cecece" />
               </TouchableOpacity>
             </View>
+          </View> */}
+
+          <View className="flex my-2">
+            <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
+              Display Name
+            </Text>
+            <InputEditor
+              data={displayName}
+              clearDataFunc={displayNameClearData}
+              setDataFunc={setDisplayName}
+            />
           </View>
 
           {/* About Me */}
-          <View className="mb-6">
+          {/* <View className="mb-6">
             <Text className="text-lightBlackText font-anybody mb-2">
               About Me
             </Text>
@@ -112,8 +163,21 @@ const EditProfileScreen = () => {
               placeholderTextColor="#cecece"
               textAlignVertical="top"
             />
-          </View>
+          </View> */}
 
+       
+
+
+  <View className="flex my-2">
+            <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
+             About Me
+            </Text>
+              <InputEditor
+            data={aboutMe}
+            clearDataFunc={abtMeClearData}
+            setDataFunc={setAboutMe}
+          />
+          </View>
           {/*//TODO: v2 add Avatar Decoration */}
           {/* <View className="mb-6">
             <Text className="text-lightBlackText font-anybody mb-2">

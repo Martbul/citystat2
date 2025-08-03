@@ -1,39 +1,49 @@
-import {
-  Image,
-  
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StatusBar, Text, TouchableOpacity, View, ScrollView, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PrimaryButton from "@/components/ui/primaryButton";
+import { useState, useCallback } from "react";
 
 export default function ProfileScreen() {
-  const { userData, isLoading } = useUserData();
+  const { userData, isLoading, refreshUserData } = useUserData();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
-  if (isLoading) {
-    return(
-      <View>
-        <Text>Loading profile...</Text>
-      </View>
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+    
+      await refreshUserData?.();
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUserData]);
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView>
+        <View>
+          <Text className="text-gray-100">Loading profile...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground">
+    <SafeAreaView className="flex-1 bg-lightBackground" >
       <View className="flex flex-col h-screen bg-lightBackground">
         <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
 
         <View className="flex flex-row items-center justify-end gap-3 items-center px-4 pt-8 pb-9 bg-lightNeutralGray">
-          <TouchableOpacity className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
+          <TouchableOpacity  className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
             <FontAwesome5 name="store" size={18} color="white" />
           </TouchableOpacity>
 
@@ -69,7 +79,18 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View> */}
 
-        <View className="flex-1 overflow-y-auto px-4 pb-20">
+        <ScrollView 
+          className="flex-1 px-4 pb-20"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#your-primary-color']} // Android
+              tintColor="#your-primary-color" // iOS
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        >
           <View className="mt-20">
             <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
               {userData?.firstName} {userData?.lastName}
@@ -84,26 +105,28 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <TouchableOpacity
-            className="w-full bg-lightPrimaryAccent mt-6 py-3 rounded-lg flex flex-row items-center justify-center gap-2 font-semibold"
-            onPress={() => router.push("/(settings)/editProfile")}
-          >
-            <FontAwesome name="pencil" size={24} color="#111111" />
-            <Text className="text-lightPrimaryText font-semibold">
-              Edit Profile
-            </Text>
-          </TouchableOpacity>
-
+          <PrimaryButton heading="Edit Profile" icon={<FontAwesome name="pencil" size={24} color="#111111" />} routingPath={"/(settings)/editProfile" as RelativePathString}/>
+          
           <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
             <Text className="text-lightNeutralGray text-lg font-medium mb-3">
               Member Since
             </Text>
-            <View className="flex items-center">
-              {/*//TODO : ADD YOUR LOGO*/}
-              {/* <View className="w-6 h-6 bg-lightPrimaryAccent rounded flex items-center justify-center mr-3">
-              <Text className="text-lightPrimaryText text-sm">D</Text>
-            </View> */}
-              <Text className="text-lightPrimaryText text-lg">29 Jan 2021</Text>
+            <View className="flex flex-row items-center">
+              <View className="w-10 h-10 rounded flex items-center justify-center mr-3">
+                <Image
+                  className="w-16 h-16 text-lightPrimaryText text-sm"
+                  source={require("../../assets/images/logo_spash_screen.png")}
+                ></Image>
+              </View>
+              <Text className="text-lightPrimaryText text-lg">
+                {userData?.createdAt
+                  ? new Date(userData.createdAt).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "Date not available"}
+              </Text>
             </View>
           </View>
 
@@ -122,12 +145,17 @@ export default function ProfileScreen() {
             onPress={() => router.push("/(screens)/editNote")}
             className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText"
           >
-            <Text className="text-lightNeutralGray text-lg">
-              {"Note (only visible to you)"}
+            <Text
+              className={`text-lg ${
+                userData?.note ? "text-neutral-800" : "text-lightNeutralGray"
+              }`}
+            >
+              {userData?.note ? userData.note : "Note (only visible to you)"}
             </Text>
+
             <FontAwesome name="sticky-note-o" size={24} color="#111111" />
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
