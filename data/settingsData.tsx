@@ -28,11 +28,11 @@ export const settings = [
     icon: () => <MaterialCommunityIcons name="palette-outline" size={24} color="black" />,
     route: "/(settings)/appearance",
   },
-  {
-    label: "Accessibility",
-    icon: () => <Ionicons name="accessibility-outline" size={24} color="black" />,
-    route: "/(settings)/accessibility",
-  },
+  // {
+  //   label: "Accessibility",
+  //   icon: () => <Ionicons name="accessibility-outline" size={24} color="black" />,
+  //   route: "/(settings)/accessibility",
+  // },
   // {
   //   label: "Language",
   //   icon: () => <Ionicons name="language-outline" size={24} color="black" />,

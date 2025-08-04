@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Panel from '@/components/ui/panel';
 
-interface SettingsSectionProps {
+interface SettingsRoutingSectionProps {
   title: string;
   data: Array<{
     label: string;
@@ -15,7 +15,7 @@ interface SettingsSectionProps {
   cardStyle?: string;
 }
 
-const SettingsSection: React.FC<SettingsSectionProps> = ({
+const SettingsRoutingSection: React.FC<SettingsRoutingSectionProps> = ({
   title,
   data,
   containerStyle = "mt-6 mx-4",
@@ -49,4 +49,4 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   );
 };
 
-export default SettingsSection;
+export default SettingsRoutingSection;

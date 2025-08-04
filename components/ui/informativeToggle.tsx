@@ -1,14 +1,8 @@
+import { Entypo, Feather } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  Easing,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, Animated, Easing } from "react-native";
 
-export default function WitchyToggle(props: {
+export default function InformativeToggle(props: {
   heading: string;
   description?: string;
   toggleFunc: () => void;
@@ -33,65 +27,46 @@ export default function WitchyToggle(props: {
     outputRange: ["0deg", "180deg"],
   });
 
-  const backgroundColor = toggled ? "#7B2CBF" : "#1E1B4B"; // purple hues
-
-  const symbol = toggled ? "🜛" : "✕"; // ✕ off, 🜛 on (alchemy rune)
-
   return (
-    <View style={{ padding: 20 }}>
-      <View style={styles.row}>
-        <Text style={styles.heading}>{props.heading}</Text>
-        <TouchableOpacity onPress={toggle} activeOpacity={0.8}>
-          <Animated.View
-            style={[
-              styles.orb,
-              {
-                backgroundColor,
-                transform: [{ rotateY }],
-                shadowColor: toggled ? "#E0AAFF" : "#A78BFA",
-              },
-            ]}
-          >
-            <Text style={styles.symbol}>{symbol}</Text>
-          </Animated.View>
-        </TouchableOpacity>
+    <View className="mx-3 my-2">
+      <View className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <View className="bg-lightSurface rounded-3xl">
+          <View className="py-4 px-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex w-3/4">
+                <Text className="text-lightBlackText text-base">
+                  {props.heading}
+                </Text>
+                {props.description && (
+                  <Text className="text-lightPrimaryText text-sm mt-2">
+                    {props.description}
+                  </Text>
+                )}
+              </View>
+
+              <TouchableOpacity onPress={toggle} activeOpacity={0.8}>
+                <Animated.View
+                  style={{
+                    transform: [{ rotateY }],
+                  }}
+                  className={`w-12 h-12 rounded-full items-center justify-center ${
+                    toggled ? "bg-lightPrimaryAccent" : "bg-lightBlackText"
+                  } shadow-md`}
+                >
+                  {/* Icon gets flipped back with scaleX: -1 if needed */}
+                  <View style={{ transform: [{ scaleX: toggled ? -1 : 1 }] }}>
+                    {toggled ? (
+                      <Entypo name="check" size={24} color="black" />
+                    ) : (
+                      <Feather name="x" size={24} color="white" />
+                    )}
+                  </View>
+                </Animated.View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </View>
-      {props.description && (
-        <Text style={styles.description}>{props.description}</Text>
-      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#3F3CBB",
-  },
-  description: {
-    marginTop: 10,
-    color: "#6B7280",
-    fontSize: 14,
-  },
-  orb: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  symbol: {
-    fontSize: 22,
-    color: "#FFF1F2",
-  },
-});

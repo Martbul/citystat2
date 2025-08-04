@@ -1,15 +1,9 @@
 import Header from "@/components/ui/header";
 import InformativeToggle from "@/components/ui/informativeToggle";
-import Panel from "@/components/ui/panel";
-import SettingsSection from "@/components/ui/settingsSection";
+import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
-import {
-  StatusBar,
-  Text,
-  View,
-  ScrollView,
-} from "react-native";
+import { ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DataAndPrivacy() {
@@ -67,20 +61,20 @@ export default function DataAndPrivacy() {
     <SafeAreaView className="flex-1 bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Data & Privacy" />
-      
-      <ScrollView 
-        className="flex-1" 
+
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
         {/* Data Preferences Section */}
         <DataPreferencesSection dataPreferences={dataPreferences} />
-        
+
         {/* Privacy Controls Section */}
         <PrivacyControlsSection />
-        
+
         {/* Policies Section */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="Policies & Disclosures"
           data={policiesData}
           containerStyle="mt-8 mx-4"
@@ -90,7 +84,11 @@ export default function DataAndPrivacy() {
   );
 }
 
-const DataPreferencesSection = ({ dataPreferences }: { dataPreferences: any[] }) => {
+const DataPreferencesSection = ({
+  dataPreferences,
+}: {
+  dataPreferences: any[];
+}) => {
   const toggle = (index: number) => {
     console.log(`Toggling preference ${index}`);
     // Add your toggle logic here
@@ -103,8 +101,8 @@ const DataPreferencesSection = ({ dataPreferences }: { dataPreferences: any[] })
       </Text>
       <View className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {dataPreferences.map((item, index) => (
-          <View 
-            className={`bg-lightSurface ${index === 0 ? 'rounded-t-3xl' : ''} ${index === dataPreferences.length - 1 ? 'rounded-b-3xl' : ''}`} 
+          <View
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === dataPreferences.length - 1 ? "rounded-b-3xl" : ""}`}
             key={item.label}
           >
             <InformativeToggle
@@ -128,22 +126,19 @@ const PrivacyControlsSection = () => {
     {
       label: "Download Your Data",
       route: "/(settings)/downloadData",
-      seconLabel: "Export all your data",
     },
     {
       label: "Delete Your Data",
       route: "/(settings)/deleteData",
-      seconLabel: "Permanently remove your data",
     },
     {
       label: "Data Retention Settings",
       route: "/(settings)/dataRetention",
-      seconLabel: "Manage how long we keep your data",
     },
   ];
 
   return (
-    <SettingsSection
+    <SettingsRoutingSection
       title="Privacy Controls"
       data={privacyControls}
       containerStyle="mt-8 mx-4"

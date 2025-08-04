@@ -1,16 +1,19 @@
 import Header from "@/components/ui/header";
-import Panel from "@/components/ui/panel";
 import InformativeToggle from "@/components/ui/informativeToggle";
-import SettingsSection from "@/components/ui/settingsSection";
+import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
-import { StatusBar, ScrollView, View, Text } from "react-native";
+import { ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Notifications() {
   const { userData } = useUserData();
-  const [appNotificationToggles, setAppNotificationToggles] = useState<any[]>([]);
-  const [systemNotificationSettings, setSystemNotificationSettings] = useState<any[]>([]);
+  const [appNotificationToggles, setAppNotificationToggles] = useState<any[]>(
+    []
+  );
+  const [systemNotificationSettings, setSystemNotificationSettings] = useState<
+    any[]
+  >([]);
   const [contentNotifications, setContentNotifications] = useState<any[]>([]);
   const [reactionNotifications, setReactionNotifications] = useState<any[]>([]);
 
@@ -104,33 +107,33 @@ export default function Notifications() {
     <SafeAreaView className="flex-1 bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Notifications" />
-      
-      <ScrollView 
-        className="flex-1" 
+
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
         {/* App Notification Toggles */}
-        <AppNotificationTogglesSection 
-          appNotificationToggles={appNotificationToggles} 
+        <AppNotificationTogglesSection
+          appNotificationToggles={appNotificationToggles}
         />
 
         {/* System Notification Settings */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="System Notifications"
           data={systemNotificationSettings}
           containerStyle="mt-8 mx-4"
         />
 
         {/* Content Notifications */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="Content Notifications"
           data={contentNotifications}
           containerStyle="mt-8 mx-4"
         />
 
         {/* Reaction Notifications */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="Reaction Notifications"
           data={reactionNotifications}
           containerStyle="mt-8 mx-4"
@@ -143,10 +146,10 @@ export default function Notifications() {
   );
 }
 
-const AppNotificationTogglesSection = ({ 
-  appNotificationToggles 
-}: { 
-  appNotificationToggles: any[] 
+const AppNotificationTogglesSection = ({
+  appNotificationToggles,
+}: {
+  appNotificationToggles: any[];
 }) => {
   const toggle = (index: number) => {
     console.log(`Toggling notification setting ${index}`);
@@ -160,8 +163,8 @@ const AppNotificationTogglesSection = ({
       </Text>
       <View className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {appNotificationToggles.map((item, index) => (
-          <View 
-            className={`bg-lightSurface ${index === 0 ? 'rounded-t-3xl' : ''} ${index === appNotificationToggles.length - 1 ? 'rounded-b-3xl' : ''}`} 
+          <View
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === appNotificationToggles.length - 1 ? "rounded-b-3xl" : ""}`}
             key={item.label}
           >
             <InformativeToggle
@@ -205,7 +208,7 @@ const AdvancedNotificationSettings = () => {
   ];
 
   return (
-    <SettingsSection
+    <SettingsRoutingSection
       title="Advanced Settings"
       data={advancedSettings}
       containerStyle="mt-8 mx-4"

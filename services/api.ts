@@ -1,3 +1,4 @@
+// services/api.ts
 import { UserData, CityStat, StreetWalk } from "@/types/user";
 import { Settings, Theme, Language } from "@/types/settings";
 
@@ -20,25 +21,50 @@ class ApiService {
       ...fetchOptions.headers,
     };
 
+    console.log(`Making request to: ${this.baseUrl}${endpoint}`);
+    
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...fetchOptions,
       headers,
     });
 
+    console.log(`Response status: ${response.status}`);
+
     if (!response.ok) {
+      // Read response text once and reuse it
+      let errorText: string;
+      try {
+        errorText = await response.text();
+      } catch (readError) {
+        errorText = `HTTP ${response.status} ${response.statusText}`;
+      }
+
+      console.log(`Error response: ${errorText}`);
+
       if (response.status === 404) {
         throw new Error("USER_NOT_FOUND");
       }
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
-    return response.json();
+    // Read response JSON once
+    try {
+      const data = await response.json();
+      console.log(`Success response:`, data);
+      return data;
+    } catch (jsonError) {
+      console.error("Failed to parse JSON response:", jsonError);
+      throw new Error("Invalid JSON response from server");
+    }
   }
 
   // User API methods
   async fetchUser(token: string, retries = 3): Promise<UserData> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
+        console.log(`Fetch user attempt ${attempt + 1}/${retries + 1}`);
+        
         return await this.makeRequest<UserData>("/api/user", {
           method: "GET",
           token,
@@ -46,12 +72,16 @@ class ApiService {
       } catch (err) {
         const isLastAttempt = attempt === retries;
         
+        console.warn(`Attempt ${attempt + 1} failed:`, err);
+        
         if (isLastAttempt) {
           throw err;
         }
 
         // Exponential backoff
-        await new Promise(res => setTimeout(res, 1000 * Math.pow(2, attempt)));
+        const delay = 1000 * Math.pow(2, attempt);
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(res => setTimeout(res, delay));
       }
     }
     
@@ -59,6 +89,8 @@ class ApiService {
   }
 
   async createUser(userData: Partial<UserData>, token: string): Promise<UserData> {
+    console.log("Creating user with data:", userData);
+    
     return this.makeRequest<UserData>("/api/user", {
       method: "POST",
       token,
@@ -71,6 +103,15 @@ class ApiService {
       method: "PUT",
       token,
       body: JSON.stringify(updates),
+    });
+  }
+
+  // Generic field update method
+  async updateUserField(field: string, value: any, token: string): Promise<UserData> {
+    return this.makeRequest<UserData>(`/api/settings/${field}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ [field]: value }),
     });
   }
 
@@ -117,5 +158,4 @@ class ApiService {
   }
 }
 
-// Export singleton instance
 export const apiService = new ApiService();

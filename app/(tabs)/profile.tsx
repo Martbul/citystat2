@@ -1,6 +1,13 @@
-import { Image, StatusBar, Text, TouchableOpacity, View, ScrollView, RefreshControl } from "react-native";
+import {
+  Image,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -18,10 +25,9 @@ export default function ProfileScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-    
       await refreshUserData?.();
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      console.error("Error refreshing profile:", error);
     } finally {
       setRefreshing(false);
     }
@@ -38,14 +44,14 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground" >
+    <SafeAreaView className="flex-1 bg-lightBackground">
       <View className="flex flex-col h-screen bg-lightBackground">
         <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
 
         <View className="flex flex-row items-center justify-end gap-3 items-center px-4 pt-8 pb-9 bg-lightNeutralGray">
-          <TouchableOpacity  className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
+          {/* <TouchableOpacity  className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
             <FontAwesome5 name="store" size={18} color="white" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
@@ -79,13 +85,13 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View> */}
 
-        <ScrollView 
+        <ScrollView
           className="flex-1 px-4 pb-20"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#your-primary-color']} // Android
+              colors={["#your-primary-color"]} // Android
               tintColor="#your-primary-color" // iOS
             />
           }
@@ -105,8 +111,12 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <PrimaryButton heading="Edit Profile" icon={<FontAwesome name="pencil" size={24} color="#111111" />} routingPath={"/(settings)/editProfile" as RelativePathString}/>
-          
+          <PrimaryButton
+            heading="Edit Profile"
+            icon={<FontAwesome name="pencil" size={24} color="#111111" />}
+            routingPath={"/(settings)/editProfile" as RelativePathString}
+          />
+
           <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
             <Text className="text-lightNeutralGray text-lg font-medium mb-3">
               Member Since

@@ -1,17 +1,16 @@
 import Header from "@/components/ui/header";
-import Panel from "@/components/ui/panel";
 import InformativeToggle from "@/components/ui/informativeToggle";
-import SettingsSection from "@/components/ui/settingsSection";
+import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
-import { StatusBar, ScrollView, View, Text } from "react-native";
+import { ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Advanced() {
   const { userData } = useUserData();
   const [developerToggles, setDeveloperToggles] = useState<any[]>([]);
   const [performanceSettings, setPerformanceSettings] = useState<any[]>([]);
-  const [experimentalFeatures, setExperimentalFeatures] = useState<any[]>([]);
+  // const [experimentalFeatures, setExperimentalFeatures] = useState<any[]>([]);
   const [debugSettings, setDebugSettings] = useState<any[]>([]);
 
   useEffect(() => {
@@ -57,28 +56,28 @@ export default function Advanced() {
         },
       ]);
 
-      setExperimentalFeatures([
-        {
-          label: "Beta Features",
-          route: "/(settings)/betaFeatures",
-          seconLabel: "Try new features before release",
-        },
-        {
-          label: "Advanced Gestures",
-          route: "/(settings)/advancedGestures",
-          seconLabel: "Enable experimental gesture controls",
-        },
-        {
-          label: "AI Enhancements",
-          route: "/(settings)/aiEnhancements",
-          seconLabel: "Test AI-powered features",
-        },
-        {
-          label: "Laboratory",
-          route: "/(settings)/laboratory",
-          seconLabel: "Experimental features testing ground",
-        },
-      ]);
+      // setExperimentalFeatures([
+      //   {
+      //     label: "Beta Features",
+      //     route: "/(settings)/betaFeatures",
+      //     seconLabel: "Try new features before release",
+      //   },
+      //   {
+      //     label: "Advanced Gestures",
+      //     route: "/(settings)/advancedGestures",
+      //     seconLabel: "Enable experimental gesture controls",
+      //   },
+      //   {
+      //     label: "AI Enhancements",
+      //     route: "/(settings)/aiEnhancements",
+      //     seconLabel: "Test AI-powered features",
+      //   },
+      //   {
+      //     label: "Laboratory",
+      //     route: "/(settings)/laboratory",
+      //     seconLabel: "Experimental features testing ground",
+      //   },
+      // ]);
 
       setDebugSettings([
         {
@@ -109,36 +108,28 @@ export default function Advanced() {
     <SafeAreaView className="flex-1 bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Advanced" />
-      
-      <ScrollView 
-        className="flex-1" 
+
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        {/* Warning Banner */}
-        <WarningBanner />
+      
 
         {/* Developer Toggles */}
-        <DeveloperTogglesSection 
-          developerToggles={developerToggles} 
-        />
+        <DeveloperTogglesSection developerToggles={developerToggles} />
 
         {/* Performance Settings */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="Performance"
           data={performanceSettings}
           containerStyle="mt-8 mx-4"
         />
 
-        {/* Experimental Features */}
-        <SettingsSection
-          title="Experimental Features"
-          data={experimentalFeatures}
-          containerStyle="mt-8 mx-4"
-        />
+      
 
         {/* Debug Settings */}
-        <SettingsSection
+        <SettingsRoutingSection
           title="Debug & Diagnostics"
           data={debugSettings}
           containerStyle="mt-8 mx-4"
@@ -151,29 +142,11 @@ export default function Advanced() {
   );
 }
 
-const WarningBanner = () => {
-  return (
-    <View className="mt-6 mx-4">
-      <View className="bg-orange-50 border border-orange-200 rounded-3xl p-6">
-        <View className="flex-row items-center mb-2">
-          <View className="w-2 h-2 bg-orange-500 rounded-full mr-3" />
-          <Text className="text-lg font-bold text-orange-900">
-            Advanced Settings
-          </Text>
-        </View>
-        <Text className="text-orange-800 leading-6">
-          These settings are intended for advanced users and developers. 
-          Changing these settings may affect app performance or stability.
-        </Text>
-      </View>
-    </View>
-  );
-};
 
-const DeveloperTogglesSection = ({ 
-  developerToggles 
-}: { 
-  developerToggles: any[] 
+const DeveloperTogglesSection = ({
+  developerToggles,
+}: {
+  developerToggles: any[];
 }) => {
   const toggle = (index: number) => {
     console.log(`Toggling developer setting ${index}`);
@@ -187,8 +160,8 @@ const DeveloperTogglesSection = ({
       </Text>
       <View className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {developerToggles.map((item, index) => (
-          <View 
-            className={`bg-lightSurface ${index === 0 ? 'rounded-t-3xl' : ''} ${index === developerToggles.length - 1 ? 'rounded-b-3xl' : ''}`} 
+          <View
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === developerToggles.length - 1 ? "rounded-b-3xl" : ""}`}
             key={item.label}
           >
             <InformativeToggle
@@ -232,7 +205,7 @@ const SystemInformationSection = () => {
   ];
 
   return (
-    <SettingsSection
+    <SettingsRoutingSection
       title="System Information"
       data={systemInfo}
       containerStyle="mt-8 mx-4"

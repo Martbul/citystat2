@@ -1,6 +1,6 @@
 import Header from "@/components/ui/header";
 import Panel from "@/components/ui/panel";
-import SettingsSection from "@/components/ui/settingsSection";
+import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
 import TabSelector from "@/components/ui/tabSelector";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { dataCombinator } from "@/utils/dataCombinator";
@@ -108,15 +108,15 @@ const Security = ({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 32 }}
     >
-      <SettingsSection title="Account Information" data={accountInfo} />
+      <SettingsRoutingSection title="Account Information" data={accountInfo} />
 
-      <SettingsSection
+      <SettingsRoutingSection
         title="Security & Sign-in"
         data={signInManagement}
         containerStyle="mt-8 mx-4"
       />
 
-      <SettingsSection
+      <SettingsRoutingSection
         title="Account Management"
         data={accountManagement}
         containerStyle="mt-8 mx-4"

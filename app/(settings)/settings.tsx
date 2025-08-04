@@ -1,10 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StatusBar,
-} from "react-native";
+import { View, Text, FlatList, StatusBar } from "react-native";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { settings } from "@/data/settingsData";
 import Header from "@/components/ui/header";
@@ -14,7 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const [search, setSearch] = useState("");
-  
 
   const filteredSettings = useMemo(() => {
     if (!search.trim()) {
@@ -73,10 +67,6 @@ const Settings = () => {
 };
 
 export default Settings;
-
-
-
-
 
 // export default function Advanced() {
 //   const { userData } = useUserData();

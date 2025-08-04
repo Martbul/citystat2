@@ -1,141 +1,211 @@
 import Header from "@/components/ui/header";
-import Panel from "@/components/ui/panel";
-import SettingsSection from "@/components/ui/settingsSection";
+import RadioSection from "@/components/ui/radioSection";
+import SettingsTouchableSection from "@/components/ui/settingsTouchableSection";
+import Slider from "@/components/ui/Slider";
+import {
+  displayMessagesOptions,
+  fontStyleOptions,
+  roleColorOptions,
+  textSizeOptions,
+  themeOptions,
+} from "@/data/appearenceSettingsOption";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
-import { StatusBar, ScrollView } from "react-native";
+import {
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Appearance() {
   const { userData } = useUserData();
-  const [themeOptions, setThemeOptions] = useState<any[]>([]);
   const [displaySettings, setDisplaySettings] = useState<any[]>([]);
-  const [previewSettings, setPreviewSettings] = useState<any[]>([]);
+  const [roleColorOption, setRoleColorOption] = useState("inName");
+  const [themeOption, setThemeColorOption] = useState("Auto");
+  const [displayMessagesOption, setDisplayMessagesOption] = useState("allMsg");
+  const [textSizeOption, setTextSizeOption] = useState("Medium");
+  const [fontStyleOption, setFontStyleOption] = useState("Default");
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
 
+  const handleRoleColorChange = (option: string) => {
+    setRoleColorOption(option);
+  };
+
+  const handleThemeChange = (option: string) => {
+    setThemeColorOption(option);
+  };
   useEffect(() => {
     if (userData) {
-      setThemeOptions([
-        {
-          label: "Light Theme",
-          route: "/(settings)/lightTheme",
-          seconLabel: "Default bright appearance",
-        },
-        {
-          label: "Dark Theme",
-          route: "/(settings)/darkTheme",
-          seconLabel: "Easy on the eyes",
-        },
-        {
-          label: "Auto (System)",
-          route: "/(settings)/autoTheme",
-          seconLabel: "Match device settings",
-        },
-      ]);
-
       setDisplaySettings([
         {
           label: "Text Size",
-          route: "/(settings)/textSize",
-          seconLabel: "Medium",
-        },
-        {
-          label: "Zoom Level",
-          route: "/(settings)/zoomLevel",
-          seconLabel: "100%",
+          seconLabel: textSizeOption,
+          options: textSizeOptions,
+          selectedOption: textSizeOption,
+          setSelectedOption: setTextSizeOption,
         },
         {
           label: "Font Style",
-          route: "/(settings)/fontStyle",
-          seconLabel: "System Default",
-        },
-      ]);
-
-      setPreviewSettings([
-        {
-          label: "Show All Messages",
-          route: "/(settings)/showAllMessages",
-          seconLabel: "Preview all message content",
-        },
-        {
-          label: "Unread Messages Only",
-          route: "/(settings)/unreadOnly",
-          seconLabel: "Show previews for unread DMs",
-        },
-        {
-          label: "Hide Previews",
-          route: "/(settings)/hidepreviews",
-          seconLabel: "Show sender name only",
+          seconLabel: fontStyleOption,
+          options: fontStyleOptions,
+          selectedOption: fontStyleOption,
+          setSelectedOption: setFontStyleOption,
         },
       ]);
     }
-  }, [userData]);
+  }, [userData, textSizeOption, fontStyleOption]);
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Appearance" />
-      
-      <ScrollView 
-        className="flex-1" 
+
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        {/* Theme Section */}
-        <SettingsSection
+        <RadioSection
           title="Theme"
-          data={themeOptions}
+          options={themeOptions}
+          selectedValue={themeOption}
+          onValueChange={handleThemeChange}
         />
 
-        {/* Display Settings Section */}
-        <SettingsSection
+        <RadioSection
+          title="Role Colors"
+          options={roleColorOptions}
+          selectedValue={roleColorOption}
+          onValueChange={handleRoleColorChange}
+        />
+
+        <SettingsTouchableSection
           title="Display Settings"
           data={displaySettings}
-          containerStyle="mt-8 mx-4"
+          containerStyle="mt-6 mx-4"
         />
 
-        {/* Message Preview Section */}
-        <SettingsSection
+        <View className="mt-6 mx-4">
+          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <View className="bg-lightSurface rounded-3xl">
+              <View className="py-4 px-4">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-lightPrimaryText font-medium">
+                    Zoom Level
+                  </Text>
+                  <Text className="text-lightSecondaryText">
+                    {Math.round(contrast)}%
+                  </Text>
+                </View>
+                <Slider
+                  minimumValue={50}
+                  maximumValue={150}
+                  value={contrast}
+                  onValueChange={setContrast}
+                  step={1}
+                />
+                <TouchableOpacity
+                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
+                  onPress={() => setContrast(100)}
+                >
+                  <Text className="text-lightPrimaryAccent font-medium">
+                    Reset to default
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <RadioSection
           title="Message Previews"
-          data={previewSettings}
-          containerStyle="mt-8 mx-4"
+          options={displayMessagesOptions}
+          selectedValue={displayMessagesOption}
+          onValueChange={setDisplayMessagesOption}
         />
 
-        {/* Additional Appearance Options */}
-        <AppearanceExtrasSection />
+        <View className="mt-6 mx-4">
+          <Text className="text-lg font-bold text-lightPrimaryText mb-2">
+            Contrast
+          </Text>
+          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <View className="bg-lightSurface rounded-3xl">
+              <View className="py-4 px-4">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-lightPrimaryText font-medium">
+                    Contrast Level
+                  </Text>
+                  <Text className="text-lightSecondaryText">
+                    {Math.round(contrast)}%
+                  </Text>
+                </View>
+                <Slider
+                  minimumValue={50}
+                  maximumValue={150}
+                  value={contrast}
+                  onValueChange={setContrast}
+                  step={1}
+                />
+                <TouchableOpacity
+                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
+                  onPress={() => setContrast(100)}
+                >
+                  <Text className="text-lightPrimaryAccent font-medium">
+                    Reset to default
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View className="mt-6 mx-4">
+          <Text className="text-lg font-bold text-lightPrimaryText mb-2">
+            Saturation
+          </Text>
+          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <View className="bg-lightSurface rounded-3xl">
+              <View className="py-4 px-4">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-lightPrimaryText font-medium">
+                    Saturation Level
+                  </Text>
+                  <Text className="text-lightSecondaryText">
+                    {Math.round(saturation)}%
+                  </Text>
+                </View>
+                <Slider
+                  minimumValue={0}
+                  maximumValue={100}
+                  value={saturation}
+                  onValueChange={setSaturation}
+                  step={1}
+                />
+                <TouchableOpacity
+                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
+                  onPress={() => setSaturation(100)}
+                >
+                  <Text className="text-lightPrimaryAccent font-medium">
+                    Reset to default
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          <View className="flex items-center justify-center">
+            <Text className="text-lightPrimaryText text-sm mt-2">
+              Reduce the colour saturation within the application for those with
+              colour sensitivities. This does not affect the saturation of
+              images, videos, role colours or other user-provided content by
+              default.
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const AppearanceExtrasSection = () => {
-  const appearanceExtras = [
-    {
-      label: "Animations",
-      route: "/(settings)/animations",
-      seconLabel: "Reduce motion effects",
-    },
-    {
-      label: "App Icon",
-      route: "/(settings)/appIcon",
-      seconLabel: "Choose your app icon",
-    },
-    {
-      label: "Color Accent",
-      route: "/(settings)/colorAccent",
-      seconLabel: "Customize accent colors",
-    },
-    {
-      label: "Navigation Style",
-      route: "/(settings)/navigationStyle",
-      seconLabel: "Tab bar or side menu",
-    },
-  ];
-
-  return (
-    <SettingsSection
-      title="Customization"
-      data={appearanceExtras}
-      containerStyle="mt-8 mx-4"
-    />
-  );
-};

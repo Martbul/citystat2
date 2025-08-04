@@ -1,14 +1,10 @@
 import Header from "@/components/ui/header";
 import { useEffect, useState } from "react";
-import {
-  SafeAreaView,
-  StatusBar,
-  Text,
-  View,
-  ActivityIndicator,
-} from "react-native";
+import { StatusBar, Text, View, ActivityIndicator } from "react-native";
 import * as Device from "expo-device";
 import * as Location from "expo-location";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Octicons } from "@expo/vector-icons";
 
 export default function DataAndPrivacy() {
   const [deviceName, setDeviceName] = useState("");
@@ -17,7 +13,8 @@ export default function DataAndPrivacy() {
 
   useEffect(() => {
     const fetchDeviceInfo = async () => {
-      const name = Device.deviceName ?? `${Device.manufacturer} ${Device.modelName}`;
+      const name =
+        Device.deviceName ?? `${Device.manufacturer} ${Device.modelName}`;
       setDeviceName(name || "Unknown Device");
     };
 
@@ -33,8 +30,9 @@ export default function DataAndPrivacy() {
         const geo = await Location.reverseGeocodeAsync(pos.coords);
         const place = geo[0];
         const readable =
-          [place.city, place.region, place.country].filter(Boolean).join(", ") ||
-          "Unknown Location";
+          [place.city, place.region, place.country]
+            .filter(Boolean)
+            .join(", ") || "Unknown Location";
         setLocation(readable);
       } catch (err) {
         setLocation("Location unavailable");
@@ -53,22 +51,31 @@ export default function DataAndPrivacy() {
       <Header title="Devices" />
       <View className="p-4 space-y-4">
         <Text className="text-base text-black">
-          Here are all the devices that are currently logged in with your CityStat
-          account. You can log out of each one individually or all other devices. If
-          you see an entry you don't recognise, log out of that device and change
-          your CityStat account password immediately.
+          Here are all the devices that are currently logged in with your
+          CityStat account. You can log out of each one individually or all
+          other devices. If you see an entry you don't recognise, log out of
+          that device and change your CityStat account password immediately.
         </Text>
 
         <View className="mt-6">
-          <Text className="text-lg font-semibold">Current Device</Text>
-          <View className="mt-2 p-4 bg-white rounded-lg shadow">
+          <Text className="text-lightPrimaryAccent font-semibold">
+            Current Device
+          </Text>
+          <View className="mt-2 p-4 bg-lightSurface rounded-lg shadow">
             {loading ? (
               <ActivityIndicator size="small" color="#888" />
             ) : (
-              <>
-                <Text className="text-base">📱 {deviceName}</Text>
-                <Text className="text-base">📍 {location}</Text>
-              </>
+              <View className="flex flex-row gap-4 items-center">
+                <View>
+                  <Octicons name="device-mobile" size={24} color="black" />
+                </View>
+                <View>
+                  <Text className="font-bold text-lightPrimaryText">
+                    {deviceName}
+                  </Text>
+                  <Text className="text-lightPrimaryText">{location}</Text>
+                </View>
+              </View>
             )}
           </View>
         </View>
