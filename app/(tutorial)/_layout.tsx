@@ -1,31 +1,17 @@
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import ErrorBoundary from "@/components/errorBoundary";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-export default function RootLayout() {
+export default function TutorialRoutesLayout() {
   return (
-     <ErrorBoundary>
-      <SafeAreaProvider>
-        <Stack>
-          <Stack.Screen name="CityStat" options={{ headerShown: false }} />
-        </Stack>
-      </SafeAreaProvider>
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      <Stack>
+        <Stack.Screen
+          name="tutorial"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
-
-
-// import { Stack } from "expo-router";
-
-// export default function TutorialRoutesLayout() {
-//   return (
-//     <Stack>
-//       <Stack.Screen
-//         name="tutorial"
-//         options={{
-//           headerShown: false,
-//         }}
-//       />
-//     </Stack>
-//   );
-// }

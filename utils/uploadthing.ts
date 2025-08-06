@@ -1,13 +1,7 @@
-import { UploadRouter } from "@/app/api/uploadthing+api";
 import { generateReactNativeHelpers } from "@uploadthing/expo";
 
-
+// Remove the route import since you don't need it
 export const { useImageUploader, useDocumentUploader } =
-  generateReactNativeHelpers<UploadRouter>({
-    /**
-     * Your server url.
-     * @default process.env.EXPO_PUBLIC_SERVER_URL
-     * @remarks In dev we will also try to use Expo.debuggerHost
-     */
-    url: "https://my-server.com",
+  generateReactNativeHelpers({
+    url: "https://citystatapi.onrender.com/api/uploadthing", // Your Go server URL
   });

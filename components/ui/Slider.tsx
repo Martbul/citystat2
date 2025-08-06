@@ -12,10 +12,12 @@ type SliderProps = {
   maximumValue: number;
   value: number;
   onValueChange: (value: number) => void;
+  onSlidingComplete?: (value: number) => void; // ✅ Added
   step?: number;
   minimumTrackTintColor?: string;
   maximumTrackTintColor?: string;
   thumbTintColor?: string;
+  disabled?: boolean;
 };
 
 const Slider: React.FC<SliderProps> = ({
@@ -23,22 +25,31 @@ const Slider: React.FC<SliderProps> = ({
   maximumValue,
   value,
   onValueChange,
+  onSlidingComplete, // ✅ Added
   step = 1,
   minimumTrackTintColor = "#bddc62",
   maximumTrackTintColor = "#e0e0e0",
   thumbTintColor = "#bddc62",
+  disabled = false,
 }) => {
   const [sliderWidth, setSliderWidth] = useState<number>(0);
 
   const percentage = ((value - minimumValue) / (maximumValue - minimumValue)) * 100;
 
   const handlePress = (event: GestureResponderEvent) => {
+    if (disabled) return;
+
     const { locationX } = event.nativeEvent;
     const relative = locationX / sliderWidth;
     const newValue = minimumValue + relative * (maximumValue - minimumValue);
     const steppedValue = Math.round(newValue / step) * step;
     const clampedValue = Math.max(minimumValue, Math.min(maximumValue, steppedValue));
+
     onValueChange(clampedValue);
+
+    if (onSlidingComplete) {
+      onSlidingComplete(clampedValue); // ✅ Fire complete callback
+    }
   };
 
   const handleLayout = (event: LayoutChangeEvent) => {
@@ -50,7 +61,11 @@ const Slider: React.FC<SliderProps> = ({
       onPress={handlePress}
       onLayout={handleLayout}
       activeOpacity={1}
-      style={styles.container}
+      disabled={disabled}
+      style={[
+        styles.container,
+        disabled && { opacity: 0.5 },
+      ]}
     >
       <View style={[styles.track, { backgroundColor: maximumTrackTintColor }]}>
         <View

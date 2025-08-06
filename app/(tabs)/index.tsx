@@ -20,6 +20,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserData } from "@/Providers/UserDataProvider";
 
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -27,9 +28,12 @@ const { width: screenWidth } = Dimensions.get("window");
 export default function HomeScreen() {
   const router = useRouter();
 
+
+
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
   const { isSignedIn, isLoaded } = useUser();
+  const {userData} = useUserData()
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [selectedTab, setSelectedTab] = useState<string>("General");
@@ -92,6 +96,10 @@ export default function HomeScreen() {
   }
   if (!isSignedIn) {
     return null;
+  }
+
+  if(userData && userData.completedTutorial === false) {
+    router.replace("/tutorial")
   }
 
   const sections = [

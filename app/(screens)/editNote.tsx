@@ -1,25 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StatusBar,
-  Alert,
-} from "react-native";
+import { View, Text, StatusBar, Alert } from "react-native";
 import { useUserData } from "@/Providers/UserDataProvider";
 import Header from "@/components/ui/header";
 import { SafeAreaView } from "react-native-safe-area-context";
 import InputEditor from "@/components/ui/inputEditor";
 import { useRouter } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import SavingLoader from "@/components/savingLoader";
 
 export default function EditNote() {
   const [newNote, setNewNote] = useState("");
-  const { userData, setUserData } = useUserData();
-  const { getToken } = useAuth();
+  const { userData, isLoading, updateNote } = useUserData();
   const router = useRouter();
-  const API_BASE_URL = process.env.EXPO_PUBLIC_CITYSTAT_API_URL;
 
   useEffect(() => {
     if (userData?.note) {
@@ -29,31 +20,15 @@ export default function EditNote() {
 
   const saveNewNote = async () => {
     try {
-      const token = await getToken();
-      const newData = {
-        newNote: newNote,
-      };
+      console.log("Updating field note");
 
-      const response = await fetch(`${API_BASE_URL}/api/user/note`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newData),
-      });
+      await updateNote(newNote);
 
-      if (!response.ok) {
-        throw new Error(`Failed to update note: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log("response:", responseData);
-      setUserData(responseData);
+      console.log("Update note successfuly");
       router.back();
     } catch (error) {
-      console.error("Error editing note:", error);
-      Alert.alert("Error", "Failed to edit note. Please try again.", [
+      console.error("Error updating note:", error);
+      Alert.alert("Error", `Failed to update note. Please try again.`, [
         { text: "OK" },
       ]);
     }
@@ -62,6 +37,10 @@ export default function EditNote() {
   const resetData = () => {
     setNewNote("");
   };
+
+  if (isLoading) {
+    return <SavingLoader />;
+  }
 
   return (
     <>

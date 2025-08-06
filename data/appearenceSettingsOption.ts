@@ -1,30 +1,32 @@
- export const roleColorOptions = [
-    { label: "Show role colours in names", value: "inName" },
-    { label: "Show role colours next to names", value: "nextToName" },
-    { label: "Don't show role colours", value: "none" },
-  ];
+import { MessagesAllowance, RoleColors, TextSize, Theme } from "@/types/settings";
 
- export const themeOptions = [
-    { label: "Auto", value: "Auto" },
-    { label: "Light", value: "Light" },
-    { label: "Dark", value: "Dark" },
-  ];
+export const themeOptions = [
+  { label: "Light", value: Theme.LIGHT },
+  { label: "Dark", value: Theme.DARK },
+  { label: "System", value: Theme.SYSTEM },
+];
 
- export const displayMessagesOptions = [
-    { label: "All Messages", value: "allMsg" },
-    { label: "Only Unread Messages", value: "onlyUnread" },
-    { label: "Hide All", value: "hideAll" },
-  ];
+export const textSizeOptions = [
+  { label: "Small", value: TextSize.SMALL },
+  { label: "Medium", value: TextSize.MEDIUM },
+  { label: "Large", value: TextSize.BIG },
+];
 
- export const fontStyleOptions = [
-    { label: "Default", value: "Default" },
-    { label: "Inter", value: "Inter" },
-    { label: "Popins", value: "Popins" },
-    { label: "Roboto", value: "Roboto" },
-  ];
+export const roleColorOptions = [
+  { label: "Next to Name", value: RoleColors.NEXTTONAME },
+  { label: "In Name", value: RoleColors.INNAME },
+  { label: "Don't Show", value: RoleColors.DONTSHOW },
+  { label: "Sync Profile", value: RoleColors.SYNCPROFILECOLORS },
+];
 
- export const textSizeOptions = [
-    { label: "BIg", value: "Big" },
-    { label: "Medium", value: "Medium" },
-    { label: "Small", value: "Small" },
-  ];
+export const displayMessagesOptions = [
+  { label: "All Messages", value: MessagesAllowance.ALLMSG },
+  { label: "Unread Messages", value: MessagesAllowance.UNREADMAS },
+  { label: "Hide", value: MessagesAllowance.HIDE },
+];
+
+export const fontStyleOptions = [
+  { label: "Default", value: "Default" },
+  { label: "Roboto", value: "Roboto" },
+  { label: "Arial", value: "Arial" },
+];

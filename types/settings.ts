@@ -1,7 +1,7 @@
 export enum Theme {
-  Light = 'Light', 
-  Dark = 'Dark',
-  Auto = 'Auto'
+  LIGHT = 'LIGHT',    
+  DARK = 'DARK',
+  SYSTEM = 'SYSTEM'
 }
 
 export enum Language {
@@ -46,7 +46,26 @@ export enum MessagesAllowance {
   UNREADMAS = 'UNREADMAS',
   HIDE = 'HIDE'
 }
+// Settings update request type
+export interface SettingsUpdateRequest {
+  theme?: Theme;
+  textSize?: TextSize;
+  zoomLevel?: string;
+  fontStyle?: string;
+  messagesAllowance?: MessagesAllowance;
+  showRoleColors?: RoleColors;
+  language?: Language;
+  enabledLocationTracking?: boolean;
+  allowCityStatDataUsage?: boolean;
+  allowDataPersonalizationUsage?: boolean;
+  allowInAppRewards?: boolean;
+  allowDataAnaliticsAndPerformance?: boolean;
+  enableInAppNotifications?: boolean;
+  enableSoundEffects?: boolean;
+  enableVibration?: boolean;
+}
 
+// Full settings type matching Prisma
 export interface Settings {
   id: string;
   userId: string;
@@ -57,18 +76,19 @@ export interface Settings {
   allowDataPersonalizationUsage: boolean;
   allowInAppRewards: boolean;
   allowDataAnaliticsAndPerformance: boolean;
+  motion: Motion;
   textSize: TextSize;
   zoomLevel: string;
   fontStyle: string;
   messagesAllowance: MessagesAllowance;
   showRoleColors: RoleColors;
-  motion: Motion;
-  stickersAnimation: StickersAnimation;
   enableInAppNotifications: boolean;
   enableSoundEffects: boolean;
   enableVibration: boolean;
-  createdAt: string;
-  updatedAt: string;
+  stickersAnimation: StickersAnimation,
+  
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SettingsProviderInterface {

@@ -9,6 +9,7 @@ import { UserDataProvider } from "@/Providers/UserDataProvider";
 import "react-native-reanimated";
 
 import "../global.css";
+import ErrorBoundary from "@/components/errorBoundary";
 
 
 export default function RootLayout() {
@@ -23,7 +24,8 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache}>
+    <ErrorBoundary>
+ <ClerkProvider tokenCache={tokenCache}>
       <UserDataProvider>
         <TailwindProvider>
           <SideMenuDrawerProvider>
@@ -56,5 +58,7 @@ export default function RootLayout() {
         </TailwindProvider>
       </UserDataProvider>
     </ClerkProvider>
+    </ErrorBoundary>
+   
   );
 }

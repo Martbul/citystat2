@@ -110,11 +110,9 @@ export interface UserData {
   friendOf?: Friend[]; // Friends where this user is the "friend"
   visitedStreets?: VisitedStreet[];
 }
-
-// Updated context type with proper typing
 export interface UserDataContextType {
   userData: UserData | null;
-  setUserData: React.Dispatch<React.SetStateAction<UserData | null>>; // Proper typing instead of 'any'
+  setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   isLoading: boolean;
   error: string | null;
 
@@ -136,11 +134,11 @@ export interface UserDataContextType {
   updateSettings: (
     settings: Partial<Omit<Settings, "id" | "userId" | "createdAt" | "updatedAt">>
   ) => Promise<void>;
-
+  settings: Settings;
   // User status and profile
   status: Status;
   setStatus: (status: Status) => Promise<void>;
-  note?: string; // Fix: should be optional and string, not String
+  note?: string;
   setNote: (note: string) => Promise<void>;
 
   // Friends
@@ -165,10 +163,23 @@ export interface UserDataContextType {
   incrementStreetsWalked: () => Promise<void>;
   addKilometers: (km: number) => Promise<void>;
 
-  // Add missing methods for new fields
+  // Profile / Settings additions
   updateAboutMe: (aboutMe: string) => Promise<void>;
   setDisableAccount: (disabled: boolean) => Promise<void>;
   setDeleteAccount: (deleted: boolean) => Promise<void>;
+
+  updateUserField: <K extends keyof UserData>(
+    field: K,
+    value: UserData[K]
+  ) => Promise<void>;
+
+  updateUsername: (username: string) => Promise<void>;
+  updateFirstName: (firstName: string) => Promise<void>;
+  updateLastName: (lastName: string) => Promise<void>;
+  updateNote: (note: string) => Promise<void>;
+  updateTextSize: (size: number) => Promise<void>;
+  updateZoomLevel: (level: number) => Promise<void>;
+  updateFontStyle: (style: string) => Promise<void>;
 }
 
 // import { Settings } from "react-native";

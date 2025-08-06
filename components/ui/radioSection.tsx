@@ -10,10 +10,11 @@ interface RadioSectionProps {
   title: string;
   options: RadioOption[];
   selectedValue: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (value: any) => void;
   containerStyle?: string;
   titleStyle?: string;
   cardStyle?: string;
+  disabled?: boolean; // ✅ Add this
 }
 
 const RadioSection: React.FC<RadioSectionProps> = ({
@@ -23,7 +24,8 @@ const RadioSection: React.FC<RadioSectionProps> = ({
   onValueChange,
   containerStyle = "mt-6 mx-4",
   titleStyle = "text-lg font-bold text-lightPrimaryText mb-2",
-  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden",
+  disabled = false // ✅ Default to false
 }) => {
   return (
     <View className={containerStyle}>
@@ -34,11 +36,14 @@ const RadioSection: React.FC<RadioSectionProps> = ({
         {options.map((option, index) => (
           <View key={option.value}>
             <View
-              className={`bg-lightSurface  ${index === 0 ? "rounded-t-3xl" : ""} ${index === options.length - 1 ? "rounded-b-3xl" : ""}`}
+              className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === options.length - 1 ? "rounded-b-3xl" : ""} ${
+                disabled ? "opacity-50" : ""
+              }`} // ✅ Dim the view when disabled
             >
               <TouchableOpacity
                 className="flex-row items-center justify-between py-4 px-4"
-                onPress={() => onValueChange(option.value)}
+                onPress={() => !disabled && onValueChange(option.value)} // ✅ Prevent interaction if disabled
+                disabled={disabled} // ✅ Native disabled flag
               >
                 <Text className="text-lightBlackText text-base">
                   {option.label}
