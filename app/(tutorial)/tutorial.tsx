@@ -1,20 +1,20 @@
+import Loader from "@/components/Loader";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
   Dimensions,
-  TouchableOpacity,
-  TextInput,
-  Image,
+  KeyboardAvoidingView,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  ScrollView as ScrollViewType,
-  KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  ScrollView as ScrollViewType,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -28,7 +28,7 @@ const TutorialScreen = () => {
   }
 
   if (!isLoaded) {
-    //TODO: Handle loading state
+    <Loader purpose="loading"/>;
   }
   const { updateUser } = useUserData();
   //TODO: Add a coice for a city to play, then set the default coords to that city center,

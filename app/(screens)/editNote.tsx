@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StatusBar, Alert } from "react-native";
 import { useUserData } from "@/Providers/UserDataProvider";
+import Loader from "@/components/Loader";
 import Header from "@/components/ui/header";
-import { SafeAreaView } from "react-native-safe-area-context";
 import InputEditor from "@/components/ui/inputEditor";
 import { useRouter } from "expo-router";
-import SavingLoader from "@/components/savingLoader";
+import React, { useEffect, useState } from "react";
+import { Alert, StatusBar, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditNote() {
   const [newNote, setNewNote] = useState("");
-  const { userData, isLoading, updateNote } = useUserData();
+  const { userData, isLoading, updateUserNote } = useUserData();
   const router = useRouter();
+
+  //TODO: Use optimistic update instead of showing loader
 
   useEffect(() => {
     if (userData?.note) {
@@ -22,7 +24,7 @@ export default function EditNote() {
     try {
       console.log("Updating field note");
 
-      await updateNote(newNote);
+      await updateUserNote(newNote);
 
       console.log("Update note successfuly");
       router.back();
@@ -39,7 +41,7 @@ export default function EditNote() {
   };
 
   if (isLoading) {
-    return <SavingLoader />;
+    return <Loader purpose="saving" />;
   }
 
   return (

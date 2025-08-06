@@ -4,16 +4,15 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
-  Dimensions,
 } from "react-native";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { onBackPress } from "@/utils/navigation";
 import { useLocalSearchParams } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import { useUserData } from "@/Providers/UserDataProvider";
+import Loader from "@/components/Loader";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-// Mock workout data for the chart
 const workoutData = [
   { week: "May 5", hours: 4 },
   { week: "May 12", hours: 4.5 },
@@ -30,42 +29,28 @@ const workoutData = [
 ];
 
 export default function FitnessProfileScreen() {
-  const API_BASE_URL = process.env.EXPO_PUBLIC_CITYSTAT_API_URL;
-
+  const { fetchOtherUserProfile, isLoading, error } = useUserData();
   const { friendId } = useLocalSearchParams();
-   const { getToken } = useAuth();
-   const [friendProfileData, setFriendProfileData] = useState<any>(null);
+  const [otherUserrofileData, setOtherUserProfileData] = useState(null);
 
-  // Use the userId to fetch the friend's data
   useEffect(() => {
-    if (friendId) {
-      // Fetch friend's profile data using the userId
-      fetchFriendProfile(friendId);
-    }
+    if (!friendId) return;
+
+    const loadProfile = async () => {
+      try {
+        const data = await fetchOtherUserProfile(friendId as string);
+        setOtherUserProfileData(data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+
+    loadProfile();
   }, [friendId]);
 
-  const fetchFriendProfile = async (friendId) => {
-    const token = await getToken();
-
-    const response = await fetch(`${API_BASE_URL}/api/friends/profile`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-       },
-      body: JSON.stringify({ friendId }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch friends: ${response.status}`);
-    }
-
-    const responseData = await response.json();
-
- 
-    console.log("Friends prodile:", responseData);
-    setFriendProfileData(responseData);
-  };
+  if (isLoading) {
+    return <Loader purpose="loading" />;
+  }
 
   const StatCard = ({ icon, title }) => (
     <TouchableOpacity className="bg-darkSurface rounded-2xl p-6 flex-1 mx-1 items-center">

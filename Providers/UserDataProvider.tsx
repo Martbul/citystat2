@@ -17,14 +17,28 @@ import {
   Status,
   CityStat,
   StreetWalk,
+  Friend,
 } from "@/types/user";
-import { Theme, Language, Settings, TextSize, MessagesAllowance, RoleColors, StickersAnimation, Motion } from "@/types/settings";
+import {
+  Theme,
+  Language,
+  Settings,
+  TextSize,
+  MessagesAllowance,
+  RoleColors,
+  StickersAnimation,
+  Motion,
+} from "@/types/settings";
+import { Alert } from "react-native";
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
   undefined
 );
 
-const defaultSettings: Omit<Settings, "id" | "userId" | "createdAt" | "updatedAt"> = {
+const defaultSettings: Omit<
+  Settings,
+  "id" | "userId" | "createdAt" | "updatedAt"
+> = {
   theme: Theme.SYSTEM,
   language: Language.En,
   enabledLocationTracking: false,
@@ -44,7 +58,6 @@ const defaultSettings: Omit<Settings, "id" | "userId" | "createdAt" | "updatedAt
   enableVibration: true,
 };
 
-
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const { user, isSignedIn } = useUser();
   const { getToken } = useAuth();
@@ -53,6 +66,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [foundUsers, setFoundUsers] = useState<UserData[] | []>([]);
 
   const loadingRef = useRef(false);
 
@@ -77,7 +91,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error";
         setError(errorMessage);
-        console.error("API ErroR:", err);
+        console.error("API Error:", err);
         return null;
       } finally {
         setIsLoading(false);
@@ -115,7 +129,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
           // Try to fetch existing user
           fetchedUserData = await apiService.fetchUser(token);
           console.log("User found:", fetchedUserData.id);
-          console.log("us: " + fetchedUserData.settings)
         } catch (error: any) {
           // If user doesn't exist, create new one
           if (error.message === "USER_NOT_FOUND") {
@@ -137,7 +150,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
               deleteAccount: false,
               note: "",
               status: Status.ACTIVE,
-              // Don't include settings here - let the backend handle defaults
             };
 
             fetchedUserData = await apiService.createUser(newUserData, token);
@@ -146,8 +158,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
             throw error;
           }
         }
-
-
 
         setUserData(fetchedUserData);
         console.log("User data loaded successfully");
@@ -163,7 +173,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadUserData();
-  }, [isSignedIn, user?.id]); // REMOVED getToken from dependencies
+  }, [isSignedIn, user?.id]);
 
   // Clear data on sign out
   useEffect(() => {
@@ -173,11 +183,13 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isSignedIn]);
 
-   const settings = useMemo(() => {
+  // Get settings - handle both "Settings" and "settings" from API
+  const settings = useMemo(() => {
     const apiSettings = userData?.Settings || userData?.settings;
-    return apiSettings ? { ...defaultSettings, ...apiSettings } : defaultSettings;
+    return apiSettings
+      ? { ...defaultSettings, ...apiSettings }
+      : defaultSettings;
   }, [userData]);
-
 
   // API methods that use the service layer
   const updateUser = useCallback(
@@ -202,49 +214,24 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [user?.id, getToken, withLoadingAndError]
   );
 
+  // Single settings update method - handles all settings updates
   const updateSettings = useCallback(
     async (
-      settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
+      settingsUpdates: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
     ): Promise<void> => {
+      console.log("updating settings (in provider)");
       if (!user?.id) return;
 
       const token = await getToken();
       if (!token) return;
 
       await withLoadingAndError(
-        () => apiService.updateUserProfile({ settings }, token), // Send as nested object
+        () =>
+          apiService.updateUserSettings({ settings: settingsUpdates }, token),
         (updatedData) => setUserData(updatedData)
       );
     },
     [user?.id, getToken, withLoadingAndError]
-  );
-
-  const setCompletedTutorial = useCallback(
-    async (completed: boolean): Promise<void> => {
-      await updateUser({ completedTutorial: completed });
-    },
-    [updateUser]
-  );
-
-  const updateTheme = useCallback(
-    async (theme: Theme): Promise<void> => {
-      await updateSettings({ theme });
-    },
-    [updateSettings]
-  );
-
-  const updateLanguage = useCallback(
-    async (language: Language): Promise<void> => {
-      await updateSettings({ language });
-    },
-    [updateSettings]
-  );
-
-  const setStatus = useCallback(
-    async (status: Status): Promise<void> => {
-      await updateUser({ status });
-    },
-    [updateUser]
   );
 
   const refreshUserData = useCallback(async (): Promise<void> => {
@@ -259,19 +246,50 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [user?.id, getToken, withLoadingAndError]);
 
-  const addFriend = useCallback(
-    async (friendId: string): Promise<void> => {
-      if (!user?.id) return;
+  // Update the addFriend method in your UserDataProvider
+  const addFriendByUser = useCallback(
+    async (friendUser: UserData): Promise<boolean> => {
+      if (!user?.id || !userData) return false;
 
-      const token = await getToken();
-      if (!token) return;
+      if (friendUser.id === userData.id) {
+        Alert.alert("Error", "You cannot add yourself as a friend");
+        return false;
+      }
 
-      await withLoadingAndError(
-        () => apiService.addFriend(user.id, friendId, token),
-        (updatedData) => setUserData(updatedData)
-      );
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = await getToken();
+        if (!token) return false;
+
+        await apiService.addFriendByUser(friendUser.id, token);
+
+        Alert.alert("Success", `Added ${friendUser.userName} as a friend!`);
+
+        // Update the foundUsers to mark this user as a friend
+        setFoundUsers((prev) =>
+          prev.map((user) =>
+            user.id === friendUser.id ? { ...user, isFriend: true } : user
+          )
+        );
+
+        // Optionally refresh user data to update friends list
+        await refreshUserData();
+
+        return true;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to add friend";
+        setError(errorMessage);
+        Alert.alert("Error", errorMessage);
+        console.error("Error adding friend:", err);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [user?.id, getToken, withLoadingAndError]
+    [user?.id, userData, getToken, refreshUserData]
   );
 
   const removeFriend = useCallback(
@@ -287,34 +305,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       );
     },
     [user?.id, getToken, withLoadingAndError]
-  );
-
-  const setNote = useCallback(
-    async (note: string): Promise<void> => {
-      await updateUser({ note });
-    },
-    [updateUser]
-  );
-
-  const updateAboutMe = useCallback(
-    async (aboutMe: string): Promise<void> => {
-      await updateUser({ aboutMe });
-    },
-    [updateUser]
-  );
-
-  const setDisableAccount = useCallback(
-    async (disabled: boolean): Promise<void> => {
-      await updateUser({ disableAccount: disabled });
-    },
-    [updateUser]
-  );
-
-  const setDeleteAccount = useCallback(
-    async (deleted: boolean): Promise<void> => {
-      await updateUser({ deleteAccount: deleted });
-    },
-    [updateUser]
   );
 
   const updateCityStats = useCallback(
@@ -356,25 +346,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [user?.id, getToken, withLoadingAndError]
   );
 
-  const incrementStreetsWalked = useCallback(async (): Promise<void> => {
-    if (!userData?.cityStats) return;
-
-    await updateCityStats({
-      totalStreetsWalked: userData.cityStats.totalStreetsWalked + 1,
-    });
-  }, [userData?.cityStats, updateCityStats]);
-
-  const addKilometers = useCallback(
-    async (km: number): Promise<void> => {
-      if (!userData?.cityStats) return;
-
-      await updateCityStats({
-        totalKilometers: userData.cityStats.totalKilometers + km,
-      });
-    },
-    [userData?.cityStats, updateCityStats]
-  );
-
   const updateUserField = useCallback(
     async (field: string, value: any): Promise<void> => {
       if (!user?.id) return;
@@ -387,83 +358,106 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
         (updatedData) => setUserData(updatedData)
       );
     },
-    [user?.id, withLoadingAndError]
+    [user?.id, getToken, withLoadingAndError]
   );
 
-   const updateUserNoteField = useCallback(
-    async ( value: any): Promise<void> => {
+  const updateUserNote = useCallback(
+    async (note: string): Promise<void> => {
       if (!user?.id) return;
 
       const token = await getToken();
       if (!token) return;
 
       await withLoadingAndError(
-        () => apiService.updateUserNote(value, token),
+        () => apiService.updateUserNote(note, token),
         (updatedData) => setUserData(updatedData)
       );
     },
-    [user?.id, withLoadingAndError]
+    [user?.id, getToken, withLoadingAndError]
   );
 
-  // Specific setting update methods
-  const updateUsername = useCallback(
-    async (username: string): Promise<void> => {
-      await updateUserField("userName", username);
+  const searchUsers = useCallback(
+    async (searchQuery: string): Promise<void> => {
+      if (!searchQuery.trim()) {
+        Alert.alert("Error", "Please enter a username to search");
+        return;
+      }
+
+      if (!user?.id) return;
+
+      const token = await getToken();
+      if (!token) return;
+
+      // Clear previous results when starting a new search
+      setFoundUsers([]);
+
+      await withLoadingAndError(
+        () => apiService.searchUsers(searchQuery, token),
+        (foundUsers) => setFoundUsers(foundUsers)
+      );
     },
-    [updateUserField]
+    [user?.id, getToken, withLoadingAndError]
   );
 
-  const updateFirstName = useCallback(
-    async (firstName: string): Promise<void> => {
-      await updateUserField("firstName", firstName);
-    },
-    [updateUserField]
-  );
+  const getFriends = useCallback(async (): Promise<Friend[]> => {
+    if (!user?.id) return [];
 
-  const updateLastName = useCallback(
-    async (lastName: string): Promise<void> => {
-      await updateUserField("lastName", lastName);
-    },
-    [updateUserField]
-  );
+    const token = await getToken();
+    if (!token) return [];
 
-  const updateNote = useCallback(
-    async (note: string): Promise<void> => {
-      await updateUserNoteField(note);
-    },
-    [updateUserField]
-  );
+    try {
+      setIsLoading(true);
+      setError(null);
 
-  // Settings-specific updates
-  const updateTextSize = useCallback(
-    async (textSize: TextSize): Promise<void> => {
-      await updateSettings({ textSize });
-    },
-    [updateSettings]
-  );
+      const friends = await apiService.getFriends(token);
 
-  const updateZoomLevel = useCallback(
-    async (zoomLevel: string): Promise<void> => {
-      await updateSettings({ zoomLevel });
-    },
-    [updateSettings]
-  );
+      return friends;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Getting friends failed";
+      setError(errorMessage);
+      console.error("Getting friends error:", err);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
 
-  const updateFontStyle = useCallback(
-    async (fontStyle: string): Promise<void> => {
-      await updateSettings({ fontStyle });
-    },
-    [updateSettings]
-  );
+  const fetchOtherUserProfile = useCallback(
+  async (otherUserId: string): Promise<any> => {
+    if (!otherUserId || !user?.id) {
+      return null;
+    }
 
-  // Updated derived values to include note
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const profileData = await apiService.fetchOtherUserProfile(otherUserId, token);
+      
+      console.log("Friends profile:", profileData);
+      
+      return profileData;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch otherUserId profile";
+      setError(errorMessage);
+      console.error("Error otherUserId friend profile:", err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [user?.id, getToken]
+);
+
+  // Derived values for backwards compatibility
   const derivedValues = useMemo(
     () => ({
       completedTutorial: userData?.completedTutorial ?? false,
-      theme: userData?.settings?.theme ?? Theme.SYSTEM,
-      language: userData?.settings?.language ?? Language.En,
       status: userData?.status ?? Status.ACTIVE,
-      note: userData?.note ?? "", // Add this
+      note: userData?.note ?? "",
       friends: userData?.friends ?? [],
       cityStats: userData?.cityStats ?? null,
       totalStreetsWalked: userData?.cityStats?.totalStreetsWalked ?? 0,
@@ -475,42 +469,31 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }),
     [userData]
   );
-  // Complete context value with all required properties
+
+  // Context value - much cleaner now
   const contextValue: UserDataContextType = useMemo(
     () => ({
       userData,
       setUserData,
       isLoading,
       error,
+      settings, // Single settings object
+      addFriendByUser, // Add this new method
+      getFriends,
+      fetchOtherUserProfile,
 
-      // User operations
+      // Core methods
       updateUser,
+      updateSettings, // Single settings update method
+      updateUserField,
+      updateUserNote,
       refreshUserData,
 
-      // Tutorial
+      // Legacy derived values (for backwards compatibility)
       completedTutorial: derivedValues.completedTutorial,
-      setCompletedTutorial,
-
-      // Settings
-      theme: derivedValues.theme,
-      language: derivedValues.language,
-      updateTheme,
-      updateLanguage,
-      updateSettings,
-          settings, // Just provide the settings object,
-
-      // User status and profile
       status: derivedValues.status,
-      setStatus,
       note: derivedValues.note,
-      setNote,
-
-      // Friends
       friends: derivedValues.friends,
-      addFriend,
-      removeFriend,
-
-      // City stats
       cityStats: derivedValues.cityStats,
       totalStreetsWalked: derivedValues.totalStreetsWalked,
       totalKilometers: derivedValues.totalKilometers,
@@ -518,57 +501,35 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       daysActive: derivedValues.daysActive,
       longestStreakDays: derivedValues.longestStreakDays,
       streetWalks: derivedValues.streetWalks,
+
+      // Friends & City stats
+      removeFriend,
       updateCityStats,
       addStreetWalk,
-      incrementStreetsWalked,
-      addKilometers,
-
-      // New user profile methods
-      updateAboutMe,
-      setDisableAccount,
-      setDeleteAccount,
-
-      updateUserField,
-      updateUsername,
-      updateFirstName,
-      updateLastName,
-      updateNote,
-      updateTextSize,
-      updateZoomLevel,
-      updateFontStyle,
+      searchUsers,
+      foundUsers,
     }),
     [
       userData,
       setUserData,
+      getFriends,
       isLoading,
       error,
-      derivedValues,
+      fetchOtherUserProfile,
+      addFriendByUser, 
+      settings,
       updateUser,
-      refreshUserData,
-      setCompletedTutorial,
-      updateTheme,
-      updateLanguage,
       updateSettings,
-    settings, // Just provide the settings object      setStatus,
-      setNote,
-      addFriend,
+      updateUserField,
+      updateUserNote,
+      refreshUserData,
+      derivedValues,
+
       removeFriend,
       updateCityStats,
       addStreetWalk,
-      incrementStreetsWalked,
-      addKilometers,
-      updateAboutMe,
-      setDisableAccount,
-      setDeleteAccount,
-      updateUserField,
-      updateUsername,
-      updateFirstName,
-      updateLastName,
-      updateAboutMe,
-      updateNote,
-      updateTextSize,
-      updateZoomLevel,
-      updateFontStyle,
+      searchUsers,
+      foundUsers,
     ]
   );
 

@@ -2,7 +2,6 @@ import InputBox from "@/components/inputBox";
 import Header from "@/components/ui/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Friend } from "@/types/user";
-import { useAuth } from "@clerk/clerk-expo";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
@@ -12,58 +11,14 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Alert,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Friends() {
   const [search, setSearch] = useState("");
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { userData } = useUserData();
+  const { userData, getFriends, friends, isLoading } = useUserData();
   const router = useRouter();
-  const API_BASE_URL = process.env.EXPO_PUBLIC_CITYSTAT_API_URL;
-  const { getToken } = useAuth();
-
-  const getFriends = async (): Promise<void> => {
-    console.log("Fetching friends for user:", userData?.id);
-    if (loading) return; // Prevent multiple simultaneous requests
-
-    setLoading(true);
-    try {
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/friends/list`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch friends: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log("Friends response:", responseData);
-
-      // Fix: Extract friends array from response object
-      const friendsData: Friend[] = responseData.friends || [];
-      console.log("Friends data:", friendsData);
-      setFriends(friendsData);
-    } catch (error) {
-      console.error("Error fetching friends:", error);
-      Alert.alert("Error", "Failed to load friends. Please try again.", [
-        { text: "OK" },
-      ]);
-      // Set empty array on error to prevent undefined issues
-      setFriends([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (userData?.id) {
@@ -72,7 +27,6 @@ export default function Friends() {
   }, [userData?.id]);
 
   const filteredFriends = useMemo(() => {
-    // Fix: Add safety check to ensure friends is always an array
     if (!Array.isArray(friends)) {
       return [];
     }
@@ -108,11 +62,11 @@ export default function Friends() {
       >
         <View className="flex-row items-center space-x-4">
           <View className="w-14 h-14 bg-lightSurface rounded-full flex items-center justify-center">
-                       <Image
-                         className="w-12 h-12"
-                         source={{ uri: item.imageUrl }}
-                       ></Image>
-                     </View>
+            <Image
+              className="w-12 h-12"
+              source={{ uri: item.imageUrl }}
+            ></Image>
+          </View>
           <Text className="text-gray-800 text-base font-medium">
             {item.userName || "Unknown User"}
           </Text>
@@ -173,7 +127,7 @@ export default function Friends() {
           ListHeaderComponent={SearchHeader}
           renderItem={renderFriendItem}
           ListEmptyComponent={renderEmptyComponent}
-          refreshing={loading}
+          refreshing={isLoading}
           onRefresh={getFriends}
           showsVerticalScrollIndicator={false}
         />

@@ -1,4 +1,4 @@
-import { UserData, CityStat, StreetWalk } from "@/types/user";
+import { UserData, CityStat, StreetWalk, Friend } from "@/types/user";
 import { Settings, Theme, Language } from "@/types/settings";
 
 class ApiService {
@@ -127,6 +127,16 @@ class ApiService {
     });
   }
 
+  async updateUserSettings(updates: any, token: string): Promise<any> {
+    console.log("In updateUserSettings, updates: " + updates);
+    console.log("to url: ... api/user, with PUT");
+    return this.makeRequest<any>("/api/user/settings", {
+      method: "PUT",
+      token,
+      body: JSON.stringify(updates),
+    });
+  }
+
   // Generic field update method
   async updateUserField(
     field: string,
@@ -140,27 +150,11 @@ class ApiService {
     });
   }
 
-   async updateUserNote(
-    value: any,
-    token: string
-  ): Promise<UserData> {
+  async updateUserNote(value: any, token: string): Promise<UserData> {
     return this.makeRequest<UserData>(`/api/user/note`, {
       method: "PUT",
       token,
       body: JSON.stringify({ newNote: value }),
-    });
-  }
-
-  // Settings API methods
-  async updateSettings(
-    userId: string,
-    settings: Partial<Settings>,
-    token: string
-  ): Promise<UserData> {
-    return this.makeRequest<UserData>(`/api/user/${userId}/settings`, {
-      method: "PUT",
-      token,
-      body: JSON.stringify(settings),
     });
   }
 
@@ -215,6 +209,53 @@ class ApiService {
       }
     );
   }
+
+  async searchUsers(searchQuery: string, token: string): Promise<UserData[]> {
+    const response = await this.makeRequest<{ users: UserData[] }>(
+      `/api/users/search?username=${encodeURIComponent(searchQuery)}`,
+      {
+        method: "GET",
+        token,
+      }
+    );
+
+    return response.users || [];
+  }
+
+  async addFriendByUser(
+    friendId: string,
+    token: string
+  ): Promise<{ message: string }> {
+    return this.makeRequest<{ message: string }>(`/api/friends/add`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({
+        friendId: friendId,
+      }),
+    });
+  }
+
+  async getFriends(token: string): Promise<Friend[]> {
+    return this.makeRequest(`api/friends/list`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  async fetchOtherUserProfile(
+  otherUserId: string,
+  token: string,
+): Promise<any> {
+  return this.makeRequest<any>(
+    `/api/friends/profile`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify({ otherUserId }),
+    }
+  );
+}
+
 }
 
 export const apiService = new ApiService();

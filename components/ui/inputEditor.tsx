@@ -17,7 +17,7 @@ export default function InputEditor(props: {
       <TextInput
         className="flex flex-row flex-1 text-lightPrimaryText"
         value={props.data}
-        onChangeText={props.setDataFunc} // Changed from onChange to onChangeText
+        onChangeText={props.setDataFunc}
       />
       <TouchableOpacity onPress={() => props.clearDataFunc()}>
         <Entypo name="circle-with-cross" size={24} color="#bddc62" />

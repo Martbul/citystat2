@@ -1,10 +1,11 @@
-import SavingLoader from "@/components/savingLoader";
+import Loader from "@/components/Loader";
+import SavingLoader from "@/components/Loader";
 import Header from "@/components/ui/header";
 import InputEditor from "@/components/ui/inputEditor";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, StatusBar, Text, View, ActivityIndicator } from "react-native";
+import { Alert, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditSetting() {
@@ -84,7 +85,7 @@ export default function EditSetting() {
   };
 
   if (isLoading) {
-    return <SavingLoader />;
+    return <Loader purpose="saving" />;
   }
 
   return (
