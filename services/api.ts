@@ -256,6 +256,26 @@ class ApiService {
       body: JSON.stringify({ otherUserId }),
     });
   }
+
+  async saveLocationPermission(
+    hasPermission: boolean,
+    token: string
+  ): Promise<any> {
+    return this.makeRequest<any>(`/api/visitor/locationPermission`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({ hasLocationPermission: hasPermission }),
+    });
+  }
+
+  async getLocationPermission(
+    token: string
+  ): Promise<any> {
+    return this.makeRequest<any>(`/api/visitor/locationPermission`, {
+      method: "GET",
+      token,
+    });
+  }
 }
 
 export const apiService = new ApiService();

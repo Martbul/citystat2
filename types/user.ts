@@ -72,7 +72,7 @@ export interface Friend {
   id: string;
   userId: string;
   friendId: string;
-  firstName?: string; 
+  firstName?: string;
   lastName?: string;
   userName: string;
   imageUrl?: string;
@@ -87,18 +87,18 @@ export interface UserData {
   firstName?: string;
   lastName?: string;
   userName?: string;
-  imageUrl: string; 
+  imageUrl: string;
   phoneNumber?: string;
   role: Role;
   completedTutorial: boolean;
-  aboutMe?: string; 
+  aboutMe?: string;
   disableAccount: boolean;
-  deleteAccount: boolean; 
+  deleteAccount: boolean;
   note?: string;
   status: Status;
   createdAt: string;
   updatedAt: string;
-  
+
   cityStats?: CityStat;
   settings?: Settings;
   devices?: Device; // Note: Device? in schema (one-to-one)
@@ -112,16 +112,28 @@ export interface UserDataContextType {
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   isLoading: boolean;
   error: string | null;
-  getFriends: () => Promise<Friend[]>
-  
+  getFriends: () => Promise<Friend[]>;
+
+  getLocationPermission: () => Promise<any>;
+
   settings: Settings;
-  fetchOtherUserProfile:(otherUserId: string) => Promise<any>;
-  updateUserDetails: (updates: Partial<Omit<UserData, "id" | "createdAt" | "updatedAt" | "cityStats" | "settings">>) => Promise<void>;
-  updateSettings: (settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>) => Promise<void>;
+  fetchOtherUserProfile: (otherUserId: string) => Promise<any>;
+  updateUserDetails: (
+    updates: Partial<
+      Omit<
+        UserData,
+        "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
+      >
+    >
+  ) => Promise<void>;
+  updateSettings: (
+    settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
+  ) => Promise<void>;
   updateUserField: (field: string, value: any) => Promise<void>;
   updateUserNote: (note: string) => Promise<void>;
   refreshUserData: () => Promise<void>;
-  
+  saveLocationPermission: (hasPermission: boolean) => Promise<any>;
+
   completedTutorial: boolean;
   status: Status;
   note: string;
@@ -133,12 +145,21 @@ export interface UserDataContextType {
   daysActive: number;
   longestStreakDays: number;
   streetWalks: StreetWalk[];
-  
+
   // Friends & City stats
   removeFriend: (friendId: string) => Promise<void>;
-  updateCityStats: (cityStats: Partial<Omit<CityStat, "id" | "createdAt" | "updatedAt" | "streetWalks" | "userId">>) => Promise<void>;
-  addStreetWalk: (streetWalk: Omit<StreetWalk, "id" | "cityStatId">) => Promise<void>;
-  searchUsers:(searchQuery: string) => Promise<void>
-  foundUsers:UserData[],
-addFriendByUser: (friendUser: UserData) => Promise<boolean>;
+  updateCityStats: (
+    cityStats: Partial<
+      Omit<
+        CityStat,
+        "id" | "createdAt" | "updatedAt" | "streetWalks" | "userId"
+      >
+    >
+  ) => Promise<void>;
+  addStreetWalk: (
+    streetWalk: Omit<StreetWalk, "id" | "cityStatId">
+  ) => Promise<void>;
+  searchUsers: (searchQuery: string) => Promise<void>;
+  foundUsers: UserData[];
+  addFriendByUser: (friendUser: UserData) => Promise<boolean>;
 }

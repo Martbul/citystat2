@@ -448,7 +448,81 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   },
   [user?.id, getToken]
-);
+  );
+  
+
+    const saveLocationPermission = useCallback(
+      async (hasPermission: boolean): Promise<any> => {
+        if (!hasPermission || !user?.id) {
+          return null;
+        }
+
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          const token = await getToken();
+          if (!token) return null;
+
+          const success = await apiService.saveLocationPermission(
+            hasPermission,
+            token
+          );
+
+          console.log("Saved location permissions", success);
+
+          return success;
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to save location permissions";
+          setError(errorMessage);
+          console.error("Error while saving location permissions:", err);
+          return null;
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      [user?.id, getToken]
+    );
+  
+  
+    const getLocationPermission = useCallback(
+      async (): Promise<any> => {
+        if (!user?.id) {
+          return null;
+        }
+
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          const token = await getToken();
+          if (!token) return null;
+
+          const success = await apiService.getLocationPermission(
+            token
+          );
+
+          console.log("Got location permissions", success);
+
+          return success;
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to get location permissions";
+          setError(errorMessage);
+          console.error("Error while getting location permissions:", err);
+          return null;
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      [user?.id, getToken]
+    );
+
 
   // Derived values for backwards compatibility
   const derivedValues = useMemo(
@@ -479,6 +553,8 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       addFriendByUser, // Add this new method
       getFriends,
       fetchOtherUserProfile,
+      saveLocationPermission,
+      getLocationPermission,
 
       // Core methods
       updateUserDetails,
@@ -509,11 +585,13 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }),
     [
       userData,
+      getLocationPermission,
       setUserData,
       getFriends,
       isLoading,
       error,
       fetchOtherUserProfile,
+      saveLocationPermission,
       addFriendByUser, 
       settings,
       updateUserDetails,
