@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, FlatList, StatusBar } from "react-native";
-import EvilIcons from "@expo/vector-icons/EvilIcons";
-import { settings } from "@/data/settingsData";
-import Header from "@/components/ui/header";
 import InputBox from "@/components/inputBox";
-import Panel from "@/components/ui/panel";
+import Panel from "@/components/panel";
+import Header from "@/components/header";
+import { settings } from "@/data/settingsData";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
+import React, { useMemo, useState } from "react";
+import { FlatList, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {

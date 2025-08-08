@@ -1,33 +1,43 @@
+import Header from "@/components/header";
 import InputBox from "@/components/inputBox";
-import Header from "@/components/ui/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Friend } from "@/types/user";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  FlatList,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-} from "react-native";
+import { FlatList, Text, TouchableOpacity, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Friends() {
   const [search, setSearch] = useState("");
-  const { userData, getFriends, friends, isLoading } = useUserData();
+  const { userData, getFriends, isLoading } = useUserData();
+  const [friends, setFriends] = useState<Friend[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    if (userData?.id) {
-      getFriends();
-    }
+    const getFnds = async () => {
+      if (userData?.id) {
+        const data = await getFriends();
+        console.log("Friends data:", data);
+        setFriends(data); // Now data is directly the friends array
+      }
+    };
+    getFnds();
   }, [userData?.id]);
+
+  // Alternative approach using a separate function for refresh
+  const handleRefresh = async () => {
+    if (userData?.id) {
+      const data = await getFriends();
+      console.log("Refreshed friends data:", data);
+      setFriends(data); // Now data is directly the friends array
+    }
+  };
 
   const filteredFriends = useMemo(() => {
     if (!Array.isArray(friends)) {
+      console.log("Friends is not an array:", friends);
       return [];
     }
 
@@ -65,7 +75,7 @@ export default function Friends() {
             <Image
               className="w-12 h-12"
               source={{ uri: item.imageUrl }}
-            ></Image>
+            />
           </View>
           <Text className="text-gray-800 text-base font-medium">
             {item.userName || "Unknown User"}
@@ -77,6 +87,17 @@ export default function Friends() {
   };
 
   const renderEmptyComponent = () => {
+    // Add debugging info
+    console.log("Rendering empty component. Friends length:", friends.length, "Search:", search);
+    
+    if (isLoading) {
+      return (
+        <View className="flex-1 items-center justify-center py-8">
+          <Text className="text-gray-500 text-base">Loading friends...</Text>
+        </View>
+      );
+    }
+
     if (search.trim()) {
       return (
         <View className="flex-1 items-center justify-center py-8">
@@ -105,6 +126,11 @@ export default function Friends() {
     router.push("/(screens)/addByUsername");
   };
 
+  // Debug info
+  console.log("Current friends state:", friends);
+  console.log("Filtered friends:", filteredFriends);
+  console.log("Is loading:", isLoading);
+
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
       <Header
@@ -128,7 +154,7 @@ export default function Friends() {
           renderItem={renderFriendItem}
           ListEmptyComponent={renderEmptyComponent}
           refreshing={isLoading}
-          onRefresh={getFriends}
+          onRefresh={handleRefresh} // Use the new handleRefresh function
           showsVerticalScrollIndicator={false}
         />
       </View>

@@ -1,6 +1,6 @@
-import Header from "@/components/ui/header";
-import InformativeToggle from "@/components/ui/informativeToggle";
-import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
+import InformativeToggle from "@/components/informativeToggle";
+import SettingsRoutingSection from "@/components/settingsRoutingSection";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
 import { ScrollView, StatusBar, Text, View } from "react-native";
@@ -102,7 +102,9 @@ const DataPreferencesSection = ({
       <View className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {dataPreferences.map((item, index) => (
           <View
-            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === dataPreferences.length - 1 ? "rounded-b-3xl" : ""}`}
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${
+              index === dataPreferences.length - 1 ? "rounded-b-3xl" : ""
+            }`}
             key={item.label}
           >
             <InformativeToggle

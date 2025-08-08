@@ -1,15 +1,9 @@
-import Header from "@/components/ui/header";
-import Panel from "@/components/ui/panel";
-import TabSelector from "@/components/ui/tabSelector";
+import Panel from "@/components/panel";
+import TabSelector from "@/components/tabSelector";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
-import {
-  FlatList,
-  SafeAreaView,
-  StatusBar,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, SafeAreaView, StatusBar, Text, View } from "react-native";
 
 export default function ConntentAndSocial() {
   const [accountTab, setAccountTab] = useState<string>("Security");
@@ -33,7 +27,7 @@ export default function ConntentAndSocial() {
         },
         {
           label: "Email",
-          route: "/(settings)/email", 
+          route: "/(settings)/email",
           seconLabel: userData?.email,
         },
         {
@@ -59,7 +53,7 @@ export default function ConntentAndSocial() {
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
-      <Header title="Account"  />
+      <Header title="Account" />
       <TabSelector
         tab={accountTab}
         setTab={setAccountTab}

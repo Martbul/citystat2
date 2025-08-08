@@ -11,6 +11,7 @@ export default function Panel(props: {
   border?: boolean;
   borderColor?: string;
   openPopup?: any;
+  labelStyle?:string
 }) {
   const router = useRouter();
 
@@ -33,7 +34,7 @@ export default function Panel(props: {
     >
       <View className="flex-row items-center space-x-4 gap-2">
         {props.icon}
-        <Text className="text-lightBlackText text-base">{props.label}</Text>
+        <Text className={`text-lightBlackText text-base ${props.labelStyle}`}>{props.label}</Text>
       </View>
       <View className="flex flex-row items-center gap-1">
         <Text className="text-lightMutedText">{props.seconLabel}</Text>

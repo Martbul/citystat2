@@ -116,7 +116,7 @@ export interface UserDataContextType {
   
   settings: Settings;
   fetchOtherUserProfile:(otherUserId: string) => Promise<any>;
-  updateUser: (updates: Partial<Omit<UserData, "id" | "createdAt" | "updatedAt" | "cityStats" | "settings">>) => Promise<void>;
+  updateUserDetails: (updates: Partial<Omit<UserData, "id" | "createdAt" | "updatedAt" | "cityStats" | "settings">>) => Promise<void>;
   updateSettings: (settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>) => Promise<void>;
   updateUserField: (field: string, value: any) => Promise<void>;
   updateUserNote: (note: string) => Promise<void>;

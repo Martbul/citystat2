@@ -1,18 +1,18 @@
+import { useUserData } from "@/Providers/UserDataProvider";
+import Header from "@/components/header";
+import InputEditor from "@/components/inputEditor";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useUserData } from "@/Providers/UserDataProvider";
-import Header from "@/components/ui/header";
 import { SafeAreaView } from "react-native-safe-area-context";
-import InputEditor from "@/components/ui/inputEditor";
 
 export default function AddByUsername() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +55,7 @@ export default function AddByUsername() {
         <Text className="text-green-600 font-medium">Friends</Text>
       ) : (
         <TouchableOpacity
-          className="bg-blue-500 px-4 py-2 rounded-lg"
+          className="bg-lightPrimaryAccent px-4 py-2 rounded-lg"
           onPress={() => addFriendByUser(item)}
           disabled={isLoading === item.id}
         >

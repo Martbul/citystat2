@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import Panel from '@/components/ui/panel';
+import Panel from "@/components/panel";
+import React from "react";
+import { Text, View } from "react-native";
 
 interface SettingsRoutingSectionProps {
   title: string;
@@ -13,6 +13,7 @@ interface SettingsRoutingSectionProps {
   containerStyle?: string;
   titleStyle?: string;
   cardStyle?: string;
+  labelStyle?: string;
 }
 
 const SettingsRoutingSection: React.FC<SettingsRoutingSectionProps> = ({
@@ -20,17 +21,18 @@ const SettingsRoutingSection: React.FC<SettingsRoutingSectionProps> = ({
   data,
   containerStyle = "mt-6 mx-4",
   titleStyle = "text-lg font-bold text-lightPrimaryText mb-2",
-  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden",
+  labelStyle=""
 }) => {
   return (
     <View className={containerStyle}>
-      <Text className={titleStyle}>
-        {title}
-      </Text>
+      <Text className={titleStyle}>{title}</Text>
       <View className={cardStyle}>
         {data.map((item, index) => (
-          <View 
-            className={`bg-lightSurface ${index === 0 ? 'rounded-t-3xl' : ''} ${index === data.length - 1 ? 'rounded-b-3xl' : ''}`} 
+          <View
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${
+              index === data.length - 1 ? "rounded-b-3xl" : ""
+            }`}
             key={item.label}
           >
             <Panel
@@ -38,6 +40,7 @@ const SettingsRoutingSection: React.FC<SettingsRoutingSectionProps> = ({
               label={item.label}
               icon={item.icon}
               seconLabel={item.seconLabel}
+              labelStyle={labelStyle}
             />
             {index < data.length - 1 && (
               <View className="h-px bg-gray-100 ml-4" />

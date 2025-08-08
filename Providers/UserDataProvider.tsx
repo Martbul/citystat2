@@ -137,15 +137,15 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
             const newUserData = {
               id: user.id,
               email: user.emailAddresses[0]?.emailAddress || "",
-              firstName: user.firstName || null,
-              lastName: user.lastName || null,
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
               imageUrl:
                 user.imageUrl ||
                 "https://48htuluf59.ufs.sh/f/1NvBfFppWcZeWF2WCCi3zDay6IgjQLVNYHEhKiCJ8OeGwTon",
-              phoneNumber: user.phoneNumbers[0]?.phoneNumber || null,
+              phoneNumber: user.phoneNumbers[0]?.phoneNumber || undefined,
               role: Role.USER,
               completedTutorial: false,
-              aboutMe: null,
+              aboutMe: undefined,
               disableAccount: false,
               deleteAccount: false,
               note: "",
@@ -155,6 +155,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
             fetchedUserData = await apiService.createUser(newUserData, token);
             console.log("New user created:", fetchedUserData);
           } else {
+            console.log("errr: " +  error)
             throw error;
           }
         }
@@ -183,7 +184,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isSignedIn]);
 
-  // Get settings - handle both "Settings" and "settings" from API
   const settings = useMemo(() => {
     const apiSettings = userData?.Settings || userData?.settings;
     return apiSettings
@@ -191,8 +191,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       : defaultSettings;
   }, [userData]);
 
-  // API methods that use the service layer
-  const updateUser = useCallback(
+  const updateUserDetails = useCallback(
     async (
       updates: Partial<
         Omit<
@@ -207,14 +206,13 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       if (!token) return;
 
       await withLoadingAndError(
-        () => apiService.updateUser(updates, token),
+        () => apiService.updateUserDetails(updates, token),
         (updatedData) => setUserData(updatedData)
       );
     },
     [user?.id, getToken, withLoadingAndError]
   );
 
-  // Single settings update method - handles all settings updates
   const updateSettings = useCallback(
     async (
       settingsUpdates: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
@@ -246,7 +244,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [user?.id, getToken, withLoadingAndError]);
 
-  // Update the addFriend method in your UserDataProvider
+
   const addFriendByUser = useCallback(
     async (friendUser: UserData): Promise<boolean> => {
       if (!user?.id || !userData) return false;
@@ -483,7 +481,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       fetchOtherUserProfile,
 
       // Core methods
-      updateUser,
+      updateUserDetails,
       updateSettings, // Single settings update method
       updateUserField,
       updateUserNote,
@@ -518,7 +516,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       fetchOtherUserProfile,
       addFriendByUser, 
       settings,
-      updateUser,
+      updateUserDetails,
       updateSettings,
       updateUserField,
       updateUserNote,

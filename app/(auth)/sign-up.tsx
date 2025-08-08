@@ -88,8 +88,8 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <SafeAreaView>
-        <View className="flex-1 p-8 justify-center bg-lightBackground">
+      
+        <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
           <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
             Verify your email
           </Text>
@@ -111,7 +111,6 @@ export default function SignUpScreen() {
               Verify
             </Text>
           </TouchableOpacity>
-        </View>
       </SafeAreaView>
     );
   }
@@ -121,8 +120,8 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView>
-      <View className="flex-1 p-8 justify-center bg-lightBackground">
+    
+      <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
         <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
           Create your account
         </Text>
@@ -186,7 +185,6 @@ export default function SignUpScreen() {
             <Text className="text-sm text-lightPrimaryAccent"> Sign in</Text>
           </Link>
         </View>
-      </View>
     </SafeAreaView>
   );
 }

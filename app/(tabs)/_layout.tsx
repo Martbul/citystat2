@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
-import { Tabs, useRouter } from "expo-router";
-import { Platform } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useAuth } from "@clerk/clerk-expo";
-import TabBarBackground from "@/components/ui/TabBarBackground";
+import { IconSymbol } from "@/components/IconSymbol";
+import TabBarBackground from "@/components/TabBarBackground";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { useAuth } from "@clerk/clerk-expo";
+import { Tabs, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
   const { isSignedIn } = useAuth();
@@ -25,7 +25,7 @@ export default function TabLayout() {
   }, [isSignedIn, userData, router]);
 
   if (!isSignedIn || (userData && !userData.completedTutorial)) {
-    return null;//Add loading spinner or smth
+    return null; //Add loading spinner or smth
   }
 
   return (

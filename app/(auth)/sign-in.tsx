@@ -76,71 +76,79 @@ export default function Page() {
   };
 
   return (
-    <SafeAreaView>
-      <View className="flex-1 p-8 justify-center bg-lightBackground">
-        <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
-          Sign in
-        </Text>
+    <SafeAreaView className="flex-1 justify-center p-8  bg-lightBackground">
+      <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
+        Sign in
+      </Text>
 
-        <View className="flex gap-2">
-          <InputBox
-            val={emailAddress}
-            valSetFunc={onEmailChange}
-            placeholderTest="Email"
-            icon={<Feather name="mail" size={20} color="black" />}
-          />
-          {emailErrors?.map((error, index) => (
-            <Text key={`email-${index}`} className="text-red-500 text-sm">
-              {error.longMessage || error.message}
-            </Text>
-          ))}
-
-          <InputBox
-            val={password}
-            valSetFunc={onPasswordChange}
-            placeholderTest="Password"
-            icon={<Feather name="lock" size={24} color="black" />}
-            icon2={
-              isPasswordVisible ? (
-                <FontAwesome name="eye-slash" size={24} color="black" />
-              ) : (
-                <FontAwesome name="eye" size={24} color="black" />
-              )
-            }
-            icon2PressFunc={toggleShowPassword}
-            secureTextEntry={!isPasswordVisible}
-          />
-
-          {passwordErrors?.map((error, index) => (
-            <Text key={`pass-${index}`} className="text-red-500 text-sm">
-              {error.longMessage || error.message}
-            </Text>
-          ))}
-        </View>
-
-        {generalErrors?.map((error, index) => (
-          <Text key={`gen-${index}`} className="text-red-500 text-sm mt-1">
+      <View className="flex gap-2">
+        <InputBox
+          val={emailAddress}
+          valSetFunc={onEmailChange}
+          placeholderTest="Email"
+          icon={<Feather name="mail" size={20} color="black" />}
+        />
+        {emailErrors?.map((error, index) => (
+          <Text key={`email-${index}`} className="text-red-500 text-sm">
             {error.longMessage || error.message}
           </Text>
         ))}
 
-        <TouchableOpacity
-          onPress={onSignInPress}
-          className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
-        >
-          <Text className="text-base font-semibold text-lightBlackText">
-            Continue
-          </Text>
-        </TouchableOpacity>
+        <InputBox
+          val={password}
+          valSetFunc={onPasswordChange}
+          placeholderTest="Password"
+          icon={<Feather name="lock" size={24} color="black" />}
+          icon2={
+            isPasswordVisible ? (
+              <FontAwesome name="eye-slash" size={24} color="black" />
+            ) : (
+              <FontAwesome name="eye" size={24} color="black" />
+            )
+          }
+          icon2PressFunc={toggleShowPassword}
+          secureTextEntry={!isPasswordVisible}
+        />
 
-        <View className="flex flex-row justify-center items-center mt-6">
-          <Text className="text-sm text-lightBlackText">
-            Don't have an account?
+        {passwordErrors?.map((error, index) => (
+          <Text key={`pass-${index}`} className="text-red-500 text-sm">
+            {error.longMessage || error.message}
           </Text>
-          <Link href="/sign-up">
-            <Text className="text-sm text-lightPrimaryAccent"> Sign up</Text>
-          </Link>
+        ))}
+
+        <View className="flex items-end mt-1">
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/resetPassword")}
+          >
+            <Text className="text-sm text-lightPrimaryAccent font-medium">
+              Forgot password?
+            </Text>
+          </TouchableOpacity>
         </View>
+      </View>
+
+      {generalErrors?.map((error, index) => (
+        <Text key={`gen-${index}`} className="text-red-500 text-sm mt-1">
+          {error.longMessage || error.message}
+        </Text>
+      ))}
+
+      <TouchableOpacity
+        onPress={onSignInPress}
+        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
+      >
+        <Text className="text-base font-semibold text-lightBlackText">
+          Continue
+        </Text>
+      </TouchableOpacity>
+
+      <View className="flex flex-row justify-center items-center mt-6">
+        <Text className="text-sm text-lightBlackText">
+          Don't have an account?
+        </Text>
+        <Link href="/sign-up">
+          <Text className="text-sm text-lightPrimaryAccent"> Sign up</Text>
+        </Link>
       </View>
     </SafeAreaView>
   );

@@ -1,7 +1,7 @@
-import Header from "@/components/ui/header";
-import RadioSection from "@/components/ui/radioSection";
-import SettingsTouchableSection from "@/components/ui/settingsTouchableSection";
-import Slider from "@/components/ui/Slider";
+import RadioSection from "@/components/radioSection";
+import SettingsTouchableSection from "@/components/settingsTouchableSection";
+import Slider from "@/components/Slider";
+import Header from "@/components/header";
 import {
   displayMessagesOptions,
   fontStyleOptions,
@@ -10,7 +10,7 @@ import {
   themeOptions,
 } from "@/data/appearenceSettingsOption";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -26,7 +26,6 @@ export default function Appearance() {
   const [displaySettings, setDisplaySettings] = useState<any[]>([]);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
-
 
   useEffect(() => {
     console.log("Settings:", settings);
@@ -51,22 +50,20 @@ export default function Appearance() {
     ]);
 
     // Set zoom level from settings
+    //TODO: Zoom and contrast wtf??
     if (settings.zoomLevel) {
       setContrast(parseInt(settings.zoomLevel));
     }
   }, [settings]);
 
-  // Convert enum values to display strings
   const getDisplayValue = (value: any, options: any[]) => {
     const option = options.find((opt) => opt.value === value);
     return option?.label || value;
   };
 
-  // Single method to handle all setting updates
   const handleSettingUpdate = async (settingUpdates: any) => {
     await updateSettings(settingUpdates);
   };
-
 
   const resetContrast = useCallback(() => {
     setContrast(100);

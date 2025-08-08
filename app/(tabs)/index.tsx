@@ -7,6 +7,7 @@ import {
   Dimensions,
   StyleSheet,
   FlatList,
+  StatusBar,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -15,25 +16,22 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { cn } from "@/utils/cn";
 import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
-import SideMenuDrawer from "@/components/ui/drawers/SideMenuDrawer";
 import { useUser } from "@clerk/clerk-expo";
 import { mockUserData } from "@/mockData/mocks";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
-
+import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
 
-
-
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
-  const { isSignedIn, isLoaded } = useUser();
-  const {userData} = useUserData()
+  const { isSignedIn, isLoaded, user } = useUser();
+  const { userData } = useUserData();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [selectedTab, setSelectedTab] = useState<string>("General");
@@ -98,8 +96,12 @@ export default function HomeScreen() {
     return null;
   }
 
-  if(userData && userData.completedTutorial === false) {
-    router.replace("/tutorial")
+  if (isSignedIn) {
+    console.log("User is signed in: " + user.id);
+  }
+
+  if (userData && userData.completedTutorial === false) {
+    router.replace("/tutorial");
   }
 
   const sections = [
@@ -108,11 +110,11 @@ export default function HomeScreen() {
     { id: "content", type: "content" },
   ];
 
-  const renderSection = ({ item }:{item:any}) => {
+  const renderSection = ({ item }: { item: any }) => {
     if (item.type === "header") {
       return (
-        <View className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-b-2xl">
-          {/* Header Top */}
+        <SafeAreaView className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-b-2xl">
+          <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
           <View className="flex-row justify-between items-center">
             <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
               <Entypo name="menu" size={26} color="#333333" />
@@ -160,7 +162,7 @@ export default function HomeScreen() {
               />
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       );
     }
 

@@ -1,21 +1,21 @@
+import PrimaryButton from "@/components/primaryButton";
+import { useUserData } from "@/Providers/UserDataProvider";
+import { Ionicons } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from "@expo/vector-icons/Feather";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { RelativePathString, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Image,
+  RefreshControl,
+  ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  RefreshControl,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import Feather from "@expo/vector-icons/Feather";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import { RelativePathString, useRouter } from "expo-router";
-import { useUserData } from "@/Providers/UserDataProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PrimaryButton from "@/components/ui/primaryButton";
-import { useState, useCallback } from "react";
 
 export default function ProfileScreen() {
   const { userData, isLoading, refreshUserData } = useUserData();
@@ -91,8 +91,8 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#your-primary-color"]} // Android
-              tintColor="#your-primary-color" // iOS
+              colors={["#bddc62"]} // Android - using your accent color
+              tintColor="#bddc62" // iOS - using your accent color
             />
           }
           showsVerticalScrollIndicator={false}

@@ -1,7 +1,6 @@
+import InputEditor from "@/components/inputEditor";
 import Loader from "@/components/Loader";
-import SavingLoader from "@/components/Loader";
-import Header from "@/components/ui/header";
-import InputEditor from "@/components/ui/inputEditor";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -13,7 +12,7 @@ export default function EditSetting() {
   const { data, header } = useLocalSearchParams();
   const [currData, setCurrData] = useState<string>("");
 
-  const { updateUser, updateSettings, isLoading, error, userData } =
+  const { updateUserDetails, updateSettings, isLoading, error, userData } =
     useUserData();
 
   useEffect(() => {
@@ -44,7 +43,6 @@ export default function EditSetting() {
         "lastname",
         "username",
         "aboutme",
-        "note",
       ];
       const settingsFields = [
         "theme",
@@ -63,7 +61,7 @@ export default function EditSetting() {
         const updates = {
           [lowerCaseHeader]: currData,
         };
-        await updateUser(updates);
+        await updateUserDetails(updates);
       } else if (settingsFields.includes(lowerCaseHeader)) {
         // Update settings field
         const settingsUpdates = {

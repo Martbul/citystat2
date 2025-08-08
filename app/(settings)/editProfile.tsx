@@ -1,20 +1,19 @@
-import Header from "@/components/ui/header";
-import InputEditor from "@/components/ui/inputEditor";
+import InputEditor from "@/components/inputEditor";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useImageUploader } from "@/utils/uploadthing";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
 import { openSettings } from "expo-linking";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
-  Pressable,
   ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -56,7 +55,7 @@ const EditProfileScreen = () => {
           [
             { text: "Dismiss" },
             { text: "Open Settings", onPress: openSettings },
-          ],
+          ]
         );
       },
     });
@@ -75,7 +74,6 @@ const EditProfileScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Edit Profile" secondActionTitle="Save" />
       <ScrollView className="flex-1 bg-lightBackground">
-        
         {/* Profile Picture Section */}
         <View className="absolute top-[20px] left-14 -ml-10 z-10">
           <View className="relative">
@@ -96,7 +94,7 @@ const EditProfileScreen = () => {
               )}
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               className="absolute -top-1 -right-1 bg-darkSurface rounded-full p-2 border-2 border-lightBackground"
               onPress={handleImagePick}
               disabled={isUploading}

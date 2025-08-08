@@ -1,6 +1,6 @@
+import Panel from "@/components/panel";
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
-import Panel from "@/components/ui/panel";
+import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "./primaryButton";
 
 interface SettingsTouchableSectionProps {
@@ -45,7 +45,9 @@ const SettingsTouchableSection: React.FC<SettingsTouchableSectionProps> = ({
       <View className={cardStyle}>
         {data.map((item, index) => (
           <View
-            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === data.length - 1 ? "rounded-b-3xl" : ""}`}
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${
+              index === data.length - 1 ? "rounded-b-3xl" : ""
+            }`}
             key={item.label}
           >
             <Panel
@@ -98,9 +100,7 @@ const SettingsTouchableSection: React.FC<SettingsTouchableSectionProps> = ({
               </>
             )}
 
-            {/* <TouchableOpacity onPress={closePopup} className="mt-4 bg-blue-500 p-2 rounded">
-              <Text className="text-white text-center">Close</Text>
-            </TouchableOpacity> */}
+           
             <PrimaryButton heading="Close" onPressAction={closePopup} />
           </View>
         </Pressable>

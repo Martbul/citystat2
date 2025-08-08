@@ -30,7 +30,7 @@ const TutorialScreen = () => {
   if (!isLoaded) {
     <Loader purpose="loading"/>;
   }
-  const { updateUser } = useUserData();
+  const { updateUserDetails } = useUserData();
   //TODO: Add a coice for a city to play, then set the default coords to that city center,
   //TODO: then fetch how many streets are in this city to calculate % coverage
   const [userDetails, setUserDetails] = useState({
@@ -61,7 +61,7 @@ const TutorialScreen = () => {
     console.log(userDetails.firstName);
 
     try {
-      await updateUser(userDetails);
+      await updateUserDetails(userDetails);
     } catch (error) {
       console.log(error);
     }

@@ -1,6 +1,6 @@
-import Header from "@/components/ui/header";
-import InformativeToggle from "@/components/ui/informativeToggle";
-import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
+import InformativeToggle from "@/components/informativeToggle";
+import SettingsRoutingSection from "@/components/settingsRoutingSection";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useEffect, useState } from "react";
 import { ScrollView, StatusBar, Text, View } from "react-native";
@@ -10,7 +10,6 @@ export default function Advanced() {
   const { userData } = useUserData();
   const [developerToggles, setDeveloperToggles] = useState<any[]>([]);
   const [performanceSettings, setPerformanceSettings] = useState<any[]>([]);
-  // const [experimentalFeatures, setExperimentalFeatures] = useState<any[]>([]);
   const [debugSettings, setDebugSettings] = useState<any[]>([]);
 
   useEffect(() => {
@@ -56,28 +55,6 @@ export default function Advanced() {
         },
       ]);
 
-      // setExperimentalFeatures([
-      //   {
-      //     label: "Beta Features",
-      //     route: "/(settings)/betaFeatures",
-      //     seconLabel: "Try new features before release",
-      //   },
-      //   {
-      //     label: "Advanced Gestures",
-      //     route: "/(settings)/advancedGestures",
-      //     seconLabel: "Enable experimental gesture controls",
-      //   },
-      //   {
-      //     label: "AI Enhancements",
-      //     route: "/(settings)/aiEnhancements",
-      //     seconLabel: "Test AI-powered features",
-      //   },
-      //   {
-      //     label: "Laboratory",
-      //     route: "/(settings)/laboratory",
-      //     seconLabel: "Experimental features testing ground",
-      //   },
-      // ]);
 
       setDebugSettings([
         {
@@ -114,34 +91,25 @@ export default function Advanced() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-      
-
-        {/* Developer Toggles */}
         <DeveloperTogglesSection developerToggles={developerToggles} />
 
-        {/* Performance Settings */}
         <SettingsRoutingSection
           title="Performance"
           data={performanceSettings}
           containerStyle="mt-8 mx-4"
         />
 
-      
-
-        {/* Debug Settings */}
         <SettingsRoutingSection
           title="Debug & Diagnostics"
           data={debugSettings}
           containerStyle="mt-8 mx-4"
         />
 
-        {/* System Information */}
         <SystemInformationSection />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
 
 const DeveloperTogglesSection = ({
   developerToggles,
@@ -161,7 +129,9 @@ const DeveloperTogglesSection = ({
       <View className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {developerToggles.map((item, index) => (
           <View
-            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === developerToggles.length - 1 ? "rounded-b-3xl" : ""}`}
+            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${
+              index === developerToggles.length - 1 ? "rounded-b-3xl" : ""
+            }`}
             key={item.label}
           >
             <InformativeToggle

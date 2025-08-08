@@ -1,12 +1,17 @@
-import Header from "@/components/ui/header";
-import Panel from "@/components/ui/panel";
-import SettingsRoutingSection from "@/components/ui/settingsRoutingSection";
-import TabSelector from "@/components/ui/tabSelector";
+import SettingsRoutingSection from "@/components/settingsRoutingSection";
+import TabSelector from "@/components/tabSelector";
+import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { dataCombinator } from "@/utils/dataCombinator";
 import { useEffect, useState } from "react";
-import { FlatList, ScrollView, StatusBar, Text, View } from "react-native";
+import {
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PrimaryModal from "@/components/primaryModal";
 
 export default function Account() {
   const [accountTab, setAccountTab] = useState<string>("Security");
@@ -15,6 +20,19 @@ export default function Account() {
   const [accountInfo, setAccountInfo] = useState<any[]>([]);
   const [signInManagement, setSignInManagement] = useState<any[]>([]);
   const [accountManagement, setAccountManagement] = useState<any[]>([]);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalLabel, setModalLabel] = useState("");
+  const [modalRoute, setModalRoute] = useState("");
+  const [modalConformationFunc, setModalConformationFunc] = useState<
+    (() => void) | undefined
+  >(undefined);
+
+  const openModal = (label: string, onConfirmFn: () => void) => {
+    setModalConformationFunc(() => onConfirmFn);
+    setModalLabel(label);
+    setModalVisible(true);
+  };
 
   useEffect(() => {
     if (userData) {
@@ -44,27 +62,21 @@ export default function Account() {
       setSignInManagement([
         {
           label: "Password",
-
-          route: "/(settings)/disableAccount",
-        },
-        {
-          label: "Security Keys",
-          route: "/(settings)/deleteAccount",
-        },
-        {
-          label: "Enable Authenticator App",
-          route: "/(settings)/deleteAccount",
+          route: "/(auth)/resetPassword",
         },
       ]);
+
       setAccountManagement([
         {
           label: "Disable Account",
-
-          route: "/(settings)/disableAccount",
+          //TODO: MAKE THE FUNC FOR DISABLELING ACC -> add flag in db that the acc is disalbed(when user tries to logs -> alert that acc is disable and just able to see stats on index screen)
+          onConfirmFunc: () => console.log("conf"),
         },
         {
+          //TODO: MAKE THE FUNC DELETING DISABLELING ACC -> delete from cleark and db
+
           label: "Delete Account",
-          route: "/(settings)/deleteAccount",
+          onConfirmFunc: () => console.log("conf"),
         },
       ]);
     }
@@ -86,9 +98,22 @@ export default function Account() {
           accountInfo={accountInfo}
           signInManagement={signInManagement}
           accountManagement={accountManagement}
+          openModal={openModal}
         />
       )}
       {accountTab === "Standing" && <Standing />}
+
+      <PrimaryModal
+        visible={modalVisible}
+        setVisible={setModalVisible}
+        title={modalLabel}
+        confirmFn={modalConformationFunc}
+      >
+        <Text className="text-center text-base">
+          Modal content for <Text className="font-semibold">{modalLabel}</Text>{" "}
+          goes here.
+        </Text>
+      </PrimaryModal>
     </SafeAreaView>
   );
 }
@@ -97,10 +122,12 @@ const Security = ({
   accountInfo,
   accountManagement,
   signInManagement,
+  openModal,
 }: {
   accountInfo: any[];
   accountManagement: any[];
   signInManagement: any[];
+  openModal: (label: string, onConfirmFn: () => void) => void;
 }) => {
   return (
     <ScrollView
@@ -116,11 +143,20 @@ const Security = ({
         containerStyle="mt-8 mx-4"
       />
 
-      <SettingsRoutingSection
-        title="Account Management"
-        data={accountManagement}
-        containerStyle="mt-8 mx-4"
-      />
+      <View className="mt-8 mx-4">
+        <Text className="text-base font-semibold text-red-500 mb-3">
+          Account Management
+        </Text>
+        {accountManagement.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            className="py-4 border-b border-gray-200"
+            onPress={() => openModal(item.label, item.onConfirmFunc)}
+          >
+            <Text className="text-red-500 text-base">{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </ScrollView>
   );
 };
@@ -128,7 +164,6 @@ const Security = ({
 const Standing = () => {
   return (
     <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
-      {/* Header Section */}
       <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
         <Text className="text-2xl font-bold text-gray-900 mb-2">
           Account Standing
@@ -139,7 +174,6 @@ const Standing = () => {
         </Text>
       </View>
 
-      {/* Status Cards */}
       <View className="space-y-4 mb-6">
         <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <View className="flex-row items-center justify-between mb-3">

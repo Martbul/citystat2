@@ -1,7 +1,7 @@
 import { useUserData } from "@/Providers/UserDataProvider";
 import Loader from "@/components/Loader";
-import Header from "@/components/ui/header";
-import InputEditor from "@/components/ui/inputEditor";
+import Header from "@/components/header";
+import InputEditor from "@/components/inputEditor";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, StatusBar, Text, View } from "react-native";

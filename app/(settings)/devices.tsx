@@ -1,4 +1,4 @@
-import Header from "@/components/ui/header";
+import Header from "@/components/header";
 import { useEffect, useState } from "react";
 import { StatusBar, Text, View, ActivityIndicator } from "react-native";
 import * as Device from "expo-device";

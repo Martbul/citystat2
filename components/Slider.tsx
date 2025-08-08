@@ -12,7 +12,7 @@ type SliderProps = {
   maximumValue: number;
   value: number;
   onValueChange: (value: number) => void;
-  onSlidingComplete?: (value: number) => void; // ✅ Added
+  onSlidingComplete?: (value: number) => void; 
   step?: number;
   minimumTrackTintColor?: string;
   maximumTrackTintColor?: string;
@@ -25,7 +25,7 @@ const Slider: React.FC<SliderProps> = ({
   maximumValue,
   value,
   onValueChange,
-  onSlidingComplete, // ✅ Added
+  onSlidingComplete,
   step = 1,
   minimumTrackTintColor = "#bddc62",
   maximumTrackTintColor = "#e0e0e0",
@@ -48,7 +48,7 @@ const Slider: React.FC<SliderProps> = ({
     onValueChange(clampedValue);
 
     if (onSlidingComplete) {
-      onSlidingComplete(clampedValue); // ✅ Fire complete callback
+      onSlidingComplete(clampedValue); 
     }
   };
 

@@ -1,5 +1,3 @@
-// app/settings/_layout.tsx
-
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 

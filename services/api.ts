@@ -1,5 +1,5 @@
-import { UserData, CityStat, StreetWalk, Friend } from "@/types/user";
-import { Settings, Theme, Language } from "@/types/settings";
+import { Settings } from "@/types/settings";
+import { CityStat, Friend, StreetWalk, UserData } from "@/types/user";
 
 class ApiService {
   private baseUrl: string;
@@ -106,11 +106,11 @@ class ApiService {
     });
   }
 
-  async updateUser(
+  async updateUserDetails(
     updates: Partial<UserData>,
     token: string
   ): Promise<UserData> {
-    return this.makeRequest<UserData>("/api/user", {
+    return this.makeRequest<UserData>("/api/user/details", {
       method: "PUT",
       token,
       body: JSON.stringify(updates),
@@ -236,26 +236,26 @@ class ApiService {
   }
 
   async getFriends(token: string): Promise<Friend[]> {
-    return this.makeRequest(`api/friends/list`, {
-      method: "GET",
-      token,
-    });
+    const response = await this.makeRequest<{ friends: Friend[] }>(
+      `/api/friends/list`,
+      {
+        method: "GET",
+        token,
+      }
+    );
+    return response.friends;
   }
 
   async fetchOtherUserProfile(
-  otherUserId: string,
-  token: string,
-): Promise<any> {
-  return this.makeRequest<any>(
-    `/api/friends/profile`,
-    {
+    otherUserId: string,
+    token: string
+  ): Promise<any> {
+    return this.makeRequest<any>(`/api/friends/profile`, {
       method: "POST",
       token,
       body: JSON.stringify({ otherUserId }),
-    }
-  );
-}
-
+    });
+  }
 }
 
 export const apiService = new ApiService();

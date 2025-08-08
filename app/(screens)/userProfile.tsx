@@ -66,7 +66,7 @@ export default function FitnessProfileScreen() {
     return (
       <View className="bg-darkSurface rounded-2xl p-4 mb-6">
         <View className="flex-row items-end justify-between h-40">
-          {data.map((item, index) => (
+          {data.map((item, index:number) => (
             <View key={index} className="flex-1 items-center">
               <View
                 className="bg-blue-600 rounded-t-sm mx-1"
@@ -147,7 +147,6 @@ export default function FitnessProfileScreen() {
             </View>
           </View>
 
-          {/* Workout Summary */}
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-darkText text-lg font-anybody">
               <Text className="font-anybodyBold">8 hours</Text> last week
