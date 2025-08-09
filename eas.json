@@ -33,7 +33,13 @@
       "env": {
         "NODE_ENV": "production"
       }
-    }
+    },
+ "production-apk": {
+  "android": {
+    "buildType": "apk"
+  }
+}
+
   },
   "submit": {
     "production": {}
