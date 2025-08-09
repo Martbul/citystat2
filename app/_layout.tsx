@@ -17,6 +17,7 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   
+  const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -25,40 +26,36 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
- <ClerkProvider tokenCache={tokenCache}>
-      <UserDataProvider>
-        <TailwindProvider>
-          <SideMenuDrawerProvider>
-                <Stack>
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(screens)"
-                    options={{ headerShown: false }}
-                  /> 
-                    <Stack.Screen
-                    name="(settings)"
-                    options={{ headerShown: false }}
-                  />
+      <ClerkProvider
+        tokenCache={tokenCache}
+        publishableKey={clerkPublishableKey}
+      >
+        <UserDataProvider>
+          <TailwindProvider>
+            <SideMenuDrawerProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(screens)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(settings)"
+                  options={{ headerShown: false }}
+                />
 
-                  <Stack.Screen
-                    name="(tutorial)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen name="+not-found" />
-                </Stack>
-                <StatusBar style="auto" />
-          </SideMenuDrawerProvider>
-        </TailwindProvider>
-      </UserDataProvider>
-    </ClerkProvider>
+                <Stack.Screen
+                  name="(tutorial)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </SideMenuDrawerProvider>
+          </TailwindProvider>
+        </UserDataProvider>
+      </ClerkProvider>
     </ErrorBoundary>
-   
   );
 }
