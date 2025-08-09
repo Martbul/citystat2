@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, StyleSheet, Alert, Text, TouchableOpacity } from "react-native";
+import { MIN_MOVEMENT_DISTANCE_METERS } from "@/constants/Location";
+import { useUserData } from "@/Providers/UserDataProvider";
 import Mapbox, {
   Camera,
   MapView,
   PointAnnotation,
   ShapeSource,
 } from "@rnmapbox/maps";
-import * as Location from "expo-location";
 import * as turf from "@turf/turf";
-import { MIN_MOVEMENT_DISTANCE_METERS } from "@/constants/Location";
-import { useUserData } from "@/Providers/UserDataProvider";
+import * as Location from "expo-location";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 //? CONSTANTS:
 
@@ -47,17 +47,41 @@ interface StreetData {
   features: Street[];
 }
 
-//TODO: a street has a single visited coords????
 interface VisitedStreet {
   streetId: string;
   streetName: string;
-  timestamp: number;
+  timestamp: number; // Entry timestamp
   coordinates: UserCoords;
   duration?: number;
 }
+// New interface that matches your Prisma model for API calls
+interface VisitedStreetRequest {
+  streetId: string;
+  streetName: string;
+  entryTimestamp: number; // Unix timestamp in milliseconds
+  exitTimestamp?: number; // Unix timestamp in milliseconds
+  durationSeconds?: number;
+  entryLatitude: number;
+  entryLongitude: number;
+}
+
+export interface SaveVisitedStreetsRequest {
+  sessionId: string;
+  visitedStreets: VisitedStreetRequest[];
+}
+
+//TODO: a street has a single visited coords????
+// interface VisitedStreet {
+//   streetId: string;
+//   streetName: string;
+//   timestamp: number;
+//   coordinates: UserCoords;
+//   duration?: number;
+// }
 
 const StreetTrackingMap = () => {
-  const { getLocationPermission, saveLocationPermission } = useUserData();
+  const { getLocationPermission, saveLocationPermission, saveVisitedStreets } =
+    useUserData();
   const [userLocation, setUserLocation] = useState<UserCoords | null>(null);
   const [highlightedStreets, setHighlightedStreets] = useState<string[]>([]);
   const [streetData, setStreetData] = useState<StreetData | null>(null);
@@ -117,7 +141,6 @@ const StreetTrackingMap = () => {
     };
   }, []);
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (visitedStreets.length > 0) {
@@ -128,6 +151,27 @@ const StreetTrackingMap = () => {
     return () => clearInterval(interval);
   }, [visitedStreets]);
 
+  //! Update your useEffect for periodic saving -> ai
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (visitedStreets.length > 0) {
+  //       console.log(`Saving ${visitedStreets.length} visited streets to database`);
+  //       saveVisitedStreetsToDatabase();
+  //     }
+  //   }, TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS);
+
+  //   return () => clearInterval(interval);
+  // }, [visitedStreets, user?.id]);
+
+  // // Also save when user leaves the screen
+  // useEffect(() => {
+  //   return () => {
+  //     // Save any remaining streets when component unmounts
+  //     if (visitedStreets.length > 0) {
+  //       saveVisitedStreetsToDatabase();
+  //     }
+  //   };
+  // }, []);
   //TODO: Save req permisions in DB
   const savePermissionStatus = async (hasPermission: boolean) => {
     try {
@@ -141,32 +185,32 @@ const StreetTrackingMap = () => {
     }
   };
 
-const requestLocationPermission = async () => {
-  try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    const granted = status === "granted";
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      const granted = status === "granted";
 
-    if (!granted) {
-      Alert.alert(
-        "Permission Denied",
-        "Location permission is required for street tracking."
-      );
-    } else {
-      console.log("Location permission granted");
-      await startLocationTracking();
+      if (!granted) {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required for street tracking."
+        );
+      } else {
+        console.log("Location permission granted");
+        await startLocationTracking();
+      }
+
+      setHasLocationPermission(granted);
+      await savePermissionStatus(granted);
+      return granted;
+    } catch (error) {
+      console.error("Error requesting location permission:", error);
+      Alert.alert("Error", "Failed to request location permission");
+      setHasLocationPermission(false);
+      await savePermissionStatus(false);
+      return false;
     }
-
-    setHasLocationPermission(granted);
-    await savePermissionStatus(granted);
-    return granted;
-  } catch (error) {
-    console.error("Error requesting location permission:", error);
-    Alert.alert("Error", "Failed to request location permission");
-    setHasLocationPermission(false);
-    await savePermissionStatus(false);
-    return false;
-  }
-};
+  };
 
   const loadPermissionStatus = async () => {
     try {
@@ -376,6 +420,27 @@ const requestLocationPermission = async () => {
     },
     [previousUserCoords, streetData, fetchStreetData]
   );
+  // ================================
+  // CONVERSION FUNCTIONS
+  // ================================
+
+  // Convert client interface to API format
+  const convertToApiFormat = (
+    visitedStreets: VisitedStreet[],
+    sessionId: string
+  ): VisitedStreetRequest[] => {
+    return visitedStreets.map((street) => ({
+      streetId: street.streetId,
+      streetName: street.streetName,
+      entryTimestamp: street.timestamp,
+      exitTimestamp: street.duration
+        ? street.timestamp + street.duration * 1000
+        : undefined,
+      durationSeconds: street.duration,
+      entryLatitude: street.coordinates.latitude,
+      entryLongitude: street.coordinates.longitude,
+    }));
+  };
 
   const shouldRefreshStreetData = (newCoords: UserCoords): boolean => {
     if (!userLocation) return true;
@@ -426,32 +491,68 @@ const requestLocationPermission = async () => {
     },
     [streetData, currentStreetId]
   );
+  // Generate unique session ID
+  const generateSessionId = (): string => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+  // const saveVisitedStreetsToDatabase = async () => {
+  //   try {
+  //     const response = await fetch("YOUR_API_ENDPOINT/visited-streets", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         // Add your auth headers here
+  //       },
+  //       body: JSON.stringify({
+  //         userId: "YOUR_USER_ID", // Get from your auth system
+  //         visitedStreets: visitedStreets,
+  //         sessionId: Date.now().toString(), // Or generate proper session ID
+  //       }),
+  //     });
+
+  //     if (response.ok) {
+  //       console.log("Successfully saved visited streets to database");
+  //       // Optionally clear local storage after successful save
+  //       setVisitedStreets([]);
+  //     } else {
+  //       throw new Error("Failed to save to database");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving visited streets:", error);
+  //     Alert.alert("Error", "Failed to save street data");
+  //   }
+  // };
 
   const saveVisitedStreetsToDatabase = async () => {
-    try {
-      const response = await fetch("YOUR_API_ENDPOINT/visited-streets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Add your auth headers here
-        },
-        body: JSON.stringify({
-          userId: "YOUR_USER_ID", // Get from your auth system
-          visitedStreets: visitedStreets,
-          sessionId: Date.now().toString(), // Or generate proper session ID
-        }),
-      });
+    if (visitedStreets.length === 0) {
+      console.log("No visited streets to save");
+      return;
+    }
 
-      if (response.ok) {
-        console.log("Successfully saved visited streets to database");
-        // Optionally clear local storage after successful save
-        setVisitedStreets([]);
-      } else {
-        throw new Error("Failed to save to database");
+    try {
+      const sessionId = generateSessionId();
+      const apiFormatStreets = convertToApiFormat(visitedStreets, sessionId);
+      const requestBody: SaveVisitedStreetsRequest = {
+        sessionId: sessionId,
+        visitedStreets: apiFormatStreets,
+      };
+      console.log("Saving visited streets:", requestBody);
+
+      const response = await saveVisitedStreets(requestBody);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save: ${response.status} ${errorText}`);
       }
+
+      const result = await response.json();
+      console.log("Successfully saved visited streets:", result);
+
+      // Clear local storage after successful save
+      setVisitedStreets([]);
     } catch (error) {
       console.error("Error saving visited streets:", error);
-      Alert.alert("Error", "Failed to save street data");
+      Alert.alert("Error", "Failed to save street data. Will retry later.");
     }
   };
 
@@ -813,8 +914,6 @@ const styles = StyleSheet.create({
 });
 
 export default StreetTrackingMap;
-
-
 
 //! not remove this commet. Claude code for mocked user movement for testing component
 // import React, { useState, useEffect, useRef, useCallback } from "react";

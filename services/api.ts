@@ -1,3 +1,4 @@
+import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
 import { Settings } from "@/types/settings";
 import { CityStat, Friend, StreetWalk, UserData } from "@/types/user";
 
@@ -268,11 +269,16 @@ class ApiService {
     });
   }
 
-  async getLocationPermission(
-    token: string
-  ): Promise<any> {
+  async getLocationPermission(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/visitor/locationPermission`, {
       method: "GET",
+      token,
+    });
+  }
+
+  async saveVisitedStreets(visitedStreets: SaveVisitedStreetsRequest,token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/visitor/streets`, {
+      method: "POST",
       token,
     });
   }

@@ -1,3 +1,4 @@
+import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
 import { Language, Theme, Settings } from "./settings";
 
 export enum Status {
@@ -40,6 +41,7 @@ export interface VisitedStreet {
   entryLongitude: number;
   createdAt: string;
 }
+
 
 export interface StreetWalk {
   id: string;
@@ -115,7 +117,9 @@ export interface UserDataContextType {
   getFriends: () => Promise<Friend[]>;
 
   getLocationPermission: () => Promise<any>;
-
+  saveVisitedStreets: (
+    visitedStreets: SaveVisitedStreetsRequest
+  ) => Promise<any>;
   settings: Settings;
   fetchOtherUserProfile: (otherUserId: string) => Promise<any>;
   updateUserDetails: (

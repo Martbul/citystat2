@@ -30,6 +30,7 @@ import {
   Motion,
 } from "@/types/settings";
 import { Alert } from "react-native";
+import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
   undefined
@@ -522,6 +523,45 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       },
       [user?.id, getToken]
     );
+  
+  
+    const saveVisitedStreets = useCallback(
+      async (visitedStreets: SaveVisitedStreetsRequest): Promise<any> => {
+        if (!visitedStreets || !user?.id) {
+          return null;
+        }
+
+        try {
+          setIsLoading(true);
+          setError(null);
+
+          const token = await getToken();
+          if (!token) return null;
+
+          const success = await apiService.saveVisitedStreets(
+            visitedStreets,
+            token
+          );
+
+          console.log("Saved location permissions", success);
+
+          return success;
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to save location permissions";
+          setError(errorMessage);
+          console.error("Error while saving location permissions:", err);
+          return null;
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      [user?.id, getToken]
+    );
+  
+  
 
 
   // Derived values for backwards compatibility
@@ -547,6 +587,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       userData,
       setUserData,
+      saveVisitedStreets,
       isLoading,
       error,
       settings, // Single settings object
@@ -588,6 +629,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       getLocationPermission,
       setUserData,
       getFriends,
+      saveVisitedStreets,
       isLoading,
       error,
       fetchOtherUserProfile,
