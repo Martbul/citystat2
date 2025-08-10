@@ -40,5 +40,13 @@ yarn-error.*
 app-example
 
 
+# Build outputs
+android/app/build/
+android/build/
+*.apk
+*.aab
+*.ipa
+
+
 credentials.json
 android/app/keystore.jks

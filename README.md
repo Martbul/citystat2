@@ -1,4 +1,21 @@
 
+## Comands Reference
+# Development workflow
+npm run android:debug              # Build debug APK
+npm run android:release           # Build release APK  
+npm run android:bundle           # Build release AAB
+npm run version:patch && npm run build:android  # Bump version & build
+
+# Release workflow
+./scripts/pre-build-checks.sh     # Run all checks
+npm run version:minor             # Bump version
+npm run build:android-bundle      # Build for Play Store
+node scripts/generate-changelog.js # Update changelog
+
+# Quick build
+chmod +x scripts/build-android.sh
+./scripts/build-android.sh
+
 ## To-Do List
 
 - [x] Fix clerk webhhoks for persisting users into neon db

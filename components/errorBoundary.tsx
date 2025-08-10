@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text } from "react-native";
 
 interface Props {
   children: React.ReactNode;
@@ -8,8 +8,6 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
-  errorInfo?: React.ErrorInfo;
-  timestamp?: string;
 }
 
 class ErrorBoundary extends React.Component<Props, State> {
@@ -19,75 +17,13 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      timestamp: new Date().toISOString(),
-    };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Structured logging
-    console.group(
-      "%c🚨 ErrorBoundary caught an error",
-      "color: red; font-weight: bold;"
-    );
-    console.log("🕒 Timestamp:", this.state.timestamp);
-    console.log("📄 Error message:", error.message);
-    console.log("📄 Stack trace:", error.stack);
-    console.log("🛠 Component stack:", errorInfo.componentStack);
-    console.log("📦 Props snapshot:", this.props);
-    console.groupEnd();
-
-    // Optional: send to crash reporting service
-    // Sentry.captureException(error, { extra: errorInfo });
-  }
-
-  renderDevErrorDetails() {
-    if (__DEV__ && this.state.error) {
-      return (
-        <ScrollView
-          style={{
-            maxHeight: 200,
-            marginTop: 10,
-            backgroundColor: "#eee",
-            padding: 8,
-          }}
-        >
-          <Text
-            style={{ fontSize: 12, fontFamily: "monospace", color: "#333" }}
-          >
-            {this.state.error.message}
-          </Text>
-          {this.state.error.stack && (
-            <Text
-              style={{
-                fontSize: 11,
-                fontFamily: "monospace",
-                color: "#666",
-                marginTop: 6,
-              }}
-            >
-              {this.state.error.stack}
-            </Text>
-          )}
-          {this.state.errorInfo?.componentStack && (
-            <Text
-              style={{
-                fontSize: 11,
-                fontFamily: "monospace",
-                color: "#666",
-                marginTop: 6,
-              }}
-            >
-              Component Stack:
-              {this.state.errorInfo.componentStack}
-            </Text>
-          )}
-        </ScrollView>
-      );
-    }
-    return null;
+    console.log("Error caught:", error, errorInfo);
+    // You can also log to a crash reporting service here
+    // Example: Sentry.captureException(error, { extra: errorInfo });
   }
 
   render() {
@@ -116,19 +52,164 @@ class ErrorBoundary extends React.Component<Props, State> {
             style={{
               textAlign: "center",
               color: "#666",
+              marginBottom: 20,
             }}
           >
-            The app encountered an error at {this.state.timestamp}.
+            The app encountered an error. Please restart the app.
           </Text>
-          {this.renderDevErrorDetails()}
+          {__DEV__ && this.state.error && (
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#999",
+                textAlign: "center",
+                fontFamily: "monospace",
+              }}
+            >
+              {this.state.error.message}
+            </Text>
+          )}
         </View>
       );
     }
+
     return this.props.children;
   }
 }
 
 export default ErrorBoundary;
+
+// import React from "react";
+// import { View, Text, ScrollView } from "react-native";
+
+// interface Props {
+//   children: React.ReactNode;
+// }
+
+// interface State {
+//   hasError: boolean;
+//   error?: Error;
+//   errorInfo?: React.ErrorInfo;
+//   timestamp?: string;
+// }
+
+// class ErrorBoundary extends React.Component<Props, State> {
+//   constructor(props: Props) {
+//     super(props);
+//     this.state = { hasError: false };
+//   }
+
+//   static getDerivedStateFromError(error: Error): State {
+//     return {
+//       hasError: true,
+//       error,
+//       timestamp: new Date().toISOString(),
+//     };
+//   }
+
+//   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+//     // Structured logging
+//     console.group(
+//       "%c🚨 ErrorBoundary caught an error",
+//       "color: red; font-weight: bold;"
+//     );
+//     console.log("🕒 Timestamp:", this.state.timestamp);
+//     console.log("📄 Error message:", error.message);
+//     console.log("📄 Stack trace:", error.stack);
+//     console.log("🛠 Component stack:", errorInfo.componentStack);
+//     console.log("📦 Props snapshot:", this.props);
+//     console.groupEnd();
+
+//     // Optional: send to crash reporting service
+//     // Sentry.captureException(error, { extra: errorInfo });
+//   }
+
+//   renderDevErrorDetails() {
+//     if (__DEV__ && this.state.error) {
+//       return (
+//         <ScrollView
+//           style={{
+//             maxHeight: 200,
+//             marginTop: 10,
+//             backgroundColor: "#eee",
+//             padding: 8,
+//           }}
+//         >
+//           <Text
+//             style={{ fontSize: 12, fontFamily: "monospace", color: "#333" }}
+//           >
+//             {this.state.error.message}
+//           </Text>
+//           {this.state.error.stack && (
+//             <Text
+//               style={{
+//                 fontSize: 11,
+//                 fontFamily: "monospace",
+//                 color: "#666",
+//                 marginTop: 6,
+//               }}
+//             >
+//               {this.state.error.stack}
+//             </Text>
+//           )}
+//           {this.state.errorInfo?.componentStack && (
+//             <Text
+//               style={{
+//                 fontSize: 11,
+//                 fontFamily: "monospace",
+//                 color: "#666",
+//                 marginTop: 6,
+//               }}
+//             >
+//               Component Stack:
+//               {this.state.errorInfo.componentStack}
+//             </Text>
+//           )}
+//         </ScrollView>
+//       );
+//     }
+//     return null;
+//   }
+
+//   render() {
+//     if (this.state.hasError) {
+//       return (
+//         <View
+//           style={{
+//             flex: 1,
+//             justifyContent: "center",
+//             alignItems: "center",
+//             padding: 20,
+//             backgroundColor: "#f5f5f5",
+//           }}
+//         >
+//           <Text
+//             style={{
+//               fontSize: 18,
+//               fontWeight: "bold",
+//               marginBottom: 10,
+//               textAlign: "center",
+//             }}
+//           >
+//             Something went wrong
+//           </Text>
+//           <Text
+//             style={{
+//               textAlign: "center",
+//               color: "#666",
+//             }}
+//           >
+//             The app encountered an error at {this.state.timestamp}.
+//           </Text>
+//           {this.renderDevErrorDetails()}
+//         </View>
+//       );
+//     }
+//     return this.props.children;
+//   }
+// }
+
+// export default ErrorBoundary;
 
 // import React from 'react';
 // import { View, Text } from 'react-native';
