@@ -55,7 +55,7 @@ interface VisitedStreet {
   coordinates: UserCoords;
   duration?: number;
 }
-// New interface that matches your Prisma model for API calls
+
 interface VisitedStreetRequest {
   streetId: string;
   streetName: string;
@@ -71,6 +71,16 @@ export interface SaveVisitedStreetsRequest {
   visitedStreets: VisitedStreetRequest[];
 }
 
+// Interface for fetched visited streets from DB
+interface FetchedVisitedStreet {
+  streetId: string;
+  streetName: string;
+  entryTimestamp: number;
+  exitTimestamp?: number;
+  durationSeconds?: number;
+  entryLatitude: number;
+  entryLongitude: number;
+}
 
 
 
@@ -108,74 +118,98 @@ const StreetTrackingMap = () => {
 
   const currentSessionId = useRef<string>(generateSessionId());
 
-  //! ERRORS:
-  //! - doesnt save visited streets into db(throws error)
-  //! - displys only current screets instead of displying all visited streets
-  //! - data is cleared when a other screen is opened(fetch already visited streets from db on mount)
-  //! - a single street is being visited multiple times(dont save doublicates in visited_streets array)
-  //! - enabled location setting is saved in db, but on mount it is not use(user ahs to accep it everuy thime he enters the screen)
+  // Fetch previously visited streets from database
+  const loadVisitedStreetsFromDB = async () => {
+    try {
+      console.log("Loading visited streets from database...");
+      const fetchedStreets = await fetchVisitedStreets(); // Implement this in UserDataProvider
+
+      if (fetchedStreets && Array.isArray(fetchedStreets)) {
+        const streetIds = new Set(
+          fetchedStreets.map((street: FetchedVisitedStreet) => street.streetId)
+        );
+        setAllVisitedStreetIds(streetIds);
+        console.log(
+          `Loaded ${streetIds.size} previously visited streets from DB`
+        );
+      }
+    } catch (error) {
+      console.error("Error loading visited streets from DB:", error);
+    }
+  };
 
   useEffect(() => {
-    const initializePermissions = async () => {
-      try {
-        logEvent("initializing location user permisions");
+    const initializeComponent = async () => {
+      // Load visited streets first
+      await loadVisitedStreetsFromDB();
 
-        // Load user's explicit choice from database
-        const savedPermission = await loadPermissionStatus();
-        console.log("User's saved permission choice:", savedPermission);
-
-        // Check current system permission
-        const { status } = await Location.getForegroundPermissionsAsync();
-        const hasSystemPermission = status === "granted";
-        console.log("System permission status:", status);
-
-        if (savedPermission === true && hasSystemPermission) {
-          // User explicitly opted in AND system allows it - start tracking
-          console.log(
-            "Starting tracking: User opted in + system permission granted"
-          );
-          setHasLocationPermission(true);
-          await startLocationTracking();
-        } else if (savedPermission === true && !hasSystemPermission) {
-          // User opted in but system permission was revoked - update DB
-          console.log(
-            "User opted in but system permission revoked - updating DB"
-          );
-          setHasLocationPermission(false);
-          await savePermissionStatus(false);
-        } else if (savedPermission === false || savedPermission === null) {
-          console.log("User hasn't opted in to location tracking");
-          setHasLocationPermission(false);
-        }
-      } catch (error) {
-        console.error("Error initializing permissions:", error);
-        setHasLocationPermission(false);
-      }
+      // Then initialize permissions
+      await initializePermissions();
     };
 
-    initializePermissions();
+    initializeComponent();
+
     return () => {
+      // Save any remaining streets when component unmounts
+      if (visitedStreets.length > 0) {
+        saveVisitedStreetsToDatabase();
+      }
       stopLocationTracking();
     };
   }, []);
+
+  const initializePermissions = async () => {
+    try {
+      logEvent("initializing location user permissions");
+
+      // Load user's explicit choice from database
+      const savedPermission = await loadPermissionStatus();
+      console.log("User's saved permission choice:", savedPermission);
+
+      // Check current system permission
+      const { status } = await Location.getForegroundPermissionsAsync();
+      const hasSystemPermission = status === "granted";
+      console.log("System permission status:", status);
+
+      if (savedPermission === true && hasSystemPermission) {
+        // User explicitly opted in AND system allows it - start tracking
+        console.log(
+          "Starting tracking: User opted in + system permission granted"
+        );
+        setHasLocationPermission(true);
+        await startLocationTracking();
+      } else if (savedPermission === true && !hasSystemPermission) {
+        // User opted in but system permission was revoked - ask again
+        console.log(
+          "User opted in but system permission revoked - requesting permission"
+        );
+        await requestLocationPermission();
+      } else if (savedPermission === false || savedPermission === null) {
+        console.log("User hasn't opted in to location tracking");
+        setHasLocationPermission(false);
+      }
+    } catch (error) {
+      console.error("Error initializing permissions:", error);
+      setHasLocationPermission(false);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (visitedStreets.length > 0) {
         saveVisitedStreetsToDatabase();
       }
-    }, TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS); // Save every 3 minutes
+    }, TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS);
 
     return () => clearInterval(interval);
   }, [visitedStreets]);
 
-  //TODO: Save req permisions in DB
   const savePermissionStatus = async (hasPermission: boolean) => {
     try {
-      logEvent("request for saving permision into db");
+      logEvent("request for saving permission into db");
 
       const result = await saveLocationPermission(hasPermission);
-      console.log(result);
+      console.log("Permission save result:", result);
       if (!result) {
         console.log("Failed to save location permission data");
       }
@@ -216,21 +250,19 @@ const StreetTrackingMap = () => {
   const loadPermissionStatus = async () => {
     try {
       const saved = await getLocationPermission();
-      console.log("saved location permision?? " + saved);
+      console.log("saved location permission: " + saved);
       return saved === true;
     } catch (error) {
       console.error("Error loading permission status:", error);
-      return false;
+      return null; // Return null instead of false to distinguish between "not found" and "explicitly denied"
     }
   };
-
-  //TODO: Set the time imterval to 30sec when a user is off screen but the app still works in the background and change it to every 5-10 sec when the user looks at the map
 
   const startLocationTracking = async () => {
     try {
       logEvent("Getting initial location...");
-      console.log("Getting initial location...");
 
+      console.log("Getting initial location...");
       const initialLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
         timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
@@ -241,13 +273,11 @@ const StreetTrackingMap = () => {
 
       // Start watching position
       console.log("Starting location watching...");
-
-      //TODO: Maybe use array to push in it every location so that it can be drawn later where on the street you have been
       const subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 5000, // Update every 7 seconds
-          distanceInterval: 10, // Update when user moves 15 meters
+          timeInterval: 5000, // Reduced from 7000 to 5000ms
+          distanceInterval: 10, // Reduced from 15 to 10 meters
         },
         (location) => {
           console.log("Location update received:", location);
@@ -273,14 +303,17 @@ const StreetTrackingMap = () => {
 
   const fetchStreetData = useCallback(
     async (coords: UserCoords) => {
-      if (!mapToken) return;
+      if (!mapToken) {
+        console.error("No map token available");
+        return;
+      }
 
       setIsLoadingStreets(true);
       try {
         logEvent("fetching street data");
 
-        // Create a bounding box around user location (roughly 1km radius)
-        const buffer = BUFFER_GETTING_STREETS * 1.5; // ~1km in degrees
+        // Create a larger bounding box for more street data
+        const buffer = BUFFER_GETTING_STREETS * 1.5; // Increased buffer size
         const bbox = [
           coords.longitude - buffer, // west
           coords.latitude - buffer, // south
@@ -291,11 +324,13 @@ const StreetTrackingMap = () => {
         const overpassQuery = `
 [out:json][timeout:30];
 (
-  way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified|living_street|service|footway|path)$"]
+  way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified|living_street|service|footway|path|cycleway|track)$"]
     (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
 );
 out geom;
 `;
+
+        console.log("Fetching streets with query:", overpassQuery);
 
         const response = await fetch(
           "https://overpass-api.de/api/interpreter",
@@ -308,14 +343,22 @@ out geom;
           }
         );
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log("Raw Overpass data:", data);
+        console.log(
+          "Raw Overpass data received, elements:",
+          data.elements?.length || 0
+        );
 
         if (!data.elements || data.elements.length === 0) {
           console.warn("No street elements found in response");
           return;
         }
 
+        // Convert Overpass data to proper GeoJSON format
         const features: Street[] = data.elements
           .filter((element: any) => {
             const hasGeometry =
@@ -355,6 +398,7 @@ out geom;
 
         console.log(`Loaded ${features.length} streets in the area`);
 
+        // Immediately check proximity after loading streets
         if (features.length > 0) {
           checkStreetProximity(coords, {
             type: "FeatureCollection",
@@ -363,7 +407,7 @@ out geom;
         }
       } catch (error) {
         console.error("Error fetching street data:", error);
-        Alert.alert("Error", "Failed to load street data"); //! encoutering this error
+        Alert.alert("Error", `Failed to load street data: ${error.message}`);
       } finally {
         setIsLoadingStreets(false);
       }
@@ -392,11 +436,10 @@ out geom;
     return R * c;
   };
 
-  //TODO: Location.LocationObject has option to be mocked => use it for testing
   const handleLocationUpdate = useCallback(
     (location: Location.LocationObject) => {
       try {
-        logEvent("handling location pudata");
+        logEvent("handling location update");
 
         const { coords } = location;
         const newUserCoords: UserCoords = {
@@ -413,10 +456,10 @@ out geom;
           return;
         }
 
-        // Throttle location updates to avoid excessive processing
+        // Reduced throttle time for more responsive updates
         const now = Date.now();
         if (now - lastLocationUpdateRef.current < 1000) {
-          return; // 1 second throttle
+          return; // 1 second throttle instead of 2
         }
         lastLocationUpdateRef.current = now;
 
@@ -433,24 +476,21 @@ out geom;
 
           if (movementDistance < MIN_MOVEMENT_DISTANCE_METERS) {
             console.log("Movement too small, skipping update");
-
-            return; // Don't update if movement is too small
+            return;
           }
         }
 
         console.log("Processing location update:", newUserCoords);
         setUserLocation(newUserCoords);
 
-        // Check street proximity
-        // checkStreetProximity(newUserCoords);
-
+        // Check street proximity with current street data
         if (streetData) {
           checkStreetProximity(newUserCoords);
         }
-        // Fetch new street data if user moved significantly
+
+        // Fetch new street data if user moved significantly or no data exists
         if (!streetData || shouldRefreshStreetData(newUserCoords)) {
           console.log("Fetching new street data...");
-
           fetchStreetData(newUserCoords);
         }
 
@@ -464,8 +504,7 @@ out geom;
 
   // Convert client interface to API format
   const convertToApiFormat = (
-    visitedStreets: VisitedStreet[],
-    sessionId: string
+    visitedStreets: VisitedStreet[]
   ): VisitedStreetRequest[] => {
     return visitedStreets.map((street) => ({
       streetId: street.streetId,
@@ -577,29 +616,41 @@ out geom;
     }
 
     try {
-      const sessionId = generateSessionId();
-      const apiFormatStreets = convertToApiFormat(visitedStreets, sessionId);
+      const apiFormatStreets = convertToApiFormat(visitedStreets);
       const requestBody: SaveVisitedStreetsRequest = {
-        sessionId: sessionId,
+        sessionId: currentSessionId.current,
         visitedStreets: apiFormatStreets,
       };
-      console.log("Saving visited streets:", requestBody);
 
-      const response = await saveVisitedStreets(requestBody);
+      console.log("Attempting to save visited streets:", requestBody);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save: ${response.status} ${errorText}`);
+      const result = await saveVisitedStreets(requestBody);
+      console.log("Save response:", result);
+
+      // Check if the result indicates success
+      if (result && (result.success === true || result.ok === true)) {
+        console.log("Successfully saved visited streets:", result);
+
+        // Add the saved streets to our all-time visited set
+        visitedStreets.forEach((street) => {
+          allVisitedStreetIds.add(street.streetId);
+        });
+        setAllVisitedStreetIds(new Set(allVisitedStreetIds));
+
+        // Clear local storage after successful save
+        setVisitedStreets([]);
+
+        // Generate new session ID for next batch
+        currentSessionId.current = generateSessionId();
+      } else {
+        throw new Error(`Save operation failed: ${JSON.stringify(result)}`);
       }
-
-      const result = await response.json();
-      console.log("Successfully saved visited streets:", result);
-
-      // Clear local storage after successful save
-      setVisitedStreets([]);
     } catch (error) {
       console.error("Error saving visited streets:", error);
-      Alert.alert("Error", "Failed to save street data. Will retry later.");
+      Alert.alert(
+        "Error",
+        `Failed to save street data: ${error.message}. Will retry later.`
+      );
     }
   };
 
@@ -637,21 +688,32 @@ out geom;
 
     // User entered a new street
     if (newStreetId && newStreetId !== currentStreetId) {
-      const street = streetData?.features.find((s) => s.id === newStreetId);
-      const streetName =
-        street?.properties?.name || `Unknown Street ${newStreetId}`;
+      // Check if this street was already visited in current session to avoid duplicates
+      const alreadyVisitedInSession = visitedStreets.some(
+        (vs) => vs.streetId === newStreetId
+      );
 
-      const visitedStreet: VisitedStreet = {
-        streetId: newStreetId,
-        streetName,
-        timestamp: now,
-        coordinates: coords,
-      };
+      if (!alreadyVisitedInSession) {
+        const street = streetData?.features.find((s) => s.id === newStreetId);
+        const streetName =
+          street?.properties?.name || `Unknown Street ${newStreetId}`;
 
-      setVisitedStreets((prev) => [...prev, visitedStreet]);
+        const visitedStreet: VisitedStreet = {
+          streetId: newStreetId,
+          streetName,
+          timestamp: now,
+          coordinates: coords,
+        };
+
+        setVisitedStreets((prev) => [...prev, visitedStreet]);
+        console.log(`User entered NEW street: ${streetName} (${newStreetId})`);
+      } else {
+        console.log(
+          `User re-entered street ${newStreetId} - not adding duplicate`
+        );
+      }
+
       streetEntryTimeRef.current = now;
-
-      console.log(`User entered street: ${streetName} (${newStreetId})`);
     }
 
     setCurrentStreetId(newStreetId);
@@ -663,6 +725,34 @@ out geom;
     const street = streetData.features.find((s) => s.id === currentStreetId);
     return street?.properties?.name || "Unknown Street";
   };
+
+  // Generate street style based on highlight status and visit history
+  const getStreetColor = (streetId: string): string => {
+    const isCurrent = streetId === currentStreetId;
+    const isHighlighted = highlightedStreets.includes(streetId);
+    const hasBeenVisited = allVisitedStreetIds.has(streetId);
+
+    if (isCurrent) return "#00FF00"; // Green for current
+    if (isHighlighted) return "#FF0000"; // Red for highlighted
+    if (hasBeenVisited) return "#FFA500"; // Orange for previously visited
+    return "#0000FF"; // Blue for unvisited
+  };
+
+  const getStreetWidth = (streetId: string): number => {
+    const isCurrent = streetId === currentStreetId;
+    const isHighlighted = highlightedStreets.includes(streetId);
+
+    if (isCurrent) return 8;
+    if (isHighlighted) return 6;
+    return 3;
+  };
+
+  //! ERRORS:
+  //! - doesnt save visited streets into db(throws error)
+  //! - displys only current screets instead of displying all visited streets
+  //! - data is cleared when a other screen is opened(fetch already visited streets from db on mount)
+  //! - a single street is being visited multiple times(dont save doublicates in visited_streets array)
+  //! - enabled location setting is saved in db, but on mount it is not use(user ahs to accep it everuy thime he enters the screen)
 
   return (
     <View style={styles.container}>
@@ -698,81 +788,39 @@ out geom;
           </PointAnnotation>
         )}
 
-        {streetData && mapZoom >= 13 && (
+        {streetData && mapZoom >= 12 && (
           <>
-            {/* Regular streets layer */}
-            <ShapeSource
-              id="regularStreetsSource"
-              shape={{
-                type: "FeatureCollection",
-                features: streetData.features.filter(
-                  (street) =>
-                    !highlightedStreets.includes(street.id) &&
-                    street.id !== currentStreetId
-                ),
-              }}
-            >
+            {/* All streets with dynamic coloring */}
+            <ShapeSource id="allStreetsSource" shape={streetData}>
               <Mapbox.LineLayer
-                id="regular_streets_layer"
+                id="all_streets_layer"
                 style={{
-                  lineColor: "#0000FF",
-                  lineWidth: 2, // Reduced from 4
-                  lineOpacity: 0.5, // Reduced from 0.7
+                  lineColor: [
+                    "case",
+                    ["==", ["get", "id"], currentStreetId || ""],
+                    "#00FF00", // Current street - green
+                    [
+                      "in",
+                      ["get", "id"],
+                      ["literal", Array.from(allVisitedStreetIds)],
+                    ],
+                    "#FFA500", // Visited streets - orange
+                    "#0000FF", // Unvisited streets - blue
+                  ],
+                  lineWidth: [
+                    "case",
+                    ["==", ["get", "id"], currentStreetId || ""],
+                    5, // Current street thicker
+                    ["in", ["get", "id"], highlightedStreets],
+                    4, // Highlighted streets
+                    2, // Default width
+                  ],
+                  lineOpacity: 0.5,
                   lineCap: "round",
                   lineJoin: "round",
                 }}
               />
             </ShapeSource>
-
-            {/* Highlighted streets layer */}
-            {highlightedStreets.length > 0 && (
-              <ShapeSource
-                id="highlightedStreetsSource"
-                shape={{
-                  type: "FeatureCollection",
-                  features: streetData.features.filter(
-                    (street) =>
-                      highlightedStreets.includes(street.id) &&
-                      street.id !== currentStreetId
-                  ),
-                }}
-              >
-                <Mapbox.LineLayer
-                  id="highlighted_streets_layer"
-                  style={{
-                    lineColor: "#FF0000",
-                    lineWidth: 6, // Reduced from 8
-                    lineOpacity: 1,
-                    lineCap: "round",
-                    lineJoin: "round",
-                  }}
-                />
-              </ShapeSource>
-            )}
-
-            {/* Current street layer */}
-            {currentStreetId && (
-              <ShapeSource
-                id="currentStreetSource"
-                shape={{
-                  type: "FeatureCollection",
-                  features: streetData.features.filter(
-                    (street) => street.id === currentStreetId
-                  ),
-                }}
-              >
-                <Mapbox.LineLayer
-                  id="current_street_layer"
-                  style={{
-                    lineColor: "#00FF00",
-                    lineWidth: 8, // Reduced from 10
-                    lineOpacity: 1,
-                    lineCap: "round",
-                    lineJoin: "round",
-                  }}
-                />
-              </ShapeSource>
-            )}
           </>
         )}
       </MapView>
@@ -780,9 +828,11 @@ out geom;
       <View style={styles.infoPanel}>
         {!hasLocationPermission && (
           <View>
-            <Text className="text-gray-500">Location tracking is disabled</Text>
+            <Text style={styles.permissionText}>
+              Location tracking is disabled
+            </Text>
             <TouchableOpacity onPress={requestLocationPermission}>
-              <Text className="text-gray-500">Enable Location Tracking</Text>
+              <Text style={styles.enableButton}>Enable Location Tracking</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -797,13 +847,19 @@ out geom;
             <Text style={styles.infoText}>
               Tracking: {locationSubscription ? "Active" : "Inactive"}
             </Text>
+            <Text style={styles.infoText}>
+              Streets Loaded: {streetData?.features.length || 0}
+            </Text>
           </>
         )}
         <Text style={styles.currentStreet}>
           Current Street: {getCurrentStreetName()}
         </Text>
         <Text style={styles.statsText}>
-          Visited Streets: {visitedStreets.length}
+          Session Streets: {visitedStreets.length}
+        </Text>
+        <Text style={styles.statsText}>
+          Total Visited: {allVisitedStreetIds.size}
         </Text>
         {isLoadingStreets && (
           <Text style={styles.loadingText}>Loading streets...</Text>
@@ -812,7 +868,6 @@ out geom;
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -833,6 +888,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  enableButton: {
+    fontSize: 14,
+    color: "#007AFF",
+    textAlign: "center",
+    marginTop: 5,
+    textDecorationLine: "underline",
   },
   infoText: {
     fontSize: 12,
