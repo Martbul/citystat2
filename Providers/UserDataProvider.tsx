@@ -543,16 +543,16 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
             token
           );
 
-          console.log("Saved location permissions", success);
+          console.log("Saved visitedStreets ", success);
 
           return success;
         } catch (err) {
           const errorMessage =
             err instanceof Error
               ? err.message
-              : "Failed to save location permissions";
+              : "Failed to save visitedStreets";
           setError(errorMessage);
-          console.error("Error while saving location permissions:", err);
+          console.error("Error while saving visitedStreets:", err);
           return null;
         } finally {
           setIsLoading(false);
@@ -561,8 +561,40 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       [user?.id, getToken]
     );
   
-  
+  ; 
+   const fetchVisitedStreets = useCallback(
+     async (): Promise<any> => {
+       if (!user?.id) {
+         return null;
+       }
 
+       try {
+         setIsLoading(true);
+         setError(null);
+
+         const token = await getToken();
+         if (!token) return null;
+
+         const success = await apiService.fetchVisitedStreets(token);
+
+         console.log("fetchVisitedStreets", success);
+
+         return success;
+       } catch (err) {
+         const errorMessage =
+           err instanceof Error
+             ? err.message
+             : "Failed to fetch Visited Streets";
+         setError(errorMessage);
+         console.error("Error while fetching visited streets:", err);
+         return null;
+       } finally {
+         setIsLoading(false);
+       }
+     },
+     [user?.id, getToken]
+   );
+  
 
   // Derived values for backwards compatibility
   const derivedValues = useMemo(
@@ -589,6 +621,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       setUserData,
       saveVisitedStreets,
       isLoading,
+      fetchVisitedStreets,
       error,
       settings, // Single settings object
       addFriendByUser, // Add this new method
@@ -627,6 +660,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [
       userData,
       getLocationPermission,
+      fetchVisitedStreets ,
       setUserData,
       getFriends,
       saveVisitedStreets,

@@ -23,7 +23,8 @@
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
-    "postversion": "node scripts/update-native-versions.js"
+    "postversion": "node scripts/update-native-versions.js",
+    "build:android:ci": "npx expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.9",

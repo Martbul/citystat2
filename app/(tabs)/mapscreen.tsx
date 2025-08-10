@@ -71,18 +71,16 @@ export interface SaveVisitedStreetsRequest {
   visitedStreets: VisitedStreetRequest[];
 }
 
-//TODO: a street has a single visited coords????
-// interface VisitedStreet {
-//   streetId: string;
-//   streetName: string;
-//   timestamp: number;
-//   coordinates: UserCoords;
-//   duration?: number;
-// }
+
+
 
 const StreetTrackingMap = () => {
-  const { getLocationPermission, saveLocationPermission, saveVisitedStreets } =
-    useUserData();
+  const {
+    getLocationPermission,
+    saveLocationPermission,
+    saveVisitedStreets,
+    fetchVisitedStreets,
+  } = useUserData();
   const [userLocation, setUserLocation] = useState<UserCoords | null>(null);
   const [highlightedStreets, setHighlightedStreets] = useState<string[]>([]);
   const [streetData, setStreetData] = useState<StreetData | null>(null);
@@ -93,12 +91,29 @@ const StreetTrackingMap = () => {
   const [locationSubscription, setLocationSubscription] =
     useState<Location.LocationSubscription | null>(null);
   const [mapZoom, setMapZoom] = useState(13);
+  const [allVisitedStreetIds, setAllVisitedStreetIds] = useState<Set<string>>(
+    new Set()
+  ); // Track all visited street IDs
 
   const mapRef = useRef(null);
   const streetEntryTimeRef = useRef<number | null>(null);
   const lastLocationUpdateRef = useRef<number>(0);
   const [previousUserCoords, setPreviousUserCoords] =
     useState<UserCoords | null>(null);
+
+  // Generate unique session ID
+  const generateSessionId = (): string => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const currentSessionId = useRef<string>(generateSessionId());
+
+  //! ERRORS:
+  //! - doesnt save visited streets into db(throws error)
+  //! - displys only current screets instead of displying all visited streets
+  //! - data is cleared when a other screen is opened(fetch already visited streets from db on mount)
+  //! - a single street is being visited multiple times(dont save doublicates in visited_streets array)
+  //! - enabled location setting is saved in db, but on mount it is not use(user ahs to accep it everuy thime he enters the screen)
 
   useEffect(() => {
     const initializePermissions = async () => {
@@ -154,27 +169,6 @@ const StreetTrackingMap = () => {
     return () => clearInterval(interval);
   }, [visitedStreets]);
 
-  //! Update your useEffect for periodic saving -> ai
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (visitedStreets.length > 0) {
-  //       console.log(`Saving ${visitedStreets.length} visited streets to database`);
-  //       saveVisitedStreetsToDatabase();
-  //     }
-  //   }, TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS);
-
-  //   return () => clearInterval(interval);
-  // }, [visitedStreets, user?.id]);
-
-  // // Also save when user leaves the screen
-  // useEffect(() => {
-  //   return () => {
-  //     // Save any remaining streets when component unmounts
-  //     if (visitedStreets.length > 0) {
-  //       saveVisitedStreetsToDatabase();
-  //     }
-  //   };
-  // }, []);
   //TODO: Save req permisions in DB
   const savePermissionStatus = async (hasPermission: boolean) => {
     try {
@@ -235,8 +229,8 @@ const StreetTrackingMap = () => {
   const startLocationTracking = async () => {
     try {
       logEvent("Getting initial location...");
-
       console.log("Getting initial location...");
+
       const initialLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
         timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
@@ -247,12 +241,13 @@ const StreetTrackingMap = () => {
 
       // Start watching position
       console.log("Starting location watching...");
+
       //TODO: Maybe use array to push in it every location so that it can be drawn later where on the street you have been
       const subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 7000, // Update every 7 seconds
-          distanceInterval: 15, // Update when user moves 15 meters
+          timeInterval: 5000, // Update every 7 seconds
+          distanceInterval: 10, // Update when user moves 15 meters
         },
         (location) => {
           console.log("Location update received:", location);
@@ -282,10 +277,10 @@ const StreetTrackingMap = () => {
 
       setIsLoadingStreets(true);
       try {
-              logEvent("fetching street data");
+        logEvent("fetching street data");
 
         // Create a bounding box around user location (roughly 1km radius)
-        const buffer = BUFFER_GETTING_STREETS; // ~1km in degrees
+        const buffer = BUFFER_GETTING_STREETS * 1.5; // ~1km in degrees
         const bbox = [
           coords.longitude - buffer, // west
           coords.latitude - buffer, // south
@@ -294,15 +289,13 @@ const StreetTrackingMap = () => {
         ];
 
         const overpassQuery = `
-[out:json][timeout:25];
+[out:json][timeout:30];
 (
   way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified|living_street|service|footway|path)$"]
     (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
 );
 out geom;
 `;
-
-      
 
         const response = await fetch(
           "https://overpass-api.de/api/interpreter",
@@ -316,12 +309,28 @@ out geom;
         );
 
         const data = await response.json();
+        console.log("Raw Overpass data:", data);
 
-        // Convert Overpass data to proper GeoJSON format
+        if (!data.elements || data.elements.length === 0) {
+          console.warn("No street elements found in response");
+          return;
+        }
+
         const features: Street[] = data.elements
-          .filter((element: any) => element.type === "way" && element.geometry)
+          .filter((element: any) => {
+            const hasGeometry =
+              element.type === "way" &&
+              element.geometry &&
+              element.geometry.length > 1;
+            if (!hasGeometry) {
+              console.log(
+                `Filtering out element ${element.id}: no valid geometry`
+              );
+            }
+            return hasGeometry;
+          })
           .map((way: any) => ({
-            type: "Feature", // Now includes the required type property
+            type: "Feature",
             id: way.id.toString(),
             geometry: {
               type: "LineString",
@@ -331,11 +340,13 @@ out geom;
               ]),
             },
             properties: {
-              name: way.tags?.name,
+              name: way.tags?.name || `Street ${way.id}`,
               highway: way.tags?.highway,
               surface: way.tags?.surface,
             },
           }));
+
+        console.log(`Successfully processed ${features.length} streets`);
 
         setStreetData({
           type: "FeatureCollection",
@@ -343,6 +354,13 @@ out geom;
         });
 
         console.log(`Loaded ${features.length} streets in the area`);
+
+        if (features.length > 0) {
+          checkStreetProximity(coords, {
+            type: "FeatureCollection",
+            features,
+          });
+        }
       } catch (error) {
         console.error("Error fetching street data:", error);
         Alert.alert("Error", "Failed to load street data"); //! encoutering this error
@@ -378,7 +396,7 @@ out geom;
   const handleLocationUpdate = useCallback(
     (location: Location.LocationObject) => {
       try {
-              logEvent("handling location pudata");
+        logEvent("handling location pudata");
 
         const { coords } = location;
         const newUserCoords: UserCoords = {
@@ -397,8 +415,8 @@ out geom;
 
         // Throttle location updates to avoid excessive processing
         const now = Date.now();
-        if (now - lastLocationUpdateRef.current < 2000) {
-          return; // 2 second throttle
+        if (now - lastLocationUpdateRef.current < 1000) {
+          return; // 1 second throttle
         }
         lastLocationUpdateRef.current = now;
 
@@ -411,7 +429,11 @@ out geom;
             newUserCoords.longitude
           );
 
+          console.log(`Movement distance: ${movementDistance.toFixed(1)}m`);
+
           if (movementDistance < MIN_MOVEMENT_DISTANCE_METERS) {
+            console.log("Movement too small, skipping update");
+
             return; // Don't update if movement is too small
           }
         }
@@ -420,10 +442,15 @@ out geom;
         setUserLocation(newUserCoords);
 
         // Check street proximity
-        checkStreetProximity(newUserCoords);
+        // checkStreetProximity(newUserCoords);
 
+        if (streetData) {
+          checkStreetProximity(newUserCoords);
+        }
         // Fetch new street data if user moved significantly
         if (!streetData || shouldRefreshStreetData(newUserCoords)) {
+          console.log("Fetching new street data...");
+
           fetchStreetData(newUserCoords);
         }
 
@@ -434,9 +461,6 @@ out geom;
     },
     [previousUserCoords, streetData, fetchStreetData]
   );
-  // ================================
-  // CONVERSION FUNCTIONS
-  // ================================
 
   // Convert client interface to API format
   const convertToApiFormat = (
@@ -457,7 +481,6 @@ out geom;
   };
 
   const shouldRefreshStreetData = (newCoords: UserCoords): boolean => {
-    
     if (!userLocation) return true;
 
     const distance = turf.distance(
@@ -466,63 +489,51 @@ out geom;
       { units: "kilometers" }
     );
 
-    return distance > 0.2; // 200 meters instead of 500
+    return distance > 0.15; // Reduced from 0.2km to 0.15km for more frequent updates
   };
 
-  //! change 3
-  // const shouldRefreshStreetData = (newCoords: UserCoords): boolean => {
-  //   if (!userLocation) return true;
-
-  //   const distance = turf.distance(
-  //     [userLocation.longitude, userLocation.latitude],
-  //     [newCoords.longitude, newCoords.latitude],
-  //     { units: "kilometers" }
-  //   );
-
-  //   return distance > 0.5; // Refresh if moved more than 500m
-  // };
-
   const checkStreetProximity = useCallback(
-    (userCoords: UserCoords) => {
-      if (!streetData) return;
+    (userCoords: UserCoords, customStreetData?: StreetData) => {
+      const dataToUse = customStreetData || streetData;
+      if (!dataToUse || !dataToUse.features.length) {
+        console.log("No street data available for proximity check");
+        return;
+      }
+
       logEvent("checking street proximity");
 
       const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-      const proximityThresholdMeters = 30; // 30 meters
+      const proximityThresholdMeters = 50; // Increased from 30 to 50 meters
       const proximityThresholdKm = proximityThresholdMeters / 1000;
 
       let foundStreet: string | null = null;
       let closestDistance = Infinity;
       let closestStreetName = null;
 
-      streetData.features.forEach((street) => {
+      console.log(`Checking proximity to ${dataToUse.features.length} streets`);
+
+      dataToUse.features.forEach((street) => {
         try {
+          // Ensure coordinates are valid
+          if (
+            !street.geometry.coordinates ||
+            street.geometry.coordinates.length < 2
+          ) {
+            console.warn(`Street ${street.id} has invalid coordinates`);
+            return;
+          }
+
           const streetLine = turf.lineString(street.geometry.coordinates);
           const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
             units: "kilometers",
           });
 
-                logEvent(
-                  `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${(
-                    distanceKm * 1000
-                  ).toFixed(1)} m away`
-                );
-
+          const distanceMeters = distanceKm * 1000;
 
           console.log(
-            `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${(
-              distanceKm * 1000
-            ).toFixed(1)} m away`
+            `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${distanceMeters.toFixed(1)}m away`
           );
 
-
-             logEvent(
-               "distanceKm: " +
-                 distanceKm +
-                 " ||| " +
-                 "closestDistance: " +
-                 closestDistance
-             );
           if (
             distanceKm <= proximityThresholdKm &&
             distanceKm < closestDistance
@@ -536,73 +547,28 @@ out geom;
         }
       });
 
+      if (foundStreet) {
+        console.log(
+          `Closest street: ${closestStreetName} (${foundStreet}) at ${(closestDistance * 1000).toFixed(1)}m`
+        );
+      } else {
+        console.log("No nearby streets found");
+      }
+
       // Only switch if we found a *different* street
       if (foundStreet && foundStreet !== currentStreetId) {
-              logEvent(
-                `Switching to street: ${closestStreetName} (${foundStreet})`
-              );
-
+        logEvent(`Switching to street: ${closestStreetName} (${foundStreet})`);
         console.log(
           `Switching to street: ${closestStreetName} (${foundStreet})`
         );
         handleStreetChange(foundStreet, userCoords);
       }
 
-      // Keep the old street if we didn't find anything new
-      if (!foundStreet) {
-              logEvent("No street found nearby, staying on previous street");
-
-        console.log("No street found nearby, staying on previous street");
-        return;
-      }
-
-      setHighlightedStreets([foundStreet]);
+      // Update highlighted streets regardless
+      setHighlightedStreets(foundStreet ? [foundStreet] : []);
     },
     [streetData, currentStreetId]
   );
-
-  //! цханге 2
-  // Check if user is near/on a street
-  // const checkStreetProximity = useCallback(
-  //   (userCoords: UserCoords) => {
-  //     if (!streetData) return;
-
-  //     const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-  //     const proximityThreshold = 0.02; // ~20 meters
-
-  //     let foundStreet: string | null = null;
-  //     let closestDistance = Infinity;
-
-  //     streetData.features.forEach((street) => {
-  //       try {
-  //         const streetLine = turf.lineString(street.geometry.coordinates);
-  //         const distance = turf.pointToLineDistance(userPoint, streetLine, {
-  //           units: "kilometers",
-  //         });
-
-  //         if (distance <= proximityThreshold && distance < closestDistance) {
-  //           closestDistance = distance;
-  //           foundStreet = street.id;
-  //         }
-  //       } catch (error) {
-  //         console.warn(`Error processing street ${street.id}:`, error);
-  //       }
-  //     });
-
-  //     // Handle street changes
-  //     if (foundStreet !== currentStreetId) {
-  //       handleStreetChange(foundStreet, userCoords);
-  //     }
-
-  //     // Update highlighted streets
-  //     setHighlightedStreets(foundStreet ? [foundStreet] : []);
-  //   },
-  //   [streetData, currentStreetId]
-  // );
-  // Generate unique session ID
-  const generateSessionId = (): string => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
 
   const saveVisitedStreetsToDatabase = async () => {
     if (visitedStreets.length === 0) {
@@ -642,22 +608,17 @@ out geom;
     coords: UserCoords
   ) => {
     const now = Date.now();
-      logEvent("handle street change");
+    logEvent("handle street change");
 
     // User left a street
     if (currentStreetId && currentStreetId !== newStreetId) {
       const exitTime = now;
       const entryTime = streetEntryTimeRef.current || now;
       const duration = Math.floor((exitTime - entryTime) / 1000); // Duration in seconds
-      logEvent(
-        "currentStreetId: " +
-          currentStreetId +
-          " ||| " +
-          "newStreetId: " +
-          newStreetId
-      );
 
-      
+      logEvent(
+        `User left street ${currentStreetId}, spent ${duration} seconds`
+      );
 
       // Update the last visited street with duration
       setVisitedStreets((prev) => {
@@ -668,9 +629,6 @@ out geom;
         }
         return updated;
       });
-      logEvent(
-        `User left street ${currentStreetId}, spent ${duration} seconds`
-      );
 
       console.log(
         `User left street ${currentStreetId}, spent ${duration} seconds`
@@ -699,86 +657,12 @@ out geom;
     setCurrentStreetId(newStreetId);
   };
 
-  // Generate street style based on highlight status
-  const getStreetStyle = (streetId: string) => {
-    const isHighlighted = highlightedStreets.includes(streetId);
-    const isCurrent = streetId === currentStreetId;
-
-    return {
-      lineColor: isCurrent ? "#00FF00" : isHighlighted ? "#FF0000" : "#0000FF",
-      lineWidth: isCurrent ? 10 : isHighlighted ? 8 : 4,
-      lineOpacity: isCurrent ? 1 : isHighlighted ? 1 : 0.7,
-    };
-  };
-
   const getCurrentStreetName = (): string => {
     if (!currentStreetId || !streetData) return "Not on a street";
 
     const street = streetData.features.find((s) => s.id === currentStreetId);
     return street?.properties?.name || "Unknown Street";
   };
-
-  // // 3. PERFORMANCE OPTIMIZATION: Debounced street checking
-  // const debouncedCheckStreetProximity = useCallback(
-  //   debounce((userCoords: UserCoords) => {
-  //     if (!streetData) return;
-
-  //     const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-  //     const proximityThreshold = 0.02;
-
-  //     let foundStreet: string | null = null;
-  //     let closestDistance = Infinity;
-
-  //     // Only check closest 20 streets to reduce computation
-  //     const sortedStreets = streetData.features
-  //       .map((street) => {
-  //         const streetCenter = turf.centroid(
-  //           turf.lineString(street.geometry.coordinates)
-  //         );
-  //         const distanceToCenter = turf.distance(userPoint, streetCenter, {
-  //           units: "kilometers",
-  //         });
-  //         return { street, distanceToCenter };
-  //       })
-  //       .sort((a, b) => a.distanceToCenter - b.distanceToCenter)
-  //       .slice(0, 20); // Only check closest 20 streets
-
-  //     sortedStreets.forEach(({ street }) => {
-  //       try {
-  //         const streetLine = turf.lineString(street.geometry.coordinates);
-  //         const distance = turf.pointToLineDistance(userPoint, streetLine, {
-  //           units: "kilometers",
-  //         });
-
-  //         if (distance <= proximityThreshold && distance < closestDistance) {
-  //           closestDistance = distance;
-  //           foundStreet = street.id;
-  //         }
-  //       } catch (error) {
-  //         console.warn(`Error processing street ${street.id}:`, error);
-  //       }
-  //     });
-
-  //     if (foundStreet !== currentStreetId) {
-  //       handleStreetChange(foundStreet, userCoords);
-  //     }
-
-  //     setHighlightedStreets(foundStreet ? [foundStreet] : []);
-  //   }, 1000), // Debounce by 1 second
-  //   [streetData, currentStreetId]
-  // );
-
-  // // Helper function for debouncing
-  // function debounce<T extends (...args: any[]) => void>(
-  //   func: T,
-  //   delay: number
-  // ): (...args: Parameters<T>) => void {
-  //   let timeoutId: NodeJS.Timeout;
-  //   return (...args: Parameters<T>) => {
-  //     clearTimeout(timeoutId);
-  //     timeoutId = setTimeout(() => func.apply(null, args), delay);
-  //   };
-  // }
 
   return (
     <View style={styles.container}>

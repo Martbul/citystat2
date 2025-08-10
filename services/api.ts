@@ -276,9 +276,25 @@ class ApiService {
     });
   }
 
-  async saveVisitedStreets(visitedStreets: SaveVisitedStreetsRequest,token: string): Promise<any> {
+  async saveVisitedStreets(
+    visitedStreets: SaveVisitedStreetsRequest,
+    token: string
+  ): Promise<any> {
     return this.makeRequest<any>(`/api/visitor/streets`, {
       method: "POST",
+      token,
+      body: JSON.stringify({
+        sessionId: visitedStreets.sessionId,
+        visitedStreets:visitedStreets.visitedStreets,
+      }),
+    });
+  }
+
+  async fetchVisitedStreets(
+    token: string
+  ): Promise<any> {
+    return this.makeRequest<any>(`/api/visitor/streets`, {
+      method: "GET",
       token,
     });
   }

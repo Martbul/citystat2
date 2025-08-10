@@ -117,6 +117,7 @@ export interface UserDataContextType {
   getFriends: () => Promise<Friend[]>;
 
   getLocationPermission: () => Promise<any>;
+  fetchVisitedStreets: () => Promise<any>;
   saveVisitedStreets: (
     visitedStreets: SaveVisitedStreetsRequest
   ) => Promise<any>;
