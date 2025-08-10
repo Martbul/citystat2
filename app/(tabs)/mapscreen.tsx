@@ -282,15 +282,25 @@ const StreetTrackingMap = () => {
           coords.latitude + buffer, // north
         ];
 
-        // Use Overpass API for OpenStreetMap data
         const overpassQuery = `
-        [out:json][timeout:25];
-        (
-          way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified)$"]
-            (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
-        );
-        out geom;
-      `;
+[out:json][timeout:25];
+(
+  way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified|living_street|service|footway|path)$"]
+    (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
+);
+out geom;
+`;
+
+        //!change 1
+        // Use Overpass API for OpenStreetMap data
+        //   const overpassQuery = `
+        //   [out:json][timeout:25];
+        //   (
+        //     way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified)$"]
+        //       (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
+        //   );
+        //   out geom;
+        // `;
 
         const response = await fetch(
           "https://overpass-api.de/api/interpreter",
@@ -333,7 +343,7 @@ const StreetTrackingMap = () => {
         console.log(`Loaded ${features.length} streets in the area`);
       } catch (error) {
         console.error("Error fetching street data:", error);
-        Alert.alert("Error", "Failed to load street data");
+        Alert.alert("Error", "Failed to load street data"); //! encoutering this error
       } finally {
         setIsLoadingStreets(false);
       }
@@ -451,77 +461,122 @@ const StreetTrackingMap = () => {
       { units: "kilometers" }
     );
 
-    return distance > 0.5; // Refresh if moved more than 500m
+    return distance > 0.2; // 200 meters instead of 500
   };
 
-  // Check if user is near/on a street
+  //! change 3
+  // const shouldRefreshStreetData = (newCoords: UserCoords): boolean => {
+  //   if (!userLocation) return true;
+
+  //   const distance = turf.distance(
+  //     [userLocation.longitude, userLocation.latitude],
+  //     [newCoords.longitude, newCoords.latitude],
+  //     { units: "kilometers" }
+  //   );
+
+  //   return distance > 0.5; // Refresh if moved more than 500m
+  // };
+
+
   const checkStreetProximity = useCallback(
     (userCoords: UserCoords) => {
       if (!streetData) return;
 
       const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-      const proximityThreshold = 0.02; // ~20 meters
+      const proximityThresholdMeters = 30; // 30 meters
+      const proximityThresholdKm = proximityThresholdMeters / 1000;
 
       let foundStreet: string | null = null;
       let closestDistance = Infinity;
+      let closestStreetName = null;
 
       streetData.features.forEach((street) => {
         try {
           const streetLine = turf.lineString(street.geometry.coordinates);
-          const distance = turf.pointToLineDistance(userPoint, streetLine, {
+          const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
             units: "kilometers",
           });
 
-          if (distance <= proximityThreshold && distance < closestDistance) {
-            closestDistance = distance;
+          console.log(
+            `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${(
+              distanceKm * 1000
+            ).toFixed(1)} m away`
+          );
+
+          if (
+            distanceKm <= proximityThresholdKm &&
+            distanceKm < closestDistance
+          ) {
+            closestDistance = distanceKm;
             foundStreet = street.id;
+            closestStreetName = street.properties?.name || "Unnamed";
           }
         } catch (error) {
           console.warn(`Error processing street ${street.id}:`, error);
         }
       });
 
-      // Handle street changes
-      if (foundStreet !== currentStreetId) {
+      // Only switch if we found a *different* street
+      if (foundStreet && foundStreet !== currentStreetId) {
+        console.log(
+          `Switching to street: ${closestStreetName} (${foundStreet})`
+        );
         handleStreetChange(foundStreet, userCoords);
       }
 
-      // Update highlighted streets
-      setHighlightedStreets(foundStreet ? [foundStreet] : []);
+      // Keep the old street if we didn't find anything new
+      if (!foundStreet) {
+        console.log("No street found nearby, staying on previous street");
+        return;
+      }
+
+      setHighlightedStreets([foundStreet]);
     },
     [streetData, currentStreetId]
   );
+
+  //! цханге 2
+  // Check if user is near/on a street
+  // const checkStreetProximity = useCallback(
+  //   (userCoords: UserCoords) => {
+  //     if (!streetData) return;
+
+  //     const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
+  //     const proximityThreshold = 0.02; // ~20 meters
+
+  //     let foundStreet: string | null = null;
+  //     let closestDistance = Infinity;
+
+  //     streetData.features.forEach((street) => {
+  //       try {
+  //         const streetLine = turf.lineString(street.geometry.coordinates);
+  //         const distance = turf.pointToLineDistance(userPoint, streetLine, {
+  //           units: "kilometers",
+  //         });
+
+  //         if (distance <= proximityThreshold && distance < closestDistance) {
+  //           closestDistance = distance;
+  //           foundStreet = street.id;
+  //         }
+  //       } catch (error) {
+  //         console.warn(`Error processing street ${street.id}:`, error);
+  //       }
+  //     });
+
+  //     // Handle street changes
+  //     if (foundStreet !== currentStreetId) {
+  //       handleStreetChange(foundStreet, userCoords);
+  //     }
+
+  //     // Update highlighted streets
+  //     setHighlightedStreets(foundStreet ? [foundStreet] : []);
+  //   },
+  //   [streetData, currentStreetId]
+  // );
   // Generate unique session ID
   const generateSessionId = (): string => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
-  // const saveVisitedStreetsToDatabase = async () => {
-  //   try {
-  //     const response = await fetch("YOUR_API_ENDPOINT/visited-streets", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         // Add your auth headers here
-  //       },
-  //       body: JSON.stringify({
-  //         userId: "YOUR_USER_ID", // Get from your auth system
-  //         visitedStreets: visitedStreets,
-  //         sessionId: Date.now().toString(), // Or generate proper session ID
-  //       }),
-  //     });
-
-  //     if (response.ok) {
-  //       console.log("Successfully saved visited streets to database");
-  //       // Optionally clear local storage after successful save
-  //       setVisitedStreets([]);
-  //     } else {
-  //       throw new Error("Failed to save to database");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saving visited streets:", error);
-  //     Alert.alert("Error", "Failed to save street data");
-  //   }
-  // };
 
   const saveVisitedStreetsToDatabase = async () => {
     if (visitedStreets.length === 0) {
