@@ -1,5 +1,6 @@
 import { MIN_MOVEMENT_DISTANCE_METERS } from "@/constants/Location";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { logEvent } from "@/utils/logger";
 import Mapbox, {
   Camera,
   MapView,
@@ -102,6 +103,8 @@ const StreetTrackingMap = () => {
   useEffect(() => {
     const initializePermissions = async () => {
       try {
+        logEvent("initializing location user permisions");
+
         // Load user's explicit choice from database
         const savedPermission = await loadPermissionStatus();
         console.log("User's saved permission choice:", savedPermission);
@@ -175,6 +178,8 @@ const StreetTrackingMap = () => {
   //TODO: Save req permisions in DB
   const savePermissionStatus = async (hasPermission: boolean) => {
     try {
+      logEvent("request for saving permision into db");
+
       const result = await saveLocationPermission(hasPermission);
       console.log(result);
       if (!result) {
@@ -187,6 +192,8 @@ const StreetTrackingMap = () => {
 
   const requestLocationPermission = async () => {
     try {
+      logEvent("request for local user permissions");
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       const granted = status === "granted";
 
@@ -227,6 +234,8 @@ const StreetTrackingMap = () => {
 
   const startLocationTracking = async () => {
     try {
+      logEvent("Getting initial location...");
+
       console.log("Getting initial location...");
       const initialLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
@@ -273,6 +282,8 @@ const StreetTrackingMap = () => {
 
       setIsLoadingStreets(true);
       try {
+              logEvent("fetching street data");
+
         // Create a bounding box around user location (roughly 1km radius)
         const buffer = BUFFER_GETTING_STREETS; // ~1km in degrees
         const bbox = [
@@ -291,16 +302,7 @@ const StreetTrackingMap = () => {
 out geom;
 `;
 
-        //!change 1
-        // Use Overpass API for OpenStreetMap data
-        //   const overpassQuery = `
-        //   [out:json][timeout:25];
-        //   (
-        //     way["highway"~"^(primary|secondary|tertiary|residential|trunk|motorway|unclassified)$"]
-        //       (${bbox[1]},${bbox[0]},${bbox[3]},${bbox[2]});
-        //   );
-        //   out geom;
-        // `;
+      
 
         const response = await fetch(
           "https://overpass-api.de/api/interpreter",
@@ -376,6 +378,8 @@ out geom;
   const handleLocationUpdate = useCallback(
     (location: Location.LocationObject) => {
       try {
+              logEvent("handling location pudata");
+
         const { coords } = location;
         const newUserCoords: UserCoords = {
           latitude: coords.latitude,
@@ -453,6 +457,7 @@ out geom;
   };
 
   const shouldRefreshStreetData = (newCoords: UserCoords): boolean => {
+    
     if (!userLocation) return true;
 
     const distance = turf.distance(
@@ -477,10 +482,10 @@ out geom;
   //   return distance > 0.5; // Refresh if moved more than 500m
   // };
 
-
   const checkStreetProximity = useCallback(
     (userCoords: UserCoords) => {
       if (!streetData) return;
+      logEvent("checking street proximity");
 
       const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
       const proximityThresholdMeters = 30; // 30 meters
@@ -497,12 +502,27 @@ out geom;
             units: "kilometers",
           });
 
+                logEvent(
+                  `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${(
+                    distanceKm * 1000
+                  ).toFixed(1)} m away`
+                );
+
+
           console.log(
             `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${(
               distanceKm * 1000
             ).toFixed(1)} m away`
           );
 
+
+             logEvent(
+               "distanceKm: " +
+                 distanceKm +
+                 " ||| " +
+                 "closestDistance: " +
+                 closestDistance
+             );
           if (
             distanceKm <= proximityThresholdKm &&
             distanceKm < closestDistance
@@ -518,6 +538,10 @@ out geom;
 
       // Only switch if we found a *different* street
       if (foundStreet && foundStreet !== currentStreetId) {
+              logEvent(
+                `Switching to street: ${closestStreetName} (${foundStreet})`
+              );
+
         console.log(
           `Switching to street: ${closestStreetName} (${foundStreet})`
         );
@@ -526,6 +550,8 @@ out geom;
 
       // Keep the old street if we didn't find anything new
       if (!foundStreet) {
+              logEvent("No street found nearby, staying on previous street");
+
         console.log("No street found nearby, staying on previous street");
         return;
       }
@@ -616,12 +642,22 @@ out geom;
     coords: UserCoords
   ) => {
     const now = Date.now();
+      logEvent("handle street change");
 
     // User left a street
     if (currentStreetId && currentStreetId !== newStreetId) {
       const exitTime = now;
       const entryTime = streetEntryTimeRef.current || now;
       const duration = Math.floor((exitTime - entryTime) / 1000); // Duration in seconds
+      logEvent(
+        "currentStreetId: " +
+          currentStreetId +
+          " ||| " +
+          "newStreetId: " +
+          newStreetId
+      );
+
+      
 
       // Update the last visited street with duration
       setVisitedStreets((prev) => {
@@ -632,6 +668,9 @@ out geom;
         }
         return updated;
       });
+      logEvent(
+        `User left street ${currentStreetId}, spent ${duration} seconds`
+      );
 
       console.log(
         `User left street ${currentStreetId}, spent ${duration} seconds`

@@ -1,5 +1,6 @@
 
 ## Comands Reference
+run: ./build-android.sh in the root to build the project
 # Development workflow
 npm run android:debug              # Build debug APK
 npm run android:release           # Build release APK  

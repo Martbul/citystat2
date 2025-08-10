@@ -20,6 +20,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
+import { logEvent } from "@/utils/logger"; 
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -76,6 +77,7 @@ export default function HomeScreen() {
   }
 
   if (isSignedIn) {
+    logEvent("User signed in", { userId: user.id });
     console.log("User is signed in: " + user.id);
   }
 
