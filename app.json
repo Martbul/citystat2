@@ -1,23 +1,19 @@
 {
   "expo": {
-    "name": "citystat2",
+    "name": "CityStat",
     "slug": "citystat2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    
+
     "scheme": "citystat2",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.citystat2"
     },
-        "android": {
+    "android": {
       "icon": "./assets/images/icon.png",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -51,7 +47,7 @@
           "locationWhenInUsePermission": "Show current location on map."
         }
       ],
-       [
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with others."

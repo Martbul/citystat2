@@ -805,14 +805,14 @@ out geom;
                       ["literal", Array.from(allVisitedStreetIds)],
                     ],
                     "#FFA500", // Visited streets - orange
-                    "#0000FF", // Unvisited streets - blue
+                    "#1886e0c2", // Unvisited streets - blue
                   ],
                   lineWidth: [
                     "case",
                     ["==", ["get", "id"], currentStreetId || ""],
-                    5, // Current street thicker
+                    3, // Current street thicker
                     ["in", ["get", "id"], highlightedStreets],
-                    4, // Highlighted streets
+                    3, // Highlighted streets
                     2, // Default width
                   ],
                   lineOpacity: 0.5,
