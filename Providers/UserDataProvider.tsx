@@ -561,7 +561,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       [user?.id, getToken]
     );
   
-  ; 
+
    const fetchVisitedStreets = useCallback(
      async (): Promise<any> => {
        if (!user?.id) {

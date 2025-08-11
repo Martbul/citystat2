@@ -1,3 +1,4 @@
+import VisitedStreetsLayer from "@/components/displyVisitedStreets";
 import { MIN_MOVEMENT_DISTANCE_METERS } from "@/constants/Location";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { logEvent } from "@/utils/logger";
@@ -16,10 +17,15 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS: number = 180000; // Save every 3 minutes
 const TIME_OBTAINING_NEW_LOCATION_MILISECONDS: number = 5000;
-
 const BUFFER_GETTING_STREETS: number = 0.01; // ~1km in degrees
-
-//TODO: Uderstand ref()
+const LOCATION_ACCURACY = Location.Accuracy.High;
+const LOCATION_UPDATE_INTERVAL_MS = 5000; // 5 seconds
+const LOCATION_DISTANCE_THRESHOLD_M = 10; // 10 meters
+const LOCATION_UPDATE_THROTTLE_MS = 1000; // 1 second throttle
+const STREET_DATA_REFRESH_DISTANCE_KM = 0.2; // 200 meters threshold for refreshing street data
+const STREET_PROXIMITY_THRESHOLD_METERS = 50; // 50m for better detection
+const METERS_IN_KILOMETER = 1000;
+const STREET_LOGGING_DISTANCE_METERS = 100; // Only log streets within this distance (to reduce noise)
 
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
@@ -51,7 +57,7 @@ interface StreetData {
 interface VisitedStreet {
   streetId: string;
   streetName: string;
-  timestamp: number; // Entry timestamp
+  timestamp: number;
   coordinates: UserCoords;
   duration?: number;
 }
@@ -59,8 +65,8 @@ interface VisitedStreet {
 interface VisitedStreetRequest {
   streetId: string;
   streetName: string;
-  entryTimestamp: number; // Unix timestamp in milliseconds
-  exitTimestamp?: number; // Unix timestamp in milliseconds
+  entryTimestamp: number;
+  exitTimestamp?: number;
   durationSeconds?: number;
   entryLatitude: number;
   entryLongitude: number;
@@ -71,7 +77,6 @@ export interface SaveVisitedStreetsRequest {
   visitedStreets: VisitedStreetRequest[];
 }
 
-// Interface for fetched visited streets from DB
 interface FetchedVisitedStreet {
   streetId: string;
   streetName: string;
@@ -81,8 +86,6 @@ interface FetchedVisitedStreet {
   entryLatitude: number;
   entryLongitude: number;
 }
-
-
 
 const StreetTrackingMap = () => {
   const {
@@ -103,7 +106,7 @@ const StreetTrackingMap = () => {
   const [mapZoom, setMapZoom] = useState(13);
   const [allVisitedStreetIds, setAllVisitedStreetIds] = useState<Set<string>>(
     new Set()
-  ); // Track all visited street IDs
+  );
 
   const mapRef = useRef(null);
   const streetEntryTimeRef = useRef<number | null>(null);
@@ -111,18 +114,16 @@ const StreetTrackingMap = () => {
   const [previousUserCoords, setPreviousUserCoords] =
     useState<UserCoords | null>(null);
 
-  // Generate unique session ID
   const generateSessionId = (): string => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
   const currentSessionId = useRef<string>(generateSessionId());
 
-  // Fetch previously visited streets from database
   const loadVisitedStreetsFromDB = async () => {
     try {
       console.log("Loading visited streets from database...");
-      const fetchedStreets = await fetchVisitedStreets(); // Implement this in UserDataProvider
+      const fetchedStreets = await fetchVisitedStreets();
 
       if (fetchedStreets && Array.isArray(fetchedStreets)) {
         const streetIds = new Set(
@@ -140,10 +141,7 @@ const StreetTrackingMap = () => {
 
   useEffect(() => {
     const initializeComponent = async () => {
-      // Load visited streets first
       await loadVisitedStreetsFromDB();
-
-      // Then initialize permissions
       await initializePermissions();
     };
 
@@ -254,7 +252,7 @@ const StreetTrackingMap = () => {
       return saved === true;
     } catch (error) {
       console.error("Error loading permission status:", error);
-      return null; // Return null instead of false to distinguish between "not found" and "explicitly denied"
+      return null;
     }
   };
 
@@ -271,13 +269,12 @@ const StreetTrackingMap = () => {
       console.log("Initial location received:", initialLocation);
       handleLocationUpdate(initialLocation);
 
-      // Start watching position
       console.log("Starting location watching...");
       const subscription = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 5000, // Reduced from 7000 to 5000ms
-          distanceInterval: 10, // Reduced from 15 to 10 meters
+          accuracy: LOCATION_ACCURACY,
+          timeInterval: LOCATION_UPDATE_INTERVAL_MS,
+          distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
         },
         (location) => {
           console.log("Location update received:", location);
@@ -300,7 +297,6 @@ const StreetTrackingMap = () => {
       console.log("Location tracking stopped");
     }
   };
-
   const fetchStreetData = useCallback(
     async (coords: UserCoords) => {
       if (!mapToken) {
@@ -398,12 +394,20 @@ out geom;
 
         console.log(`Loaded ${features.length} streets in the area`);
 
-        // Immediately check proximity after loading streets
-        if (features.length > 0) {
+        // Only check proximity if we don't have a current street or if we're not tracking location actively
+        if (
+          features.length > 0 &&
+          (!currentStreetId || !locationSubscription)
+        ) {
+          console.log("Checking proximity after fetching new street data");
           checkStreetProximity(coords, {
             type: "FeatureCollection",
             features,
           });
+        } else {
+          console.log(
+            "Skipping proximity check - already tracking or no current street"
+          );
         }
       } catch (error) {
         console.error("Error fetching street data:", error);
@@ -412,7 +416,7 @@ out geom;
         setIsLoadingStreets(false);
       }
     },
-    [mapToken]
+    [mapToken, currentStreetId, locationSubscription]
   );
 
   // Function to calculate distance between two points using Haversine formula
@@ -458,8 +462,8 @@ out geom;
 
         // Reduced throttle time for more responsive updates
         const now = Date.now();
-        if (now - lastLocationUpdateRef.current < 1000) {
-          return; // 1 second throttle instead of 2
+        if (now - lastLocationUpdateRef.current < LOCATION_UPDATE_THROTTLE_MS) {
+          return; // Skip update if called too soo
         }
         lastLocationUpdateRef.current = now;
 
@@ -528,9 +532,10 @@ out geom;
       { units: "kilometers" }
     );
 
-    return distance > 0.15; // Reduced from 0.2km to 0.15km for more frequent updates
+    return distance > STREET_DATA_REFRESH_DISTANCE_KM;
   };
 
+  // Also update the checkStreetProximity function to be more careful about triggering changes:
   const checkStreetProximity = useCallback(
     (userCoords: UserCoords, customStreetData?: StreetData) => {
       const dataToUse = customStreetData || streetData;
@@ -542,8 +547,8 @@ out geom;
       logEvent("checking street proximity");
 
       const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-      const proximityThresholdMeters = 50; // Increased from 30 to 50 meters
-      const proximityThresholdKm = proximityThresholdMeters / 1000;
+      const proximityThresholdKm =
+        STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
 
       let foundStreet: string | null = null;
       let closestDistance = Infinity;
@@ -569,9 +574,12 @@ out geom;
 
           const distanceMeters = distanceKm * 1000;
 
-          console.log(
-            `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${distanceMeters.toFixed(1)}m away`
-          );
+          // Only log for very close streets to reduce noise
+          if (distanceMeters <= STREET_LOGGING_DISTANCE_METERS) {
+            console.log(
+              `Street ${street.id} (${street.properties?.name || "Unnamed"}) is ${distanceMeters.toFixed(1)}m away`
+            );
+          }
 
           if (
             distanceKm <= proximityThresholdKm &&
@@ -594,19 +602,24 @@ out geom;
         console.log("No nearby streets found");
       }
 
-      // Only switch if we found a *different* street
+      // Only trigger change if we found a *different* street AND it's not already the current street
       if (foundStreet && foundStreet !== currentStreetId) {
         logEvent(`Switching to street: ${closestStreetName} (${foundStreet})`);
         console.log(
           `Switching to street: ${closestStreetName} (${foundStreet})`
         );
         handleStreetChange(foundStreet, userCoords);
+      } else if (foundStreet === currentStreetId) {
+        // We're still on the same street, no need to trigger change
+        console.log(
+          `Still on same street: ${closestStreetName} (${foundStreet})`
+        );
       }
 
       // Update highlighted streets regardless
       setHighlightedStreets(foundStreet ? [foundStreet] : []);
     },
-    [streetData, currentStreetId]
+    [streetData, currentStreetId, allVisitedStreetIds, visitedStreets]
   );
 
   const saveVisitedStreetsToDatabase = async () => {
@@ -627,8 +640,9 @@ out geom;
       const result = await saveVisitedStreets(requestBody);
       console.log("Save response:", result);
 
-      // Check if the result indicates success
-      if (result && (result.success === true || result.ok === true)) {
+      // Fixed: Check for the actual response format from your backend
+      // Also handle case where result might be null
+      if (result && result.status === "success") {
         console.log("Successfully saved visited streets:", result);
 
         // Add the saved streets to our all-time visited set
@@ -688,12 +702,16 @@ out geom;
 
     // User entered a new street
     if (newStreetId && newStreetId !== currentStreetId) {
-      // Check if this street was already visited in current session to avoid duplicates
+      // Enhanced duplicate prevention: check both current session AND all-time visited
       const alreadyVisitedInSession = visitedStreets.some(
         (vs) => vs.streetId === newStreetId
       );
 
-      if (!alreadyVisitedInSession) {
+      // Also check if we're already tracking this as the current street
+      const isAlreadyCurrentStreet = currentStreetId === newStreetId;
+
+      // Only add if it's truly a new street entry
+      if (!alreadyVisitedInSession && !isAlreadyCurrentStreet) {
         const street = streetData?.features.find((s) => s.id === newStreetId);
         const streetName =
           street?.properties?.name || `Unknown Street ${newStreetId}`;
@@ -705,11 +723,24 @@ out geom;
           coordinates: coords,
         };
 
-        setVisitedStreets((prev) => [...prev, visitedStreet]);
+        setVisitedStreets((prev) => {
+          // Double-check for duplicates before adding
+          const isDuplicate = prev.some((vs) => vs.streetId === newStreetId);
+          if (isDuplicate) {
+            console.log(`Preventing duplicate entry for street ${newStreetId}`);
+            return prev;
+          }
+          return [...prev, visitedStreet];
+        });
+
         console.log(`User entered NEW street: ${streetName} (${newStreetId})`);
+
+        // Add to all-time visited set immediately
+        allVisitedStreetIds.add(newStreetId);
+        setAllVisitedStreetIds(new Set(allVisitedStreetIds));
       } else {
         console.log(
-          `User re-entered street ${newStreetId} - not adding duplicate`
+          `User re-entered street ${newStreetId} - not adding duplicate (session: ${alreadyVisitedInSession}, current: ${isAlreadyCurrentStreet})`
         );
       }
 
@@ -725,34 +756,6 @@ out geom;
     const street = streetData.features.find((s) => s.id === currentStreetId);
     return street?.properties?.name || "Unknown Street";
   };
-
-  // Generate street style based on highlight status and visit history
-  const getStreetColor = (streetId: string): string => {
-    const isCurrent = streetId === currentStreetId;
-    const isHighlighted = highlightedStreets.includes(streetId);
-    const hasBeenVisited = allVisitedStreetIds.has(streetId);
-
-    if (isCurrent) return "#00FF00"; // Green for current
-    if (isHighlighted) return "#FF0000"; // Red for highlighted
-    if (hasBeenVisited) return "#FFA500"; // Orange for previously visited
-    return "#0000FF"; // Blue for unvisited
-  };
-
-  const getStreetWidth = (streetId: string): number => {
-    const isCurrent = streetId === currentStreetId;
-    const isHighlighted = highlightedStreets.includes(streetId);
-
-    if (isCurrent) return 8;
-    if (isHighlighted) return 6;
-    return 3;
-  };
-
-  //! ERRORS:
-  //! - doesnt save visited streets into db(throws error)
-  //! - displys only current screets instead of displying all visited streets
-  //! - data is cleared when a other screen is opened(fetch already visited streets from db on mount)
-  //! - a single street is being visited multiple times(dont save doublicates in visited_streets array)
-  //! - enabled location setting is saved in db, but on mount it is not use(user ahs to accep it everuy thime he enters the screen)
 
   return (
     <View style={styles.container}>
@@ -804,7 +807,7 @@ out geom;
                       ["get", "id"],
                       ["literal", Array.from(allVisitedStreetIds)],
                     ],
-                    "#FFA500", // Visited streets - orange
+                    "#8B00FF", // Visited streets - purple (changed from orange)
                     "#1886e0c2", // Unvisited streets - blue
                   ],
                   lineWidth: [
@@ -821,6 +824,34 @@ out geom;
                 }}
               />
             </ShapeSource>
+
+            {currentStreetId && (
+              <ShapeSource
+                id="currentStreetSource"
+                shape={{
+                  type: "FeatureCollection",
+                  features: streetData.features.filter(
+                    (street) => street.id === currentStreetId
+                  ),
+                }}
+              >
+                <Mapbox.LineLayer
+                  id="current_street_layer"
+                  style={{
+                    lineColor: "#00FF00",
+                    lineWidth: 4, // Reduced from 10
+                    lineOpacity: 0.5,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                />
+              </ShapeSource>
+            )}
+
+            <VisitedStreetsLayer
+              visitedStreets={visitedStreets}
+              streetData={streetData}
+            />
           </>
         )}
       </MapView>
