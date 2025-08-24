@@ -1,5 +1,3 @@
-// src/theme/fonts.js
-
 const Fonts = {
   family: {
     regular: "Anybody-Regular",

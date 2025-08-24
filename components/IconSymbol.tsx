@@ -8,15 +8,15 @@ import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
-
 const MAPPING = {
   "house.fill": "home",
   "map.fill": "map",
+  "globe.fill": "globe",
   "person.fill": "person",
   "trophy.fill": "leaderboard", 
   "location.fill": "location-on",
   "person.circle.fill": "account-circle",
-} as IconMapping;
+} as unknown as IconMapping;
 
 
 export function IconSymbol({

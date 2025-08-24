@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   TouchableOpacity,
   View,
@@ -7,20 +7,21 @@ import {
   Dimensions,
   FlatList,
   StatusBar,
+  Image,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { cn } from "@/utils/cn";
 import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
-import { logEvent } from "@/utils/logger"; 
+import { logEvent } from "@/utils/logger";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -30,11 +31,14 @@ export default function HomeScreen() {
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
   const { isSignedIn, isLoaded, user } = useUser();
-  const { userData } = useUserData();
+  const { userData, refreshUserData } = useUserData();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  
- 
+
+  useEffect(() => {
+    console.log("refreshing user data");
+    refreshUserData();
+  }, []);
 
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
@@ -77,8 +81,9 @@ export default function HomeScreen() {
   }
 
   if (isSignedIn) {
-    logEvent("User signed in", { userId: user.id });
+    // logEvent("User signed in", { userId: user.id });
     console.log("User is signed in: " + user.id);
+    console.log("refreshing user data");
   }
 
   if (userData && userData.completedTutorial === false) {
@@ -94,67 +99,127 @@ export default function HomeScreen() {
   const renderSection = ({ item }: { item: any }) => {
     if (item.type === "header") {
       return (
-        <SafeAreaView className="bg-lightNeutralGray px-4 pt-12 pb-9 rounded-b-2xl">
-          <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
-          <View className="flex-row justify-between items-center">
-            <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
-              <Entypo name="menu" size={26} color="#333333" />
-            </TouchableOpacity>
-
-            <View className="flex-row gap-3">
-              <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
-                <Fontisto name="search" size={18} color="white" />
+        <SafeAreaView >
+          <StatusBar  backgroundColor="bg-lightNeutralGray" />
+          <View className=" px-4 pb-9 rounded-b-2xl">
+            <View className="flex-row justify-between items-center">
+              <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
+                <Entypo name="menu" size={26} color="#333333" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
-                onPress={() => router.push("/(screens)/notifications")}
-              >
-                <MaterialIcons
-                  name="notifications-active"
-                  size={20}
-                  color="white"
+              <View className="flex-row gap-3">
+                <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
+                  <Fontisto name="search" size={18} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
+                  onPress={() => router.push("/(screens)/notifications")}
+                >
+                  <MaterialIcons
+                    name="notifications-active"
+                    size={20}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View className="mt-5">
+              <View className="flex-row justify-between">
+                <StatCard
+                  title="Total"
+                  value="847.3"
+                  subtitle="km"
+                  icon={
+                    <FontAwesome5 name="walking" size={18} color="#c8f751" />
+                  }
                 />
-              </TouchableOpacity>
+                <StatCard
+                  title="Coverage"
+                  value="23.7%"
+                  subtitle="Sofia"
+                  icon={
+                    <MaterialIcons name="explore" size={20} color="#c8f751" />
+                  }
+                />
+                <StatCard
+                  title="Active"
+                  value="156"
+                  subtitle="2025"
+                  icon={<AntDesign name="calendar" size={20} color="#c8f751" />}
+                />
+              </View>
             </View>
           </View>
 
-          <View className="mt-5">
-            <View className="flex-row justify-between">
-              <StatCard
-                title="Total"
-                value="847.3"
-                subtitle="km"
-                icon={<FontAwesome5 name="walking" size={18} color="#c8f751" />}
-              />
-              <StatCard
-                title="Coverage"
-                value="23.7%"
-                subtitle="Sofia"
-                icon={
-                  <MaterialIcons name="explore" size={20} color="#c8f751" />
-                }
-              />
-              <StatCard
-                title="Active"
-                value="156"
-                subtitle="2025"
-                icon={<AntDesign name="calendar" size={20} color="#c8f751" />}
-              />
+          {/* THIS IS THE VIEW THAT NEED TO */}
+          <View className="flex flex-row justify-between items-center px-4">
+            <View className="justify-center">
+              <View className="mb-2">
+                <MaterialCommunityIcons name="gold" size={24} color="black" />
+                <Text>0 Gold</Text>
+              </View>
+              <View className=" mb-2">
+                <FontAwesome5 name="gem" size={24} color="black" />
+                <Text>0 Gems</Text>
+              </View>
+              <View>
+                <FontAwesome5 name="old-republic" size={24} color="black" />
+                <Text>0 Artifacts</Text>
+              </View>
+
+              <View>
+                <MaterialCommunityIcons
+                  name="crystal-ball"
+                  size={24}
+                  color="black"
+                />
+                <Text>0 Magic</Text>
+              </View>
+            </View>
+            <View>
+              <Image
+                className="w-28 h-28"
+                source={{
+                  uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Ethereum-icon-purple.svg/langfr-250px-Ethereum-icon-purple.svg.png",
+                }}
+              ></Image>
+            </View>
+
+            <View>
+              <View>
+                <MaterialCommunityIcons name="sword" size={24} color="black" />
+                <Text>0 Strenght</Text>
+              </View>
+
+              <View>
+                <FontAwesome5 name="chess-king" size={24} color="black" />
+                <Text>0 Influence</Text>
+              </View>
+              <View>
+                <FontAwesome5 name="ethereum" size={24} color="black" />
+                <Text>0 Runes</Text>
+              </View>
+              <View>
+                <MaterialCommunityIcons
+                  name="lightning-bolt-outline"
+                  size={24}
+                  color="black"
+                />
+                <Text>0 Energy</Text>
+              </View>
             </View>
           </View>
         </SafeAreaView>
       );
     }
 
-    
-    
-
     return null;
   };
 
   return (
-    <SafeAreaView className={cn("flex-1 bg-bddc62")}>
+    <SafeAreaView className="flex-1 bg-containerBg">
       {isSideMenuDrawerOpen && (
         <SideMenuDrawer
           isSideMenuDrawerOpen={isSideMenuDrawerOpen}
@@ -175,7 +240,7 @@ export default function HomeScreen() {
   );
 }
 
-const StatCard = ({
+export const StatCard = ({
   title,
   value,
   subtitle,

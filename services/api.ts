@@ -1,6 +1,6 @@
-import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
 import { Settings } from "@/types/settings";
-import { CityStat, Friend, StreetWalk, UserData } from "@/types/user";
+import { CityStat, Friend, UserData } from "@/types/user";
+import { SaveVisitedStreetsRequest } from "@/types/world";
 
 class ApiService {
   private baseUrl: string;
@@ -172,17 +172,7 @@ class ApiService {
     });
   }
 
-  async addStreetWalk(
-    userId: string,
-    streetWalk: Omit<StreetWalk, "id" | "cityStatId">,
-    token: string
-  ): Promise<UserData> {
-    return this.makeRequest<UserData>(`/api/users/${userId}/street-walks`, {
-      method: "POST",
-      token,
-      body: JSON.stringify(streetWalk),
-    });
-  }
+
 
   // Friends API methods
   async addFriend(

@@ -36,7 +36,6 @@ export default function ResetPasswordScreen() {
     setErrors((prev) => prev.filter((e) => e.paramName !== "new_password"));
   };
 
-  // Step 1: Request password reset
   const onRequestResetPress = async () => {
     setErrors([]);
     setLoading(true);
@@ -47,7 +46,6 @@ export default function ResetPasswordScreen() {
     }
 
     try {
-      // Use Clerk's password reset flow
       await signIn.create({
         strategy: "reset_password_email_code",
         identifier: emailAddress,
@@ -75,7 +73,6 @@ export default function ResetPasswordScreen() {
     }
   };
 
-  // Step 2: Complete password reset
   const onResetPasswordPress = async () => {
     setErrors([]);
     setLoading(true);
@@ -86,7 +83,6 @@ export default function ResetPasswordScreen() {
     }
 
     try {
-      // Complete the password reset using Clerk's attemptFirstFactor
       const result = await signIn.attemptFirstFactor({
         strategy: "reset_password_email_code",
         code,
@@ -94,13 +90,11 @@ export default function ResetPasswordScreen() {
       });
 
       if (result.status === "complete") {
-        // Set the active session
         await setActive({ session: result.createdSessionId });
         setResetSuccessful(true);
         
-        // Navigate to main app after showing success
         setTimeout(() => {
-          router.replace("/(tabs)"); // Adjust this to your main app route
+          router.replace("/(tabs)");
         }, 2000);
       } else {
         console.error(JSON.stringify(result, null, 2));
@@ -137,7 +131,6 @@ export default function ResetPasswordScreen() {
       !["email_address", "code", "new_password"].includes(e.paramName)
   );
 
-  // Success screen
   if (resetSuccessful) {
     return (
       <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
@@ -154,7 +147,6 @@ export default function ResetPasswordScreen() {
     );
   }
 
-  // Step 2: Enter code and new password
   if (pendingReset) {
     return (
       <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
@@ -230,7 +222,6 @@ export default function ResetPasswordScreen() {
     );
   }
 
-  // Step 1: Enter email address
   return (
     <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
       <Text className="mb-2 text-2xl font-bold text-center text-lightBlackText">

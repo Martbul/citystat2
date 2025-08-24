@@ -1,36 +1,36 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { SaveVisitedStreetsRequest } from "@/app/(tabs)/world";
 import { apiService } from "@/services/api";
 import {
-  UserData,
-  UserDataContextType,
+  Language,
+  MessagesAllowance,
+  Motion,
+  RoleColors,
+  Settings,
+  StickersAnimation,
+  TextSize,
+  Theme,
+} from "@/types/settings";
+import {
+  CityStat,
+  Friend,
   Role,
   Status,
-  CityStat,
   StreetWalk,
-  Friend,
+  UserData,
+  UserDataContextType,
 } from "@/types/user";
-import {
-  Theme,
-  Language,
-  Settings,
-  TextSize,
-  MessagesAllowance,
-  RoleColors,
-  StickersAnimation,
-  Motion,
-} from "@/types/settings";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert } from "react-native";
-import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
 
 const UserDataContext = createContext<UserDataContextType | undefined>(
   undefined
@@ -58,6 +58,14 @@ const defaultSettings: Omit<
   enableSoundEffects: true,
   enableVibration: true,
 };
+
+// add the func for fetching uses location in the provider,
+// get the users town to calulate this like percantage couverage and soo on
+// add raning for his town, for his friends
+// add ranking overall, overall percentage, most killomets, most streets
+
+
+//! add checksin the db fr dulicates, in a single sesshion in the clients there may not be dublicates but then in the overlal visited strees there can dublicate ids
 
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const { user, isSignedIn } = useUser();
@@ -537,6 +545,8 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
 
           const token = await getToken();
           if (!token) return null;
+                    console.log("-----------visitedStreets ", visitedStreets);
+
 
           const success = await apiService.saveVisitedStreets(
             visitedStreets,
@@ -586,7 +596,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
              ? err.message
              : "Failed to fetch Visited Streets";
          setError(errorMessage);
-         console.error("Error while fetching visited streets:", err);
+         console.error("Error while fetching visited streets:", err); //! getting error here
          return null;
        } finally {
          setIsLoading(false);

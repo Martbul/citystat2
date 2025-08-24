@@ -1,5 +1,5 @@
-import { SaveVisitedStreetsRequest } from "@/app/(tabs)/mapscreen";
-import { Language, Theme, Settings } from "./settings";
+import { Settings } from "./settings";
+import { SaveVisitedStreetsRequest, VisitedStreet } from "./world";
 
 export enum Status {
   ACTIVE = "ACTIVE",
@@ -11,13 +11,14 @@ export enum Status {
   INVISIBLE = "INVISIBLE",
 }
 
+//! the prisma schema has been updates so update this file accordingly
+
 export enum Role {
   USER = "USER",
   ADMIN = "ADMIN",
   MODERATOR = "MODERATOR",
 }
 
-// Add missing Device interface from your schema
 export interface Device {
   id: string;
   userId: string;
@@ -25,30 +26,6 @@ export interface Device {
   name: string;
   location: string;
   lastLoggedIn: string;
-}
-
-// Add VisitedStreet interface from your schema
-export interface VisitedStreet {
-  id: string;
-  userId: string;
-  sessionId: string;
-  streetId: string;
-  streetName: string;
-  entryTimestamp: number; // BigInt in Prisma, but number in TS for JSON
-  exitTimestamp?: number;
-  durationSeconds?: number;
-  entryLatitude: number; // Decimal in Prisma
-  entryLongitude: number;
-  createdAt: string;
-}
-
-
-export interface StreetWalk {
-  id: string;
-  streetName: string;
-  geoJson: any; // JSON type from Prisma
-  distanceKm: number;
-  cityStatId: string;
 }
 
 export interface CityStat {
@@ -63,9 +40,8 @@ export interface CityStat {
   cityCoveragePct: number;
   daysActive: number;
   longestStreakDays: number;
-  streetWalks: StreetWalk[];
-  userId: string; // Add this - it's in your Prisma schema
-  settingsId?: string; // Add this - it's in your Prisma schema
+  userId: string;
+  settingsId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,25 +79,36 @@ export interface UserData {
 
   cityStats?: CityStat;
   settings?: Settings;
-  devices?: Device; // Note: Device? in schema (one-to-one)
-  friends?: Friend[]; // Friends where this user is the "user"
-  friendOf?: Friend[]; // Friends where this user is the "friend"
+  devices?: Device;
+  friends?: Friend[];
+  friendOf?: Friend[];
   visitedStreets?: VisitedStreet[];
 }
 
 export interface UserDataContextType {
   userData: UserData | null;
-  setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
+  settings: Settings;
+
+  completedTutorial: boolean;
+  status: Status;
+  note: string;
+  friends: any[];
+  cityStats: CityStat | null;
+  totalStreetsWalked: number;
+  totalKilometers: number;
+  cityCoveragePct: number;
+  daysActive: number;
+  longestStreakDays: number;
+  foundUsers: UserData[];
   isLoading: boolean;
   error: string | null;
   getFriends: () => Promise<Friend[]>;
-
+  setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   getLocationPermission: () => Promise<any>;
   fetchVisitedStreets: () => Promise<any>;
   saveVisitedStreets: (
     visitedStreets: SaveVisitedStreetsRequest
   ) => Promise<any>;
-  settings: Settings;
   fetchOtherUserProfile: (otherUserId: string) => Promise<any>;
   updateUserDetails: (
     updates: Partial<
@@ -138,20 +125,6 @@ export interface UserDataContextType {
   updateUserNote: (note: string) => Promise<void>;
   refreshUserData: () => Promise<void>;
   saveLocationPermission: (hasPermission: boolean) => Promise<any>;
-
-  completedTutorial: boolean;
-  status: Status;
-  note: string;
-  friends: any[];
-  cityStats: CityStat | null;
-  totalStreetsWalked: number;
-  totalKilometers: number;
-  cityCoveragePct: number;
-  daysActive: number;
-  longestStreakDays: number;
-  streetWalks: StreetWalk[];
-
-  // Friends & City stats
   removeFriend: (friendId: string) => Promise<void>;
   updateCityStats: (
     cityStats: Partial<
@@ -161,10 +134,6 @@ export interface UserDataContextType {
       >
     >
   ) => Promise<void>;
-  addStreetWalk: (
-    streetWalk: Omit<StreetWalk, "id" | "cityStatId">
-  ) => Promise<void>;
   searchUsers: (searchQuery: string) => Promise<void>;
-  foundUsers: UserData[];
   addFriendByUser: (friendUser: UserData) => Promise<boolean>;
 }

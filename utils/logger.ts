@@ -1,8 +1,7 @@
-// logger.js
 const BETTERSTACK_SOURCE_TOKEN = "BS2RZYH8oZXYviBPShNuvSEMbJEiKa8C";
 const BETTERSTACK_URL = "https://in.logs.betterstack.com";
 
-export const logEvent = async (message, extra = {}) => {
+export const logEvent = async (message:string, extra = {}) => {
   try {
     await fetch(BETTERSTACK_URL, {
       method: "POST",

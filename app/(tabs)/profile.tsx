@@ -5,7 +5,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { RelativePathString, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Image,
   RefreshControl,
@@ -22,6 +22,11 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    console.log("refreshing user data");
+    refreshUserData()
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -35,55 +40,41 @@ export default function ProfileScreen() {
 
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView>
-        <View>
-          <Text className="text-gray-100">Loading profile...</Text>
+      <SafeAreaView className="flex-1 bg-containerBg">
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-textDarkGray text-lg">Loading profile...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground">
-      <View className="flex flex-col h-screen bg-lightBackground">
-        <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
+    <SafeAreaView className="flex-1 bg-containerBg">
+      <View className="flex flex-col h-screen bg-containerBg">
+        <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
 
-        <View className="flex flex-row items-center justify-end gap-3 items-center px-4 pt-8 pb-9 bg-lightNeutralGray">
-          {/* <TouchableOpacity  className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full my-4">
-            <FontAwesome5 name="store" size={18} color="white" />
-          </TouchableOpacity> */}
-
+        {/* Header with modern gradient background */}
+        <View className="flex flex-row items-center justify-end gap-3 px-4 pt-8 pb-9 bg-gradient-to-br from-panelDark to-panelDarker">
           <TouchableOpacity
-            className="flex justify-center items-center w-10 h-10 bg-lightContainerBg rounded-full"
+            className="flex justify-center items-center w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20"
             onPress={() => router.push("/(settings)/settings")}
           >
-            <Ionicons name="settings" size={20} color="white" />
+            <Ionicons name="settings" size={28} color="#1F2937" />
           </TouchableOpacity>
         </View>
 
+        {/* Profile Image with modern styling */}
         <View className="absolute top-20 left-4 z-10">
           <View className="relative">
-            <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
+            <View className="w-32 h-32 bg-white rounded-3xl flex items-center justify-center shadow-lg border-4 border-white">
               <Image
-                className="w-28 h-28"
+                className="w-28 h-28 rounded-3xl"
                 source={{ uri: userData?.imageUrl }}
-              ></Image>
+              />
             </View>
-
-            {/* 
-         //TODO: v2 add the light
-         <View className="absolute -bottom-1 -right-1 w-4 h-4 bg-lightSecondaryAccent rounded-full border-2 border-lightSurface"></View> */}
+           
           </View>
         </View>
-
-        {/* 
-      //TODO: v2 add the status
-      <View className="absolute top-44 left-36 z-10">
-        <TouchableOpacity className="bg-lightContainerBg px-3 py-2 rounded-full flex flex-row items-center gap-1">
-          <Feather name="plus" size={16} color="white" />
-          <Text className="text-white text-sm">Add Status</Text>
-        </TouchableOpacity>
-      </View> */}
 
         <ScrollView
           className="flex-1 px-4 pb-20"
@@ -91,44 +82,49 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#bddc62"]} // Android - using your accent color
-              tintColor="#bddc62" // iOS - using your accent color
+              colors={["#c8f751"]} // Android - using modern green
+              tintColor="#c8f751" // iOS - using modern green
             />
           }
           showsVerticalScrollIndicator={false}
         >
-          <View className="mt-20">
-            <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
+          {/* User Info Section */}
+          <View className="mt-24">
+            <Text className="text-textDark text-4xl font-bold mb-2">
               {userData?.firstName} {userData?.lastName}
             </Text>
-            <View className="flex flex-row items-center gap-1">
-              <View className="w-6 h-6 bg-lightSecondaryAccent rounded  flex items-center justify-center">
+            <View className="flex flex-row items-center gap-2 mb-4">
+              <View className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-sm">
                 <Feather name="hash" size={16} color="white" />
               </View>
-              <Text className="text-lightNeutralGray text-lg">
+              <Text className="text-textDarkGray text-xl font-medium">
                 {userData?.userName}
               </Text>
             </View>
           </View>
 
-          <PrimaryButton
-            heading="Edit Profile"
-            icon={<FontAwesome name="pencil" size={24} color="#111111" />}
-            routingPath={"/(settings)/editProfile" as RelativePathString}
-          />
+          {/* Edit Profile Button */}
+          <View className="mb-6">
+            <PrimaryButton
+              heading="Edit Profile"
+              icon={<FontAwesome name="pencil" size={24} color="#111111" />}
+              routingPath={"/(settings)/editProfile" as RelativePathString}
+            />
+          </View>
 
-          <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
-            <Text className="text-lightNeutralGray text-lg font-medium mb-3">
+          {/* Member Since Card */}
+          <View className="mb-6 bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <Text className="text-textDark text-lg font-semibold mb-4">
               Member Since
             </Text>
             <View className="flex flex-row items-center">
-              <View className="w-10 h-10 rounded flex items-center justify-center mr-3">
+              <View className="w-14 h-14 bg-containerBg rounded-2xl flex items-center justify-center mr-4 shadow-sm">
                 <Image
-                  className="w-16 h-16 text-lightPrimaryText text-sm"
+                  className="w-12 h-12"
                   source={require("../../assets/images/logo_spash_screen.png")}
-                ></Image>
+                />
               </View>
-              <Text className="text-lightPrimaryText text-lg">
+              <Text className="text-textDark text-lg font-medium">
                 {userData?.createdAt
                   ? new Date(userData.createdAt).toLocaleDateString("en-GB", {
                       day: "2-digit",
@@ -140,184 +136,52 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <TouchableOpacity onPress={() => router.push("/(screens)/friends")}>
-            <View className="flex flex-row justify-between items-center mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
-              <Text className="text-lightNeutralGray text-lg font-medium">
-                Your Friends
-              </Text>
-              <View className="flex items-center">
-                <AntDesign name="arrowright" size={24} color="#111111" />
+          {/* Friends Section */}
+          <TouchableOpacity 
+            onPress={() => router.push("/(screens)/friends")}
+            className="mb-6"
+          >
+            <View className="flex flex-row justify-between items-center bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <View className="flex flex-row items-center">
+                <View className="w-12 h-12 bg-iconGreen/10 rounded-2xl flex items-center justify-center mr-4">
+                  <Ionicons name="people" size={20} color="#10B981" />
+                </View>
+                <Text className="text-textDark text-lg font-semibold">
+                  Your Friends
+                </Text>
+              </View>
+              <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center">
+                <AntDesign name="arrowright" size={20} color="#6B7280" />
               </View>
             </View>
           </TouchableOpacity>
 
+          {/* Note Section */}
           <TouchableOpacity
             onPress={() => router.push("/(screens)/editNote")}
-            className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText"
+            className="mb-8"
           >
-            <Text
-              className={`text-lg ${
-                userData?.note ? "text-neutral-800" : "text-lightNeutralGray"
-              }`}
-            >
-              {userData?.note ? userData.note : "Note (only visible to you)"}
-            </Text>
-
-            <FontAwesome name="sticky-note-o" size={24} color="#111111" />
+            <View className="flex flex-row items-center justify-between bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-1 flex flex-row items-center">
+                <View className="w-12 h-12 bg-sessionBlue/10 rounded-2xl flex items-center justify-center mr-4">
+                  <FontAwesome name="sticky-note-o" size={18} color="#3B82F6" />
+                </View>
+                <Text
+                  className={`flex-1 text-lg font-medium ${
+                    userData?.note ? "text-textBlack" : "text-textGray"
+                  }`}
+                  numberOfLines={2}
+                >
+                  {userData?.note ? userData.note : "Add a personal note (only visible to you)"}
+                </Text>
+              </View>
+              <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center ml-3">
+                <AntDesign name="arrowright" size={20} color="#6B7280" />
+              </View>
+            </View>
           </TouchableOpacity>
         </ScrollView>
       </View>
     </SafeAreaView>
   );
 }
-
-
-// // Updated ProfileScreen.tsx
-// import PrimaryButton from "@/components/primaryButton";
-// import { useUserData } from "@/Providers/UserDataProvider";
-// import AntDesign from "@expo/vector-icons/AntDesign";
-// import Feather from "@expo/vector-icons/Feather";
-// import FontAwesome from "@expo/vector-icons/FontAwesome";
-// import { RelativePathString, useRouter } from "expo-router";
-// import { useCallback, useState } from "react";
-// import {
-//   Image,
-//   RefreshControl,
-//   ScrollView,
-//   Text,
-//   TouchableOpacity,
-//   View,
-// } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
-// import { ProfileScreenHeader } from "@/components/ScreenHeader"; // Import your new component
-
-// export default function ProfileScreen() {
-//   const { userData, isLoading, refreshUserData } = useUserData();
-//   const router = useRouter();
-//   const [refreshing, setRefreshing] = useState(false);
-
-//   const onRefresh = useCallback(async () => {
-//     setRefreshing(true);
-//     try {
-//       await refreshUserData?.();
-//     } catch (error) {
-//       console.error("Error refreshing profile:", error);
-//     } finally {
-//       setRefreshing(false);
-//     }
-//   }, [refreshUserData]);
-
-//   if (isLoading && !refreshing) {
-//     return (
-//       <SafeAreaView>
-//         <View>
-//           <Text className="text-gray-100">Loading profile...</Text>
-//         </View>
-//       </SafeAreaView>
-//     );
-//   }
-
-//   return (
-//     <SafeAreaView className="flex-1 bg-lightBackground">
-//       <View className="flex flex-col h-screen bg-lightBackground">
-        
-//         <ProfileScreenHeader
-//           onSettingsPress={() => router.push("/(settings)/settings")}
-//         />
-
-//         <View className="absolute top-20 left-4 z-10">
-//           <View className="relative">
-//             <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
-//               <Image
-//                 className="w-28 h-28"
-//                 source={{ uri: userData?.imageUrl }}
-//               />
-//             </View>
-//           </View>
-//         </View>
-
-//         <ScrollView
-//           className="flex-1 px-4 pb-20"
-//           refreshControl={
-//             <RefreshControl
-//               refreshing={refreshing}
-//               onRefresh={onRefresh}
-//               colors={["#bddc62"]}
-//               tintColor="#bddc62"
-//             />
-//           }
-//           showsVerticalScrollIndicator={false}
-//         >
-//           <View className="mt-20">
-//             <Text className="text-lightPrimaryText text-3xl font-bold mb-1">
-//               {userData?.firstName} {userData?.lastName}
-//             </Text>
-//             <View className="flex flex-row items-center gap-1">
-//               <View className="w-6 h-6 bg-lightSecondaryAccent rounded flex items-center justify-center">
-//                 <Feather name="hash" size={16} color="white" />
-//               </View>
-//               <Text className="text-lightNeutralGray text-lg">
-//                 {userData?.userName}
-//               </Text>
-//             </View>
-//           </View>
-
-//           <PrimaryButton
-//             heading="Edit Profile"
-//             icon={<FontAwesome name="pencil" size={24} color="#111111" />}
-//             routingPath={"/(settings)/editProfile" as RelativePathString}
-//           />
-
-//           <View className="mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
-//             <Text className="text-lightNeutralGray text-lg font-medium mb-3">
-//               Member Since
-//             </Text>
-//             <View className="flex flex-row items-center">
-//               <View className="w-10 h-10 rounded flex items-center justify-center mr-3">
-//                 <Image
-//                   className="w-16 h-16 text-lightPrimaryText text-sm"
-//                   source={require("../../assets/images/logo_spash_screen.png")}
-//                 />
-//               </View>
-//               <Text className="text-lightPrimaryText text-lg">
-//                 {userData?.createdAt
-//                   ? new Date(userData.createdAt).toLocaleDateString("en-GB", {
-//                       day: "2-digit",
-//                       month: "long",
-//                       year: "numeric",
-//                     })
-//                   : "Date not available"}
-//               </Text>
-//             </View>
-//           </View>
-
-//           <TouchableOpacity onPress={() => router.push("/(screens)/friends")}>
-//             <View className="flex flex-row justify-between items-center mt-6 bg-lightSurface rounded-xl p-4 border border-lightMutedText">
-//               <Text className="text-lightNeutralGray text-lg font-medium">
-//                 Your Friends
-//               </Text>
-//               <View className="flex items-center">
-//                 <AntDesign name="arrowright" size={24} color="#111111" />
-//               </View>
-//             </View>
-//           </TouchableOpacity>
-
-//           <TouchableOpacity
-//             onPress={() => router.push("/(screens)/editNote")}
-//             className="flex flex-row w-full mt-6 bg-lightSurface rounded-xl p-4 items-center justify-between mb-6 border border-lightMutedText"
-//           >
-//             <Text
-//               className={`text-lg ${
-//                 userData?.note ? "text-neutral-800" : "text-lightNeutralGray"
-//               }`}
-//             >
-//               {userData?.note ? userData.note : "Note (only visible to you)"}
-//             </Text>
-
-//             <FontAwesome name="sticky-note-o" size={24} color="#111111" />
-//           </TouchableOpacity>
-//         </ScrollView>
-//       </View>
-//     </SafeAreaView>
-//   );
-// }

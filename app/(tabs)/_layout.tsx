@@ -1,5 +1,6 @@
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/IconSymbol";
+import Spinner from "@/components/spinner";
 import TabBarBackground from "@/components/TabBarBackground";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useAuth } from "@clerk/clerk-expo";
@@ -8,12 +9,12 @@ import React, { useEffect } from "react";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
-  const { isSignedIn } = useAuth();
-  const { userData } = useUserData();
+  const { isSignedIn, isLoaded} = useAuth();
+  const { userData, isLoading } = useUserData();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isSignedIn) {
+    if (!isSignedIn && !isLoading &&isLoaded ) {
       router.replace("/(auth)/sign-in");
       return;
     }
@@ -25,7 +26,8 @@ export default function TabLayout() {
   }, [isSignedIn, userData, router]);
 
   if (!isSignedIn || (userData && !userData.completedTutorial)) {
-    return null; //Add loading spinner or smth
+    return ( <Spinner />);       
+
   }
 
   return (
@@ -55,9 +57,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="mapscreen"
+        name="world"
         options={{
-          title: "Map",
+          title: "World",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="location.fill" color={color} />
           ),
@@ -73,24 +75,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* <Tabs.Screen
-        name="explore"
-        options={{
-          title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="dev"
-        options={{
-          title: "Dev",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
-        }}
-      /> */}
       <Tabs.Screen
         name="profile"
         options={{
