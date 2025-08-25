@@ -5,44 +5,51 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo, useCallback } from "react";
 import { GestureResponderEvent, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Spinner from "./spinner";
 import { StreetData } from "@/types/world";
+import { useUserData } from "@/Providers/UserDataProvider";
 
 type StatusIndicatorProps = {
   isActive: "Active" | "Inactive";
 };
-const MapTrackingPanel = ({ isLocationSubscrActive,currentStreetId,streetData, onClose }: {isLocationSubscrActive:"Active" | "Inactive";currentStreetId:string|null;streetData:StreetData|null, onClose: () => void }) => {
-  const [visitedStreets] = useState(42);
+
+type MapTrackingPanelProps = {
+  isLocationSubscrActive: "Active" | "Inactive";
+  currentStreetId: string | null;
+  streetData: StreetData | null;
+  sessionCountVisitedStreets: number;
+  allCountVisitedStreets: number;
+  onClose: () => void;
+};
+
+const MapTrackingPanel = memo(({ 
+  isLocationSubscrActive, 
+  currentStreetId, 
+  streetData, 
+  sessionCountVisitedStreets,
+  allCountVisitedStreets,
+  onClose 
+}: MapTrackingPanelProps) => {
+   const {
+      fetchVisitedStreets,
+      // isLoading,
+    } = useUserData();
   const [totalVisited] = useState(156);
   const [currentStreet, setCurrentStreet] = useState("Unknown Street");
   const [location, setLocation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLocation();
-    const currStreetName = getCurrentStreetName(currentStreetId,streetData);
-    setCurrentStreet(currStreetName);
-  }, []);
-
-  const handleOverlayPress = () => {
-    if (onClose) onClose();
-  };
-
- const handlePanelPress = (e: GestureResponderEvent) => {
-  e.stopPropagation();
-};
-
-  const getCurrentStreetName = (currentStreetId:string|null,streetData:StreetData|null): string => {
+  const getCurrentStreetName = useCallback((currentStreetId: string | null, streetData: StreetData | null): string => {
     if (!currentStreetId || !streetData) return "Not on a street";
 
     const street = streetData.features.find((s) => s.id === currentStreetId);
     return street?.properties?.name || "Unknown Street";
-  };
+  }, []);
 
-  const fetchLocation = async () => {
+  const fetchLocation = useCallback(async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -61,9 +68,26 @@ const MapTrackingPanel = ({ isLocationSubscrActive,currentStreetId,streetData, o
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const StatCard = ({
+  useEffect(() => {
+    fetchLocation();
+    const currStreetName = getCurrentStreetName(currentStreetId, streetData);
+    setCurrentStreet(currStreetName);
+  }, [fetchLocation, getCurrentStreetName, currentStreetId, streetData,fetchVisitedStreets]);
+  
+
+
+
+  const handleOverlayPress = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const handlePanelPress = useCallback((e: GestureResponderEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const StatCard = memo(({
     title,
     value,
     subtitle,
@@ -96,25 +120,24 @@ const MapTrackingPanel = ({ isLocationSubscrActive,currentStreetId,streetData, o
         <Text className="text-xs text-gray-600">{subtitle}</Text>
       </View>
     </View>
-  );
+  ));
 
-
-const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
-  <View className="flex-row items-center mb-2">
-    <View
-      className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-        isActive === "Active" ? "bg-lime-300" : "bg-gray-400"
-      }`}
-    />
-    <Text
-      className={`text-xs font-medium ${
-        isActive === "Active" ? "text-lime-300" : "text-gray-500"
-      }`}
-    >
-      Tracking: {isActive}
-    </Text>
-  </View>
-);
+  const StatusIndicator = memo(({ isActive }: StatusIndicatorProps) => (
+    <View className="flex-row items-center mb-2">
+      <View
+        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+          isActive === "Active" ? "bg-lime-300" : "bg-gray-400"
+        }`}
+      />
+      <Text
+        className={`text-xs font-medium ${
+          isActive === "Active" ? "text-lime-300" : "text-gray-500"
+        }`}
+      >
+        Tracking: {isActive}
+      </Text>
+    </View>
+  ));
 
   if (isLoading) {
     return (
@@ -139,7 +162,7 @@ const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
         onPress={handlePanelPress}
       >
         <View className="bg-gray-800 rounded-2xl p-5 shadow-2xl">
-          {/* Header */}
+
           <View className="flex-row justify-between items-center mb-5">
             <View className="flex-row items-center">
               <View className="bg-white/10 rounded-lg p-1.5 mr-2">
@@ -183,8 +206,8 @@ const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
             />
           </View>
 
-          <View className="bg-white/5 border border-white/10 rounded-xl p-3 mb-3">
-            <StatusIndicator isActive={isLocationSubscrActive} />
+          <View className="flex flex-row justify-between items-center bg-white/5 border border-white/10 rounded-xl p-3 mb-3">
+          
             <View className="flex-row items-center">
               <Ionicons name="location" size={14} color="#c8f751" />
               <View className="ml-1.5">
@@ -194,14 +217,17 @@ const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
                 </Text>
               </View>
             </View>
+            <View>
+            <StatusIndicator isActive={isLocationSubscrActive} />
+
+          </View>
           </View>
 
-          {/* Session Stats */}
           <View className="border-t border-white/10 pt-3">
             <View className="flex-row justify-around">
               <View className="items-center">
                 <Text className="text-xl font-bold text-lime-300 mb-0.5">
-                  {visitedStreets}
+                  {sessionCountVisitedStreets}
                 </Text>
                 <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
                   SESSION STREETS
@@ -209,10 +235,10 @@ const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
               </View>
               <View className="items-center">
                 <Text className="text-xl font-bold text-lime-300 mb-0.5">
-                  {totalVisited}
+                  {allCountVisitedStreets}
                 </Text>
                 <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
-                  TOTAL EXPLORED
+                  TOTAL STREETS
                 </Text>
               </View>
             </View>
@@ -221,6 +247,8 @@ const StatusIndicator = ({ isActive }: StatusIndicatorProps) => (
       </TouchableOpacity>
     </TouchableOpacity>
   );
-};
+});
+
+MapTrackingPanel.displayName = 'MapTrackingPanel';
 
 export default MapTrackingPanel;

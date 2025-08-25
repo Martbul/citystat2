@@ -100,8 +100,8 @@ export default function HomeScreen() {
     if (item.type === "header") {
       return (
         <SafeAreaView >
-          <StatusBar  backgroundColor="bg-lightNeutralGray" />
-          <View className=" px-4 pb-9 rounded-b-2xl">
+          <StatusBar  backgroundColor="bg-lightContainerBg" />
+          <View className=" px-4 mt-9 pb-10 rounded-b-2xl">
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
@@ -125,7 +125,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View className="mt-5">
+            <View className="mt-8">
               <View className="flex-row justify-between">
                 <StatCard
                   title="Total"

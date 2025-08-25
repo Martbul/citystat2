@@ -1,4 +1,3 @@
-import { SaveVisitedStreetsRequest } from "@/app/(tabs)/world";
 import { apiService } from "@/services/api";
 import {
   Language,
@@ -15,10 +14,10 @@ import {
   Friend,
   Role,
   Status,
-  StreetWalk,
   UserData,
   UserDataContextType,
 } from "@/types/user";
+import { SaveVisitedStreetsRequest } from "@/types/world";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import React, {
   createContext,
@@ -336,22 +335,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [user?.id, getToken, withLoadingAndError]
   );
 
-  const addStreetWalk = useCallback(
-    async (
-      streetWalk: Omit<StreetWalk, "id" | "cityStatId">
-    ): Promise<void> => {
-      if (!user?.id) return;
-
-      const token = await getToken();
-      if (!token) return;
-
-      await withLoadingAndError(
-        () => apiService.addStreetWalk(user.id, streetWalk, token),
-        (updatedData) => setUserData(updatedData)
-      );
-    },
-    [user?.id, getToken, withLoadingAndError]
-  );
+  
 
   const updateUserField = useCallback(
     async (field: string, value: any): Promise<void> => {
@@ -614,12 +598,10 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       note: userData?.note ?? "",
       friends: userData?.friends ?? [],
       cityStats: userData?.cityStats ?? null,
-      totalStreetsWalked: userData?.cityStats?.totalStreetsWalked ?? 0,
       totalKilometers: userData?.cityStats?.totalKilometers ?? 0,
       cityCoveragePct: userData?.cityStats?.cityCoveragePct ?? 0,
       daysActive: userData?.cityStats?.daysActive ?? 0,
       longestStreakDays: userData?.cityStats?.longestStreakDays ?? 0,
-      streetWalks: userData?.cityStats?.streetWalks ?? [],
     }),
     [userData]
   );
@@ -653,17 +635,14 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       note: derivedValues.note,
       friends: derivedValues.friends,
       cityStats: derivedValues.cityStats,
-      totalStreetsWalked: derivedValues.totalStreetsWalked,
       totalKilometers: derivedValues.totalKilometers,
       cityCoveragePct: derivedValues.cityCoveragePct,
       daysActive: derivedValues.daysActive,
       longestStreakDays: derivedValues.longestStreakDays,
-      streetWalks: derivedValues.streetWalks,
 
       // Friends & City stats
       removeFriend,
       updateCityStats,
-      addStreetWalk,
       searchUsers,
       foundUsers,
     }),
@@ -689,7 +668,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
 
       removeFriend,
       updateCityStats,
-      addStreetWalk,
       searchUsers,
       foundUsers,
     ]

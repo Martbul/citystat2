@@ -35,7 +35,6 @@ export interface CityStat {
   country: string;
   population?: number;
   area?: number;
-  totalStreetsWalked: number;
   totalKilometers: number;
   cityCoveragePct: number;
   daysActive: number;
@@ -94,7 +93,6 @@ export interface UserDataContextType {
   note: string;
   friends: any[];
   cityStats: CityStat | null;
-  totalStreetsWalked: number;
   totalKilometers: number;
   cityCoveragePct: number;
   daysActive: number;
@@ -130,7 +128,7 @@ export interface UserDataContextType {
     cityStats: Partial<
       Omit<
         CityStat,
-        "id" | "createdAt" | "updatedAt" | "streetWalks" | "userId"
+        "id" | "createdAt" | "updatedAt"  | "userId"
       >
     >
   ) => Promise<void>;

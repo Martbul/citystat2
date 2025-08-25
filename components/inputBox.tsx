@@ -1,5 +1,5 @@
 import React from "react";
-import { TextInput, View, StyleSheet, TouchableOpacity } from "react-native";
+import { TextInput, View, TouchableOpacity } from "react-native";
 
 export default function InputBox(props: {
   val: any;
@@ -11,20 +11,27 @@ export default function InputBox(props: {
   secureTextEntry?: boolean;
 }) {
   return (
-    <View style={styles.container}>
-      {props.icon && <View style={styles.iconWrapper}>{props.icon}</View>}
+    <View className="flex flex-row items-center bg-white rounded-3xl px-4 py-3 border border-gray-200 shadow-sm">
+      {props.icon && (
+        <View className="flex items-center justify-center mr-1 ">
+          {props.icon}
+        </View>
+      )}
+
       <TextInput
         value={props.val}
         placeholder={props.placeholderTest}
         onChangeText={props.valSetFunc}
-        placeholderTextColor="#aaa"
-        style={styles.input}
+        placeholderTextColor="#9CA3AF" // text-gray-400
+        className="flex-1 text-base text-textBlack"
         secureTextEntry={props.secureTextEntry}
       />
+
       {props.icon2 && (
         <TouchableOpacity
           onPress={props.icon2PressFunc}
-          style={styles.icon2Wrapper}
+          className="ml-3 flex items-center justify-center"
+          activeOpacity={0.7}
         >
           {props.icon2}
         </TouchableOpacity>
@@ -32,34 +39,3 @@ export default function InputBox(props: {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d4d4d4",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    minHeight: 44,
-  },
-  iconWrapper: {
-    marginRight: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#000",
-    paddingVertical: 0,
-    textAlignVertical: "center",
-  },
-  icon2Wrapper: {
-    marginLeft: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

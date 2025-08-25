@@ -1,3 +1,5 @@
+import * as turf from "@turf/turf";
+import * as Location from "expo-location";
 import {
   BUFFER_GETTING_STREETS,
   LOCATION_ACCURACY,
@@ -12,32 +14,30 @@ import {
   TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS,
   TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
 } from "@/constants/world";
-import VisitedStreetsLayer from "@/components/displyVisitedStreets";
-import { useUserData } from "@/Providers/UserDataProvider";
+import type {
+  FetchedVisitedStreet,
+  SaveVisitedStreetsRequest,
+  Street,
+  StreetData,
+  UserCoords,
+  VisitedStreet,
+  VisitedStreetRequest,
+} from "@/types/world";
 import { logEvent } from "@/utils/logger";
-import Mapbox, {
-  Camera,
-  MapView,
-  ShapeSource,
-} from "@rnmapbox/maps";
-import * as turf from "@turf/turf";
-import * as Location from "expo-location";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import MapTrackingPanel from "@/components/mapMenu";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FetchedVisitedStreet, SaveVisitedStreetsRequest, Street, StreetData, UserCoords, VisitedStreet, VisitedStreetRequest } from "@/types/world";
+
+import { useUserData } from "@/Providers/UserDataProvider";
+import Mapbox, { Camera, MapView, ShapeSource } from "@rnmapbox/maps";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import CenterCameraOnUserButton from "@/components/centerCameraOnUserButton";
+import LocationEnablerPanel from "@/components/locationEnablerPanel";
+import VisitedStreetsLayer from "@/components/displyVisitedStreets";
+import MapTrackingPanel from "@/components/mapMenu";
 
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
-
 
 const StreetTrackingMap = () => {
   const {
@@ -199,7 +199,10 @@ const StreetTrackingMap = () => {
       return false;
     }
   };
-
+  const handleRequestLocationPermission = useCallback(async () => {
+    // Your location permission request logic here
+    return await requestLocationPermission();
+  }, [requestLocationPermission]);
   const loadPermissionStatus = async () => {
     try {
       const saved = await getLocationPermission();
@@ -726,24 +729,18 @@ out geom;
     setCurrentStreetId(newStreetId);
   };
 
-  const getCurrentStreetName = (): string => {
-    if (!currentStreetId || !streetData) return "Not on a street";
-
-    const street = streetData.features.find((s) => s.id === currentStreetId);
-    return street?.properties?.name || "Unknown Street";
-  };
-
   const toggleMapMenu = () => {
     if (isMapMenuOpen) {
-      // Close the menu
       setIsMapMenuOpen(false);
     } else {
-      // Open the menu
       setIsMapMenuOpen(true);
     }
   };
 
-  // Function to center camera on user
+  const handleMapMenuClose = useCallback(() => {
+    toggleMapMenu();
+  }, [toggleMapMenu]);
+
   const centerOnUser = () => {
     if (userLocation && cameraRef.current) {
       cameraRef.current.setCamera({
@@ -753,6 +750,10 @@ out geom;
       });
     }
   };
+
+  const handleCenterOnUser = useCallback(() => {
+    centerOnUser();
+  }, [centerOnUser]);
 
   if (isLoading) {
     return (
@@ -812,11 +813,12 @@ out geom;
                 iconSize: 0.06,
                 iconAllowOverlap: true,
                 iconIgnorePlacement: true,
-                iconAnchor: "bottom", 
+                iconAnchor: "bottom",
               }}
             />
           </Mapbox.ShapeSource>
         )}
+
         {streetData && mapZoom >= 11 && (
           <>
             {/* All streets with dynamic coloring */}
@@ -895,47 +897,34 @@ out geom;
       </MapView>
 
       {!isMapMenuOpen && (
-        <View style={styles.mapControls}>
-          {/* Center on User Button */}
-          <TouchableOpacity
-            style={[
-              styles.controlButton,
-              userLocation
-                ? styles.controlButtonActive
-                : styles.controlButtonDisabled,
-            ]}
-            onPress={centerOnUser}
-            disabled={!userLocation}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="locate"
-              size={20}
-              color={userLocation ? "#007AFF" : "#999"}
-            />
-          </TouchableOpacity>
-        </View>
+        <CenterCameraOnUserButton
+          userLocation={userLocation}
+          centerOnUser={handleCenterOnUser}
+        />
       )}
 
       {!hasLocationPermission && (
-        <View style={styles.infoPanel}>
-          <View>
-            <Text style={styles.permissionText}>
-              Location tracking is disabled
-            </Text>
-            <TouchableOpacity onPress={requestLocationPermission}>
-              <Text style={styles.enableButton}>Enable Location Tracking</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <LocationEnablerPanel
+          requestLocationPermission={handleRequestLocationPermission}
+        />
       )}
 
       {userLocation && hasLocationPermission && isMapMenuOpen && (
-        <MapTrackingPanel isLocationSubscrActive={locationSubscription ? "Active" : "Inactive" } currentStreetId={currentStreetId} streetData={streetData} onClose={() => toggleMapMenu()} />
+        <MapTrackingPanel
+          isLocationSubscrActive={locationSubscription ? "Active" : "Inactive"}
+          currentStreetId={currentStreetId}
+          streetData={streetData}
+                    sessionCountVisitedStreets={visitedStreets.length}
+                    allCountVisitedStreets={allVisitedStreetIds.size}
+
+          onClose={handleMapMenuClose}
+        />
       )}
 
       {isLoadingStreets && (
-        <Text style={styles.loadingText}>Loading streets...</Text>
+        <Text className="absolute inset-0 bg-black/30 justify-center items-center z-50">
+          Loading streets...
+        </Text>
       )}
 
       <TouchableOpacity
@@ -974,77 +963,10 @@ out geom;
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   map: {
     flex: 1,
-  },
-  infoPanel: {
-    position: "absolute",
-    top: 50,
-    left: 10,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  enableButton: {
-    fontSize: 14,
-    color: "#007AFF",
-    textAlign: "center",
-    marginTop: 5,
-    textDecorationLine: "underline",
-  },
- 
- 
- 
-  loadingText: {
-    fontSize: 12,
-    color: "#FFA500",
-    fontStyle: "italic",
-  },
-
-
-  permissionText: {
-    fontSize: 14,
-    color: "#FF0000",
-    textAlign: "center",
-    fontWeight: "bold",
-  },
- 
-
-  mapControls: {
-    position: "absolute",
-    top: 120,
-    right: 20,
-    zIndex: 100,
-  },
-  controlButton: {
-    backgroundColor: "white",
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  controlButtonActive: {
-    backgroundColor: "white",
-  },
-
-  controlButtonDisabled: {
-    backgroundColor: "#F5F5F5",
   },
 });
 

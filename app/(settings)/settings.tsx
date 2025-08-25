@@ -6,6 +6,9 @@ import EvilIcons from "@expo/vector-icons/EvilIcons";
 import React, { useMemo, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CardTitle, ClickableCard, IconContainer, RowLayout, SectionSpacing } from "@/components/dev";
+import { Ionicons } from "@expo/vector-icons";
+import SettingsPannel from "@/components/settingsPanel";
 
 const Settings = () => {
   const [search, setSearch] = useState("");
@@ -29,7 +32,7 @@ const Settings = () => {
           val={search}
           valSetFunc={setSearch}
           placeholderTest="Search settings..."
-          icon={<EvilIcons name="search" size={28} color="#aaa" />}
+          icon={<EvilIcons name="search" size={32} color="#aaa" />}
         />
       </View>
     ),
@@ -49,7 +52,8 @@ const Settings = () => {
           contentContainerStyle={{ padding: 16 }}
           ListHeaderComponent={SearchHeader}
           renderItem={({ item }) => (
-            <Panel route={item.route} label={item.label} icon={item.icon()} />
+           <SettingsPannel  route={item.route} label={item.label} icon={item.icon()} />
+            //<Panel route={item.route} label={item.label} icon={item.icon()} />
           )}
           ListEmptyComponent={() =>
             search.trim() ? (
