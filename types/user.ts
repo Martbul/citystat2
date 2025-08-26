@@ -73,6 +73,22 @@ export interface UserData {
   deleteAccount: boolean;
   note?: string;
   status: Status;
+
+  cityName?: string;
+  cityCountry?: string;
+  cityState?: string;
+  cityCoords?: {
+    lat: number;
+    lng: number;
+  };
+  selectedCity?: {
+    name: string;
+    country: string;
+    state?: string;
+    lat: number;
+    lon: number;
+    display_name: string;
+  };
   createdAt: string;
   updatedAt: string;
 

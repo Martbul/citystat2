@@ -78,7 +78,7 @@ export default function RankingScreen() {
                 onPress={() => setLeaderbardTab("friends")}
                 className={`px-4 py-2 rounded-full ${
                   leaderboardTab === "friends"
-                    ? "bg-lightSecondaryAccent"
+                    ? "bg-accent"
                     : "bg-lightSurface border border-lightMutedText"
                 }`}
               >
@@ -97,7 +97,7 @@ export default function RankingScreen() {
                 onPress={() => setLeaderbardTab("global")}
                 className={`px-4 py-2 rounded-full ${
                   leaderboardTab === "global"
-                    ? "bg-lightSecondaryAccent"
+                    ? "bg-accent"
                     : "bg-lightSurface border border-lightMutedText"
                 }`}
               >
@@ -120,7 +120,7 @@ export default function RankingScreen() {
                   <Text className="text-lightBlackText font-anybodyBold text-lg">
                     #{index + 1} {item.name}
                   </Text>
-                  <Text className="text-lightSecondaryAccent font-anybodyBold text-lg">
+                  <Text className="text-accent font-anybodyBold text-lg">
                     {item.score}
                   </Text>
                 </View>

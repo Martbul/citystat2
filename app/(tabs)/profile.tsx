@@ -156,7 +156,8 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Note Section */}
+
+          {/* //! addoptimistic updates */}
           <TouchableOpacity
             onPress={() => router.push("/(screens)/editNote")}
             className="mb-8"

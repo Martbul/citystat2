@@ -7,7 +7,7 @@ import {
 } from "./dev";
 import { useRouter } from "expo-router";
 
-export default function SettingsPannel(props: {
+export default function SideMenuPannel(props: {
   route?: any;
   pressFunc?: () => void;
   label: string;
@@ -20,9 +20,7 @@ export default function SettingsPannel(props: {
 }) {
   const router = useRouter();
 
-  const borderClasses = props.border
-    ? `border ${props.borderColor ?? "border-gray-300"}`
-    : "";
+ 
 
   const handlePress = () => {
     if (props.pressFunc) {
@@ -36,7 +34,7 @@ export default function SettingsPannel(props: {
     <SectionSpacing className="mb-3">
       <ClickableCard onPress={handlePress}>
         <RowLayout>
-          <IconContainer color="accent">{props.icon}</IconContainer>
+          <IconContainer color="neutral">{props.icon}</IconContainer>
           <CardTitle className="ml-4">{props.label}</CardTitle>
         </RowLayout>
       </ClickableCard>

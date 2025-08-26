@@ -29,6 +29,7 @@
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.9",
     "@expo/vector-icons": "^14.1.0",
+    "@radix-ui/react-select": "^2.2.6",
     "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
@@ -37,6 +38,8 @@
     "@turf/turf": "^7.2.0",
     "@uploadthing/expo": "^7.2.5",
     "ajv": "^8.12.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "eas": "^0.1.0",
     "expo": "~53.0.20",
     "expo-auth-session": "~6.2.1",
@@ -60,8 +63,10 @@
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.10",
     "expo-web-browser": "~14.2.0",
+    "lucide-react": "^0.542.0",
     "nativewind": "^4.1.23",
     "react": "19.0.0",
+    "react-country-state-city": "^1.1.12",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-chart-kit": "^6.12.0",
@@ -73,7 +78,10 @@
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
+    "recharts": "2.15.4",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss-react-native": "^1.7.10",
+    "tw-animate-css": "^1.3.7",
     "uploadthing": "^7.7.3"
   },
   "devDependencies": {

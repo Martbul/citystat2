@@ -17,8 +17,9 @@ import { menuItems } from "@/data/sideMenuData";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import Panel from "../panel";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SideMenuPannel from "../sideMenuPanel";
+import { PageTitle } from "../dev";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -36,15 +37,8 @@ const SideMenuDrawer = ({
   const { userData, isLoading } = useUserData();
   const router = useRouter();
 
-  const handleMenuItemPress = (route: string) => {
-    // TODO: Add navigation logic here
-    console.log("Navigate to:", route);
-    closeDrawer();
-  };
-
   return (
     <>
-      {/* Overlay */}
       <Animated.View
         style={[styles.overlay, { opacity: overlayOpacity }]}
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
@@ -60,42 +54,44 @@ const SideMenuDrawer = ({
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
       >
-        <SafeAreaView
-         className="flex-1 bg-lightSurface">
-          <View className="relative flex-row items-center p-4 py-6  border-b border-gray-200 dark:border-gray-700">
+        <SafeAreaView className="flex-1 bg-lightSurface mt-1">
+          <View className="relative flex-row items-center justify-center  p-4 py-6  border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity
               onPress={closeDrawer}
               className="absolute left-4"
               style={{ zIndex: 10 }}
             >
-              <AntDesign name="close" size={24} color="#333" />
+              <AntDesign name="close" size={24} color="#1F2937" />
             </TouchableOpacity>
-            <Text className="flex-1 text-center text-gray-900  font-anybodyBold text-xl">
-              CityStat
-            </Text>
+            <PageTitle>City Stat</PageTitle>
           </View>
 
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/profile")}
             className="p-4 border-b border-gray-200 dark:border-gray-700"
           >
-            <View className="flex-row items-center ">
-              <View className="flex items-center justify-center bg-lightNeutralGray rounded-full w-16 h-16">
-                <Image
-                  className="w-14 h-14"
-                  source={{ uri: userData?.imageUrl }}
-                ></Image>
+            <View className="flex-row items-center">
+              {/* Avatar */}
+              <View className="w-16 h-16 rounded-full bg-lightNeutralGray overflow-hidden items-center justify-center">
+                {userData?.imageUrl ? (
+                  <Image
+                    source={{ uri: userData.imageUrl }}
+                    className="w-16 h-16 rounded-full"
+                  />
+                ) : (
+                  <Feather name="user" size={28} color="#666" />
+                )}
               </View>
 
-              <View className="ml-3">
-                <Text className="text-gray-900 font-anybodyBold text-lg">
+              <View className="ml-4 flex-1">
+                <Text className="text-gray-900 dark:text-gray-500 font-anybodyBold text-lg">
                   {userData?.firstName} {userData?.lastName}
                 </Text>
                 <View className="flex-row items-center mt-1">
-                  <View className="w-5 h-5 bg-lightSecondaryAccent rounded  flex items-center justify-center">
-                    <Feather name="hash" size={16} color="white" />
+                  <View className="w-5 h-5 bg-accent rounded flex items-center justify-center">
+                    <Feather name="hash" size={14} color="white" />
                   </View>
-                  <Text className="text-muted ml-1 text-sm font-anybody">
+                  <Text className="ml-2 text-sm font-anybody text-muted">
                     {userData?.userName}
                   </Text>
                 </View>
@@ -108,10 +104,9 @@ const SideMenuDrawer = ({
               scrollEnabled={true}
               data={menuItems}
               keyExtractor={(item) => item.label}
-              contentContainerStyle={{ padding: 16 }}
+              contentContainerStyle={{ padding: 12 }}
               renderItem={({ item }) => (
-                <Panel
-                border={true}
+                <SideMenuPannel
                   label={item.label}
                   icon={item.icon()}
                   route={item.route}

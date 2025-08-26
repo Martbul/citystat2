@@ -12,7 +12,7 @@ export default function TabSelector(props: {
         onPress={() => props.setTab(props.tabOne)}
         className={`px-14 py-2 rounded-full  ${
           props.tab === props.tabOne
-            ? "bg-lightSecondaryAccent"
+            ? "bg-accent"
             : "bg-lightSurface border border-lightMutedText"
         }`}
       >
@@ -29,7 +29,7 @@ export default function TabSelector(props: {
         onPress={() => props.setTab(props.tabTwo)}
         className={`px-14 py-2 rounded-full ${
           props.tab === props.tabTwo
-            ? "bg-lightSecondaryAccent"
+            ? "bg-accent"
             : "bg-lightSurface border border-lightMutedText"
         }`}
       >

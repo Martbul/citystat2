@@ -1,14 +1,15 @@
 import React from 'react';
 import { Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons, AntDesign, Feather, FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // COMMON STYLE PATTERNS FROM YOUR PROFILE PAGE
 
 // 1. PAGE CONTAINER
 export const PageContainer = ({ children }: { children: React.ReactNode }) => (
-  <View className="flex-1 bg-containerBg">
+  <SafeAreaView className="flex-1 bg-containerBg">
     {children}
-  </View>
+  </SafeAreaView>
 );
 
 // 2. HEADER WITH GRADIENT BACKGROUND
@@ -36,7 +37,7 @@ export const Card = ({ children, className = "" }: { children: React.ReactNode, 
 );
 
 // 5. CLICKABLE CARD (for navigation)
-export const ClickableCard = ({ onPress, children, className = "" }) => (
+export const ClickableCard = ({ onPress, children, className = "" }: { onPress:any, children: React.ReactNode, className?: string }) => (
   <TouchableOpacity 
     onPress={onPress} 
     activeOpacity={0.5} // closer to 1 = less fade
@@ -55,11 +56,13 @@ export const ClickableCard = ({ onPress, children, className = "" }) => (
 // 6. ICON CONTAINERS (different variants)
 export const IconContainer = ({ 
   size = "medium", 
-  color = "accent", 
-  children 
+  color = "accent",
+  className = "",
+  children
 }: { 
   size?: "small" | "medium" | "large", 
-  color?: "accent" | "green" | "blue" | "neutral",
+  color?: "accent" | "green" | "blue" | "neutral" |"red" | "transparent",
+  className?: string
   children: React.ReactNode 
 }) => {
   const sizeClasses = {
@@ -72,19 +75,21 @@ export const IconContainer = ({
     accent: "bg-accent",
     green: "bg-iconGreen/10",
     blue: "bg-sessionBlue/10", 
-    neutral: "bg-containerBg"
+    neutral: "bg-containerBg",
+    red: "bg-red-600",
+    transparent: "bg-transparent"
   };
   
   return (
-    <View className={`${sizeClasses[size]} ${colorClasses[color]} rounded-2xl flex items-center justify-center shadow-sm`}>
+    <View className={`${sizeClasses[size]} ${colorClasses[color]} rounded-2xl flex items-center justify-center shadow-sm ${className}`}>
       {children}
     </View>
   );
 };
 
 // 7. TEXT HIERARCHY
-export const PageTitle = ({ children }: { children: React.ReactNode }) => (
-  <Text className="text-textDark text-4xl font-bold mb-2">
+export const PageTitle = ({ children , className = ""}: { children: React.ReactNode , className?: string}) => (
+  <Text className={`text-textDark text-3xl font-bold mb-2 ${className}`}>
     {children}
   </Text>
 );
@@ -113,8 +118,8 @@ export const SecondaryText = ({ children }: { children: React.ReactNode }) => (
   </Text>
 );
 
-export const MutedText = ({ children }: { children: React.ReactNode }) => (
-  <Text className="text-textGray text-lg font-medium">
+export const MutedText = ({ children , className = ""}: { children: React.ReactNode , className?: string}) => (
+  <Text className={`text-textGray text-lg font-medium ${className} `}>
     {children}
   </Text>
 );

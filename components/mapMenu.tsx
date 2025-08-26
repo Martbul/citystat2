@@ -87,40 +87,6 @@ const MapTrackingPanel = memo(({
     e.stopPropagation();
   }, []);
 
-  const StatCard = memo(({
-    title,
-    value,
-    subtitle,
-    icon,
-    trend,
-  }: {
-    title: string;
-    value: number;
-    subtitle: string;
-    icon: any;
-    trend: any;
-  }) => (
-    <View className="bg-white/90 rounded-xl p-3 flex-1 mx-1 shadow">
-      <View className="flex-row justify-between items-start mb-2">
-        <View className="bg-lime-300 rounded-lg p-1.5 shadow">{icon}</View>
-        {trend && (
-          <View className="flex-row items-center">
-            <View className="w-1 h-1 bg-lime-300 rounded-full mr-1" />
-            <Text className="text-lime-300 text-[10px] font-semibold">
-              +{trend}%
-            </Text>
-          </View>
-        )}
-      </View>
-      <View>
-        <Text className="text-xl font-bold text-gray-900 mb-0.5">{value}</Text>
-        <Text className="text-[10px] font-semibold tracking-wide text-gray-500 mb-0.5">
-          {title.toUpperCase()}
-        </Text>
-        <Text className="text-xs text-gray-600">{subtitle}</Text>
-      </View>
-    </View>
-  ));
 
   const StatusIndicator = memo(({ isActive }: StatusIndicatorProps) => (
     <View className="flex-row items-center mb-2">
@@ -182,30 +148,7 @@ const MapTrackingPanel = memo(({
             </Text>
           </View>
 
-          <View className="flex-row justify-between mb-5">
-            <StatCard
-              title="Distance"
-              value={847.3}
-              subtitle="km total"
-              trend="12"
-              icon={<FontAwesome5 name="walking" size={16} color="#1F2937" />}
-            />
-            <StatCard
-              title="Coverage"
-              value={23.7}
-              subtitle="of Sofia"
-              trend="5"
-              icon={<MaterialIcons name="explore" size={16} color="#1F2937" />}
-            />
-            <StatCard
-              title="Days Active"
-              value={156}
-              subtitle="in 2025"
-              trend="8"
-              icon={<AntDesign name="calendar" size={16} color="#1F2937" />}
-            />
-          </View>
-
+          
           <View className="flex flex-row justify-between items-center bg-white/5 border border-white/10 rounded-xl p-3 mb-3">
           
             <View className="flex-row items-center">

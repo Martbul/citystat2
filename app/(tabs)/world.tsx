@@ -914,9 +914,8 @@ out geom;
           isLocationSubscrActive={locationSubscription ? "Active" : "Inactive"}
           currentStreetId={currentStreetId}
           streetData={streetData}
-                    sessionCountVisitedStreets={visitedStreets.length}
-                    allCountVisitedStreets={allVisitedStreetIds.size}
-
+          sessionCountVisitedStreets={visitedStreets.length}
+          allCountVisitedStreets={allVisitedStreetIds.size}
           onClose={handleMapMenuClose}
         />
       )}

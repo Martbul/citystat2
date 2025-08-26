@@ -6,15 +6,15 @@ import { useUserData } from "@/Providers/UserDataProvider";
 import { useAuth } from "@clerk/clerk-expo";
 import { Tabs, useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 
 export default function TabLayout() {
-  const { isSignedIn, isLoaded} = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const { userData, isLoading } = useUserData();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isSignedIn && !isLoading &&isLoaded ) {
+    if (!isSignedIn && !isLoading && isLoaded) {
       router.replace("/(auth)/sign-in");
       return;
     }
@@ -26,8 +26,11 @@ export default function TabLayout() {
   }, [isSignedIn, userData, router]);
 
   if (!isSignedIn || (userData && !userData.completedTutorial)) {
-    return ( <Spinner />);       
-
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Spinner variant="orbital" size="xl" />
+      </View>
+    );
   }
 
   return (
@@ -61,7 +64,7 @@ export default function TabLayout() {
         options={{
           title: "World",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="location.fill" color={color} />
+            <IconSymbol size={28} name="public.fill" color={color} />
           ),
         }}
       />
@@ -85,12 +88,12 @@ export default function TabLayout() {
         }}
       />
 
-       <Tabs.Screen
+      <Tabs.Screen
         name="dev"
         options={{
           title: "dev",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="globe.fill" color={color} />
+            <IconSymbol size={28} name="hammer.fill" color={color} />
           ),
         }}
       />

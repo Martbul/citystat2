@@ -21,7 +21,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
 import { logEvent } from "@/utils/logger";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  CardTitle,
+  ClickableCard,
+  HeaderButton,
+  IconContainer,
+  RowLayout,
+  SectionSpacing,
+} from "@/components/dev";
+import { AreaTwoLinerChart } from "@/components/charts/areaTwoLiner";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -74,16 +83,18 @@ export default function HomeScreen() {
   };
 
   if (!isLoaded) {
+    console.log("not loaded yet");
+
     return null;
   }
   if (!isSignedIn) {
+    console.log("not signed in");
+
     return null;
   }
 
   if (isSignedIn) {
-    // logEvent("User signed in", { userId: user.id });
     console.log("User is signed in: " + user.id);
-    console.log("refreshing user data");
   }
 
   if (userData && userData.completedTutorial === false) {
@@ -99,31 +110,37 @@ export default function HomeScreen() {
   const renderSection = ({ item }: { item: any }) => {
     if (item.type === "header") {
       return (
-        <SafeAreaView >
-          <StatusBar  backgroundColor="bg-lightContainerBg" />
-          <View className=" px-4 mt-9 pb-10 rounded-b-2xl">
+        <SafeAreaView>
+          <StatusBar backgroundColor="bg-lightContainerBg" />
+          <View className="mx-3 px-4 mt-9 pb-10 rounded-b-2xl">
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
               </TouchableOpacity>
 
               <View className="flex-row gap-3">
-                <TouchableOpacity className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center">
-                  <Fontisto name="search" size={18} color="white" />
-                </TouchableOpacity>
+                <HeaderButton onPress={() => console.log("Search pressed")}>
+                  <Fontisto name="search" size={22} color="#1F2937" />
+                </HeaderButton>
 
-                <TouchableOpacity
-                  className="w-10 h-10 bg-lightContainerBg rounded-full justify-center items-center"
+                <HeaderButton
                   onPress={() => router.push("/(screens)/notifications")}
                 >
-                  <MaterialIcons
-                    name="notifications-active"
-                    size={20}
-                    color="white"
-                  />
-                </TouchableOpacity>
+                  <Ionicons name="notifications" size={24} color="#1F2937" />
+                </HeaderButton>
               </View>
             </View>
+
+            <SectionSpacing className="my-3">
+              <ClickableCard onPress={console.log("suuu")}>
+                <RowLayout>
+                  <IconContainer color="accent">
+                    <AntDesign name="user" size={24} color="#c8f751" />
+                  </IconContainer>
+                  <CardTitle className="ml-4">See somthing importatn</CardTitle>
+                </RowLayout>
+              </ClickableCard>
+            </SectionSpacing>
 
             <View className="mt-8">
               <View className="flex-row justify-between">
@@ -143,17 +160,19 @@ export default function HomeScreen() {
                     <MaterialIcons name="explore" size={20} color="#c8f751" />
                   }
                 />
-                <StatCard
-                  title="Active"
-                  value="156"
-                  subtitle="2025"
-                  icon={<AntDesign name="calendar" size={20} color="#c8f751" />}
-                />
               </View>
+            </View>
+
+           
+                <AreaTwoLinerChart/>
+            
+
+            <View>
+              <Dashboard />
             </View>
           </View>
 
-          {/* THIS IS THE VIEW THAT NEED TO */}
+          {/* 
           <View className="flex flex-row justify-between items-center px-4">
             <View className="justify-center">
               <View className="mb-2">
@@ -210,7 +229,7 @@ export default function HomeScreen() {
                 <Text>0 Energy</Text>
               </View>
             </View>
-          </View>
+          </View> */}
         </SafeAreaView>
       );
     }
@@ -248,27 +267,72 @@ export const StatCard = ({
 }: {
   title: string;
   value: number | string;
-  subtitle: string;
-  icon: any;
+  subtitle?: string;
+  icon: React.ReactNode;
 }) => (
-  <View className="w-[28%] h-32">
-    <View className="flex-1 rounded-2xl p-4 bg-lightContainerBg border border-lightMutedText">
-      <View className="justify-between h-full">
-        <View className="flex-row justify-between items-center">
+  <View className="flex-1 min-w-[45%] max-w-[48%]">
+    <View className="rounded-2xl p-4 bg-lightSurface border border-lightNeutralGray shadow-sm h-36">
+      <View className="flex-col justify-between h-full">
+        {/* Title + Icon */}
+        <View className="flex-row justify-between items-center mb-2">
           <Text className="text-lightMutedText font-anybody text-xs">
             {title}
           </Text>
-          {icon}
+          <View className="bg-lightContainerBg rounded-full p-2">{icon}</View>
         </View>
-        <Text className="text-white font-anybodyBold text-2xl mt-1">
+
+        {/* Value */}
+        <Text className="text-lightBlackText font-anybodyBold text-2xl">
           {value}
         </Text>
-        {subtitle && (
+
+        {/* Subtitle */}
+        {subtitle ? (
           <Text className="text-lightMutedText text-[11px] mt-1 font-anybody">
             {subtitle}
           </Text>
-        )}
+        ) : null}
       </View>
     </View>
   </View>
 );
+
+const Dashboard = () => {
+  return (
+    <View className="flex justify-center items-center mt-4 gap-2">
+      <View className="flex flex-row gap-2">
+        <DashboardCard
+          label="Stats"
+          icon={<Ionicons name="stats-chart" size={24} color="black" />}
+        />
+        <DashboardCard
+          label="Global"
+          icon={<Ionicons name="globe-outline" size={24} color="black" />}
+        />
+      </View>
+      <View className="flex flex-row gap-2">
+        <DashboardCard
+          label="Friends"
+          icon={<FontAwesome5 name="user-friends" size={24} color="black" />}
+        />
+        <DashboardCard
+          label="Calendar"
+          icon={<Feather name="calendar" size={24} color="black" />}
+        />
+      </View>
+    </View>
+  );
+};
+
+
+
+const DashboardCard = (props: { label: string; icon: React.ReactNode }) => {
+  return (
+    <View className="bg-lightSurface px-4 py-2 rounded-2xl border border-lightNeutralGray shadow-sm h-16 items-center justify-center min-w-[45%] max-w-[48%]">
+      <View className="flex flex-row items-center gap-2">
+        <View className="rounded-full p-2 bg-transparent">{props.icon}</View>
+        <Text className="font-anybody text-lightBlackText">{props.label}</Text>
+      </View>
+    </View>
+  );
+};

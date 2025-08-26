@@ -88,3 +88,16 @@ Join our community of developers creating universal apps.
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
+
+
+
+
+- chart you vs avg for yout town
+- chartyou vs avg for you friend
+- straight bars for the whole year showing how many streets you covered each mont
+- curve line from the month showing streets covered each day
+- comparison chart 1v1 compare
+- func that constatnly tracks if the user is mooving, if he stops than "draw" cirly around him with x radius and start a timer(for later stat for most time spent im what places) 
+
+
+- under profile/home add dashboard with statistics, achivements, goals, challenges 

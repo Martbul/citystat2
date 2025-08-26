@@ -11,7 +11,7 @@ type IconSymbolName = keyof typeof MAPPING;
 const MAPPING = {
   "house.fill": "home",
   "map.fill": "map",
-  "globe.fill": "globe",
+  "public.fill": "public",
   "person.fill": "person",
   "trophy.fill": "leaderboard", 
   "location.fill": "location-on",
@@ -31,5 +31,6 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
+  
   return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }

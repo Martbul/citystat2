@@ -22,7 +22,7 @@ export default function WhatsNew() {
         </Text>
 
         {/* Section Header */}
-        <Text className="text-lightSecondaryAccent font-bold text-lg mt-6 mb-2">
+        <Text className="text-accent font-bold text-lg mt-6 mb-2">
           QUICK! LET&apos;S SWITCH TO FIXES
         </Text>
 
@@ -55,7 +55,7 @@ export default function WhatsNew() {
         </Text>
 
         {/* Upgrade Section */}
-        <Text className="text-lightSecondaryAccent font-bold text-lg mt-6 mb-2">
+        <Text className="text-accent font-bold text-lg mt-6 mb-2">
           UPGRADE YOUR COMMUNITY AND YOUR PROFILE
         </Text>
         <Text className="mb-6 text-lightPrimaryText">
@@ -86,7 +86,7 @@ export default function WhatsNew() {
         </Text>
 
         {/* Saved Avatars Section */}
-        <Text className="text-lightSecondaryAccent font-bold text-lg mt-6 mb-2">
+        <Text className="text-accent font-bold text-lg mt-6 mb-2">
           S-A-V-E-D AVATARS & GUESSING G-A-M-E-S
         </Text>
         <Text className="mb-10 text-lightPrimaryText">
