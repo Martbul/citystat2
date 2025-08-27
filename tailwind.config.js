@@ -20,7 +20,7 @@ module.exports = {
         darkText: "#ffffff",
         muted: "#cecece",
         accent: "#c8f751",
-                transparent: "transparent",
+        transparent: "transparent",
         
         // Light theme colors
         lightBackground: "#ebebeb",

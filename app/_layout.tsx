@@ -1,6 +1,5 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { TailwindProvider } from "tailwindcss-react-native";
@@ -10,6 +9,7 @@ import "react-native-reanimated";
 
 import "../global.css";
 import ErrorBoundary from "@/components/errorBoundary";
+import { StatusBar } from "react-native";
 
 
 export default function RootLayout() {
@@ -51,7 +51,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
-              <StatusBar style="auto" />
+              <StatusBar  />
             </SideMenuDrawerProvider>
           </TailwindProvider>
         </UserDataProvider>

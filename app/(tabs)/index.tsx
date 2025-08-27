@@ -7,7 +7,6 @@ import {
   Dimensions,
   FlatList,
   StatusBar,
-  Image,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -21,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
 import { logEvent } from "@/utils/logger";
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import {
   CardTitle,
   ClickableCard,
@@ -30,8 +29,8 @@ import {
   RowLayout,
   SectionSpacing,
 } from "@/components/dev";
-import { AreaTwoLinerChart } from "@/components/charts/areaTwoLiner";
 import { ChartRadar } from "@/components/charts/radarChart";
+import { SuggestedExplorersSection } from "@/components/suggestedUsersSection";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -85,18 +84,19 @@ export default function HomeScreen() {
 
   if (!isLoaded) {
     console.log("not loaded yet");
-
     return null;
   }
+
+
   if (!isSignedIn) {
     console.log("not signed in");
-
     return null;
   }
 
   if (isSignedIn) {
     console.log("User is signed in: " + user.id);
   }
+
 
   if (userData && userData.completedTutorial === false) {
     router.replace("/tutorial");
@@ -113,7 +113,7 @@ export default function HomeScreen() {
       return (
         <SafeAreaView>
           <StatusBar backgroundColor="bg-lightContainerBg" />
-          <View className="mx-3 px-4 mt-9 pb-10 rounded-b-2xl">
+          <View className="mx-4 mt-9 pb-10 rounded-b-2xl gap-4">
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
@@ -132,18 +132,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <SectionSpacing className="my-3">
-              <ClickableCard onPress={console.log("suuu")}>
-                <RowLayout>
-                  <IconContainer color="accent">
-                    <AntDesign name="user" size={24} color="#c8f751" />
-                  </IconContainer>
-                  <CardTitle className="ml-4">See somthing importatn</CardTitle>
-                </RowLayout>
-              </ClickableCard>
-            </SectionSpacing>
-
-            <View className="mt-8">
+            <View className="mt-6">
               <View className="flex-row justify-between">
                 <StatCard
                   title="Total"
@@ -164,73 +153,22 @@ export default function HomeScreen() {
               </View>
             </View>
 
-           
-                {/* <AreaTwoLinerChart/> */}
-            <ChartRadar/>
+            <Dashboard />
 
-            <View>
-              <Dashboard />
-            </View>
+            <ChartRadar />
+
+            <SuggestedExplorersSection />
+            <SectionSpacing className="">
+              <ClickableCard onPress={console.log("suuu")}>
+                <RowLayout>
+                  <IconContainer color="accent">
+                    <AntDesign name="user" size={24} color="#c8f751" />
+                  </IconContainer>
+                  <CardTitle className="ml-4">See somthing importatn</CardTitle>
+                </RowLayout>
+              </ClickableCard>
+            </SectionSpacing>
           </View>
-
-          {/* 
-          <View className="flex flex-row justify-between items-center px-4">
-            <View className="justify-center">
-              <View className="mb-2">
-                <MaterialCommunityIcons name="gold" size={24} color="black" />
-                <Text>0 Gold</Text>
-              </View>
-              <View className=" mb-2">
-                <FontAwesome5 name="gem" size={24} color="black" />
-                <Text>0 Gems</Text>
-              </View>
-              <View>
-                <FontAwesome5 name="old-republic" size={24} color="black" />
-                <Text>0 Artifacts</Text>
-              </View>
-
-              <View>
-                <MaterialCommunityIcons
-                  name="crystal-ball"
-                  size={24}
-                  color="black"
-                />
-                <Text>0 Magic</Text>
-              </View>
-            </View>
-            <View>
-              <Image
-                className="w-28 h-28"
-                source={{
-                  uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Ethereum-icon-purple.svg/langfr-250px-Ethereum-icon-purple.svg.png",
-                }}
-              ></Image>
-            </View>
-
-            <View>
-              <View>
-                <MaterialCommunityIcons name="sword" size={24} color="black" />
-                <Text>0 Strenght</Text>
-              </View>
-
-              <View>
-                <FontAwesome5 name="chess-king" size={24} color="black" />
-                <Text>0 Influence</Text>
-              </View>
-              <View>
-                <FontAwesome5 name="ethereum" size={24} color="black" />
-                <Text>0 Runes</Text>
-              </View>
-              <View>
-                <MaterialCommunityIcons
-                  name="lightning-bolt-outline"
-                  size={24}
-                  color="black"
-                />
-                <Text>0 Energy</Text>
-              </View>
-            </View>
-          </View> */}
         </SafeAreaView>
       );
     }
@@ -300,7 +238,7 @@ export const StatCard = ({
 
 const Dashboard = () => {
   return (
-    <View className="flex justify-center items-center mt-4 gap-2">
+    <View className="flex justify-center items-center gap-2">
       <View className="flex flex-row gap-2">
         <DashboardCard
           label="Stats"
@@ -324,8 +262,6 @@ const Dashboard = () => {
     </View>
   );
 };
-
-
 
 const DashboardCard = (props: { label: string; icon: React.ReactNode }) => {
   return (

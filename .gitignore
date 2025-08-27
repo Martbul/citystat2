@@ -50,3 +50,8 @@ android/build/
 
 credentials.json
 android/app/keystore.jks
+
+# Android build artifacts
+android/.gradle/
+android/app/.cxx/
+android/app/build/
