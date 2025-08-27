@@ -31,6 +31,7 @@ import {
   SectionSpacing,
 } from "@/components/dev";
 import { AreaTwoLinerChart } from "@/components/charts/areaTwoLiner";
+import { ChartRadar } from "@/components/charts/radarChart";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -164,8 +165,8 @@ export default function HomeScreen() {
             </View>
 
            
-                <AreaTwoLinerChart/>
-            
+                {/* <AreaTwoLinerChart/> */}
+            <ChartRadar/>
 
             <View>
               <Dashboard />

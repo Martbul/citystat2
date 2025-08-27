@@ -138,14 +138,14 @@ export const AreaTwoLinerChart = () => {
   );
   const minValue = 0;
 
-  const xScale = (index) => (index / (filteredData.length - 1)) * (CHART_WIDTH - PADDING * 2) + PADDING;
-  const yScale = (value) => CHART_HEIGHT - PADDING - ((value - minValue) / (maxValue - minValue)) * (CHART_HEIGHT - PADDING * 2);
+  const xScale = (index:number) => (index / (filteredData.length - 1)) * (CHART_WIDTH - PADDING * 2) + PADDING;
+  const yScale = (value:number) => CHART_HEIGHT - PADDING - ((value - minValue) / (maxValue - minValue)) * (CHART_HEIGHT - PADDING * 2);
 
   // Generate paths for areas
-  const generateAreaPath = (data, key, isStacked = false) => {
+  const generateAreaPath = (data, key:string, isStacked = false) => {
     let path = `M ${xScale(0)} ${yScale(isStacked ? data[0][key] + data[0].mobile : data[0][key])}`;
     
-    data.forEach((item, index) => {
+    data.forEach((item, index:number) => {
       const value = isStacked ? item[key] + item.mobile : item[key];
       path += ` L ${xScale(index)} ${yScale(value)}`;
     });
@@ -167,7 +167,7 @@ export const AreaTwoLinerChart = () => {
   const mobileAreaPath = generateAreaPath(filteredData, 'mobile');
   const desktopAreaPath = generateAreaPath(filteredData, 'desktop', true);
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString:string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
