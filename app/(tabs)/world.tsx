@@ -39,6 +39,9 @@ import MapTrackingPanel from "@/components/mapMenu";
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
 
+//!  LOG  Successfully processed 1696 streets
+//! user is in other screens buit streets are loaded(do not remove but do it once for performace purposses)
+
 const StreetTrackingMap = () => {
   const {
     getLocationPermission,

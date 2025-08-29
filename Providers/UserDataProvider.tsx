@@ -589,6 +589,39 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
      [user?.id, getToken]
    );
   
+  
+  
+  const fetchUsersSameCity = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const success = await apiService.fetchUsersSameCity(token);
+
+      console.log("fetchUsersSameCity", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch users in the same city";
+      setError(errorMessage);
+      console.error("Error while fetching users in the same city:", err); 
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+  
+  
+  
+  
 
   // Derived values for backwards compatibility
   const derivedValues = useMemo(
@@ -621,6 +654,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       fetchOtherUserProfile,
       saveLocationPermission,
       getLocationPermission,
+      fetchUsersSameCity,
 
       // Core methods
       updateUserDetails,
@@ -649,7 +683,8 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [
       userData,
       getLocationPermission,
-      fetchVisitedStreets ,
+      fetchVisitedStreets,
+      fetchUsersSameCity,
       setUserData,
       getFriends,
       saveVisitedStreets,

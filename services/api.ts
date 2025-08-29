@@ -172,8 +172,6 @@ class ApiService {
     });
   }
 
-
-
   // Friends API methods
   async addFriend(
     userId: string,
@@ -275,19 +273,26 @@ class ApiService {
       token,
       body: JSON.stringify({
         sessionId: visitedStreets.sessionId,
-        visitedStreets:visitedStreets.visitedStreets,
+        visitedStreets: visitedStreets.visitedStreets,
       }),
     });
   }
 
-  async fetchVisitedStreets(
-    token: string
-  ): Promise<any> {
+  async fetchVisitedStreets(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/visitor/streets`, {
       method: "GET",
       token,
     });
   }
+
+  async fetchUsersSameCity(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/users/sameCity`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  
 }
 
 export const apiService = new ApiService();

@@ -120,6 +120,7 @@ export interface UserDataContextType {
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   getLocationPermission: () => Promise<any>;
   fetchVisitedStreets: () => Promise<any>;
+  fetchUsersSameCity : () => Promise<any>;
   saveVisitedStreets: (
     visitedStreets: SaveVisitedStreetsRequest
   ) => Promise<any>;
@@ -142,10 +143,7 @@ export interface UserDataContextType {
   removeFriend: (friendId: string) => Promise<void>;
   updateCityStats: (
     cityStats: Partial<
-      Omit<
-        CityStat,
-        "id" | "createdAt" | "updatedAt"  | "userId"
-      >
+      Omit<CityStat, "id" | "createdAt" | "updatedAt" | "userId">
     >
   ) => Promise<void>;
   searchUsers: (searchQuery: string) => Promise<void>;

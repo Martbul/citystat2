@@ -52,6 +52,18 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="calendar"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="statisticsScreen"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

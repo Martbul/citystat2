@@ -2,16 +2,13 @@ import React, { useEffect, useRef } from "react";
 import {
   TouchableOpacity,
   View,
-  Text,
   Animated,
   Dimensions,
   FlatList,
   StatusBar,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Fontisto from "@expo/vector-icons/Fontisto";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import { useUser } from "@clerk/clerk-expo";
@@ -19,8 +16,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
-import { logEvent } from "@/utils/logger";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import {  Ionicons } from "@expo/vector-icons";
 import {
   CardTitle,
   ClickableCard,
@@ -31,6 +27,8 @@ import {
 } from "@/components/dev";
 import { ChartRadar } from "@/components/charts/radarChart";
 import { SuggestedExplorersSection } from "@/components/suggestedUsersSection";
+import { DashboardMenu } from "@/components/dashboardMenu";
+import QuickStats from "@/components/quickStats";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -44,11 +42,12 @@ export default function HomeScreen() {
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    console.log("refreshing user data");
-    refreshUserData();
-  }, []);
-
+ useEffect(() => {
+   console.log("refreshing user data");
+   refreshUserData();
+ }, [user?.id]);
+  
+  
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
     Animated.parallel([
@@ -100,6 +99,7 @@ export default function HomeScreen() {
 
   if (userData && userData.completedTutorial === false) {
     router.replace("/tutorial");
+    return null; 
   }
 
   const sections = [
@@ -112,7 +112,7 @@ export default function HomeScreen() {
     if (item.type === "header") {
       return (
         <SafeAreaView>
-          <StatusBar backgroundColor="bg-lightContainerBg" />
+          <StatusBar backgroundColor="#fafafa" barStyle="dark-content" />
           <View className="mx-4 mt-9 pb-10 rounded-b-2xl gap-4">
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
@@ -132,34 +132,16 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View className="mt-6">
-              <View className="flex-row justify-between">
-                <StatCard
-                  title="Total"
-                  value="847.3"
-                  subtitle="km"
-                  icon={
-                    <FontAwesome5 name="walking" size={18} color="#c8f751" />
-                  }
-                />
-                <StatCard
-                  title="Coverage"
-                  value="23.7%"
-                  subtitle="Sofia"
-                  icon={
-                    <MaterialIcons name="explore" size={20} color="#c8f751" />
-                  }
-                />
-              </View>
-            </View>
+            <QuickStats />
 
-            <Dashboard />
+            <DashboardMenu />
 
             <ChartRadar />
 
             <SuggestedExplorersSection />
+
             <SectionSpacing className="">
-              <ClickableCard onPress={console.log("suuu")}>
+              <ClickableCard onPress={() => console.log("suuu")}>
                 <RowLayout>
                   <IconContainer color="accent">
                     <AntDesign name="user" size={24} color="#c8f751" />
@@ -197,79 +179,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-export const StatCard = ({
-  title,
-  value,
-  subtitle,
-  icon,
-}: {
-  title: string;
-  value: number | string;
-  subtitle?: string;
-  icon: React.ReactNode;
-}) => (
-  <View className="flex-1 min-w-[45%] max-w-[48%]">
-    <View className="rounded-2xl p-4 bg-lightSurface border border-lightNeutralGray shadow-sm h-36">
-      <View className="flex-col justify-between h-full">
-        {/* Title + Icon */}
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-lightMutedText font-anybody text-xs">
-            {title}
-          </Text>
-          <View className="bg-lightContainerBg rounded-full p-2">{icon}</View>
-        </View>
-
-        {/* Value */}
-        <Text className="text-lightBlackText font-anybodyBold text-2xl">
-          {value}
-        </Text>
-
-        {/* Subtitle */}
-        {subtitle ? (
-          <Text className="text-lightMutedText text-[11px] mt-1 font-anybody">
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  </View>
-);
-
-const Dashboard = () => {
-  return (
-    <View className="flex justify-center items-center gap-2">
-      <View className="flex flex-row gap-2">
-        <DashboardCard
-          label="Stats"
-          icon={<Ionicons name="stats-chart" size={24} color="black" />}
-        />
-        <DashboardCard
-          label="Global"
-          icon={<Ionicons name="globe-outline" size={24} color="black" />}
-        />
-      </View>
-      <View className="flex flex-row gap-2">
-        <DashboardCard
-          label="Friends"
-          icon={<FontAwesome5 name="user-friends" size={24} color="black" />}
-        />
-        <DashboardCard
-          label="Calendar"
-          icon={<Feather name="calendar" size={24} color="black" />}
-        />
-      </View>
-    </View>
-  );
-};
-
-const DashboardCard = (props: { label: string; icon: React.ReactNode }) => {
-  return (
-    <View className="bg-lightSurface px-4 py-2 rounded-2xl border border-lightNeutralGray shadow-sm h-16 items-center justify-center min-w-[45%] max-w-[48%]">
-      <View className="flex flex-row items-center gap-2">
-        <View className="rounded-full p-2 bg-transparent">{props.icon}</View>
-        <Text className="font-anybody text-lightBlackText">{props.label}</Text>
-      </View>
-    </View>
-  );
-};

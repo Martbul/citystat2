@@ -32,6 +32,14 @@ This is a mobile app build using expo, raec
 
 4. Scan the QR code and run the dev directly build on your phone
 
+5. Strange error
+ Comment this line 
+  ```bash
+ <data android:scheme="exp+[My app]"/>
+   ```
+   from AndroidManifest.xml file
+
+
 
 ## Build apk
 

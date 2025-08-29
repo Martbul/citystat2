@@ -1,11 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, ScrollView, TouchableOpacity, Image, Text } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { BodyText, Card, CenteredColumn, RowLayout, SectionSpacing, SectionTitle, SpaceBetweenRow } from "./dev";
 import PrimaryButton from "./primaryButton";
+import { useUserData } from "@/Providers/UserDataProvider";
+import Spinner from "./spinner";
 
 
 export const SuggestedExplorersSection = () => {
+  const { userData, fetchUsersSameCity, isLoading } = useUserData();
+
+  const [usersSameCity, setUsersSameCity] = useState<any[] | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  useEffect(() => {
+    if (userData && !hasLoaded) {
+      const loadUsers = async () => {
+        console.log("Loading users for the first time...");
+        try {
+          const users = await fetchUsersSameCity();
+          console.log("Fetched users:", users);
+          setUsersSameCity(users);
+          setHasLoaded(true);
+        } catch (error) {
+          console.error("Failed to load users:", error);
+          setUsersSameCity([]);
+          setHasLoaded(true);
+        }
+      };
+      loadUsers();
+    }
+  }, [userData, hasLoaded]); 
+
   return (
     <SectionSpacing>
       <Card>
@@ -28,7 +54,23 @@ export const SuggestedExplorersSection = () => {
             gap: 12,
           }}
         >
-          <SuggestionUserCard
+          {isLoading ? (
+            <Spinner />
+          ) : usersSameCity && usersSameCity.length > 0 ? (
+            usersSameCity.map((user) => (
+              <SuggestionUserCard
+                key={user.id}
+                image={user.imageUrl}
+                name={user.firstName + " " + user.lastName}
+              />
+            ))
+          ) : (
+            <Text className="text-lightMutedText">
+              No users found in your city.
+            </Text>
+          )}
+
+          {/* <SuggestionUserCard
             image="https://cdn-9.motorsport.com/images/mgl/6D1XbeV0/s8/max-verstappen-red-bull-racing.jpg"
             name="Max Verstappen"
           />
@@ -43,7 +85,7 @@ export const SuggestedExplorersSection = () => {
           <SuggestionUserCard
             image="https://a.espncdn.com/combiner/i?img=/i/headshots/rpm/players/full/5498.png"
             name="Lando Norris"
-          />
+          /> */}
         </ScrollView>
       </Card>
     </SectionSpacing>
