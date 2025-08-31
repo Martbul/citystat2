@@ -1,13 +1,12 @@
 import React from 'react';
 import { Text, View, TouchableOpacity } from 'react-native';
-import { Ionicons, AntDesign, Feather, FontAwesome } from '@expo/vector-icons';
+import { Ionicons, AntDesign, Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// COMMON STYLE PATTERNS FROM YOUR PROFILE PAGE
 
 // 1. PAGE CONTAINER
-export const PageContainer = ({ children }: { children: React.ReactNode }) => (
-  <SafeAreaView className="flex-1 bg-containerBg">
+export const PageContainer = ({ children , className = ""}: { children: React.ReactNode, className?: string }) => (
+  <SafeAreaView className={`flex-1 bg-containerBg ${className}`}>
     {children}
   </SafeAreaView>
 );
@@ -68,7 +67,7 @@ export const IconContainer = ({
   children
 }: { 
   size?: "small" | "medium" | "large", 
-  color?: "accent" | "green" | "green2"|"blue" | "neutral" |"red" | "transparent",
+  color?: "accent" | "green" | "green2" | "blue" | "neutral" | "red" | "gold" | "transparent",
   className?: string
   children: React.ReactNode 
 }) => {
@@ -85,6 +84,7 @@ export const IconContainer = ({
     blue: "bg-sessionBlue/10", 
     neutral: "bg-containerBg",
     red: "bg-red-600",
+    gold: "bg-[#FFD700]/20",
     transparent: "bg-transparent"
   };
   

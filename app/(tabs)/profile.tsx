@@ -7,7 +7,7 @@ import {
 } from "@/components/dev";
 import PrimaryButton from "@/components/primaryButton";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { RelativePathString, useRouter } from "expo-router";
@@ -142,17 +142,29 @@ export default function ProfileScreen() {
           </View>
 
           <SectionSpacing className="mb-3">
+            <ClickableCard onPress={() => router.push("/(screens)/ranking")}>
+              <RowLayout className="">
+                <IconContainer color="gold">
+                  <FontAwesome5 name="medal" size={24} color="#FFD700" />
+                </IconContainer>
+                <CardTitle className="ml-4">Ranking</CardTitle>
+              </RowLayout>
+            </ClickableCard>
+          </SectionSpacing>
+
+          <SectionSpacing className="mb-3">
             <ClickableCard onPress={() => router.push("/(screens)/friends")}>
               <RowLayout className="">
                 <IconContainer color="green">
                   <Ionicons name="people" size={20} color="#10B981" />
                 </IconContainer>
-                <CardTitle className="ml-4"> Your Friends</CardTitle>
+                <CardTitle className="ml-4">Your Friends</CardTitle>
               </RowLayout>
             </ClickableCard>
           </SectionSpacing>
 
-          <SectionSpacing className="mb-8">
+          {/* //! place elsewhere the note */}
+          {/* <SectionSpacing className="mb-8">
             <ClickableCard onPress={() => router.push("/(screens)/editNote")}>
               <RowLayout className="flex-1">
                 <IconContainer color="blue" className="mr-4">
@@ -170,7 +182,7 @@ export default function ProfileScreen() {
                 </Text>
               </RowLayout>
             </ClickableCard>
-          </SectionSpacing>
+          </SectionSpacing> */}
         </ScrollView>
       </View>
     </SafeAreaView>

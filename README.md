@@ -50,6 +50,7 @@ eas credentials -p android
 # move creadentials to android dir
 cd android
 cp ../credentials/android/keystore.jks app/keystore.jks
+cd ..
 
 # run build script
 ./build-android.sh
@@ -85,6 +86,23 @@ After the build is ready move the apk file to your phone(use usb) and execut
 - [] add image picker in the tutoriaol screen
 - [] order friends in alphabetical order 
 - [] fix share invite, copy link,....
+
+
+- Walking/Running distance: Kilometers covered in the city by walking and by running
+Speed trends: Average speed in different areas (walking in parks vs. traffic zones)
+Most visited areas: "Your personal hotspots."
+Green space coverage: % of your walking that’s inside parks/green zones.
+Elevation changes: How much uphill/downhill travel you’ve done in the city.
+Street streaks: Longest unbroken walk without repeating streets.
+Color map: Heatmap of how much of the city you’ve “painted” by visiting.   
+Friends overlap: Compare areas visited with friends (privacy-conscious, opt-in).
+Shared challenges: Community quests like "cover the whole city as a group."
+
+PREDICTIONS FEATURE:
+Predictive patterns: Where you’re most likely to be at a given time.
+
+
+
 
 - [] v2 - mutyple cities
 

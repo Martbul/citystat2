@@ -192,8 +192,8 @@ const Spinner = ({
         >
           <AnimatedView className="absolute top-0 left-1/2 w-2 h-2 accent rounded-full -translate-x-1/2" />
           <AnimatedView className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-iconGreenrounded-full -translate-x-1/2" />
-          <AnimatedView className="absolute left-0 top-1/2 w-1 h-1 bg-lightPrimaryAccent rounded-full -translate-y-1/2" />
-          <AnimatedView className="absolute right-0 top-1/2 w-1 h-1 bg-lightPrimaryAccent rounded-full -translate-y-1/2" />
+          <AnimatedView className="absolute left-0 top-1/2 w-2 h-2 bg-lightPrimaryAccent rounded-full -translate-y-1/2" />
+          <AnimatedView className="absolute right-0 top-1/2 w-2 h-2 bg-lightPrimaryAccent rounded-full -translate-y-1/2" />
         </AnimatedView>
       </AnimatedView>
     );

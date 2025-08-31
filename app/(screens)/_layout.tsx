@@ -64,6 +64,20 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="challenges"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="ranking"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

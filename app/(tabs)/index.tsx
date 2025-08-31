@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserData } from "@/Providers/UserDataProvider";
 import SideMenuDrawer from "@/components/drawers/SideMenuDrawer";
-import {  Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import {
   CardTitle,
   ClickableCard,
@@ -42,12 +42,11 @@ export default function HomeScreen() {
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
- useEffect(() => {
-   console.log("refreshing user data");
-   refreshUserData();
- }, [user?.id]);
-  
-  
+  useEffect(() => {
+    console.log("refreshing user data");
+    refreshUserData();
+  }, [user?.id]);
+
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
     Animated.parallel([
@@ -86,7 +85,6 @@ export default function HomeScreen() {
     return null;
   }
 
-
   if (!isSignedIn) {
     console.log("not signed in");
     return null;
@@ -96,10 +94,9 @@ export default function HomeScreen() {
     console.log("User is signed in: " + user.id);
   }
 
-
   if (userData && userData.completedTutorial === false) {
     router.replace("/tutorial");
-    return null; 
+    return null;
   }
 
   const sections = [
@@ -124,6 +121,11 @@ export default function HomeScreen() {
                   <Fontisto name="search" size={22} color="#1F2937" />
                 </HeaderButton>
 
+                <HeaderButton
+                  onPress={() => router.push("/(screens)/challenges")}
+                >
+                  <FontAwesome6 name="star" size={22} color="black" />
+                </HeaderButton>
                 <HeaderButton
                   onPress={() => router.push("/(screens)/notifications")}
                 >

@@ -11,18 +11,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Base colors
-        // background: "#f3f3f3ff",
         darkBackground: "#111111",
-        // surface: "#ffffff",
         darkSurface: "#1a1a1a",
         text: "#111111",
         darkText: "#ffffff",
         muted: "#cecece",
         accent: "#c8f751",
         transparent: "transparent",
-        
-        // Light theme colors
         lightBackground: "#ebebeb",
         lightSurface: "#fafafa",
         lightPrimaryText: "#111111",
