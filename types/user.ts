@@ -148,4 +148,7 @@ export interface UserDataContextType {
   ) => Promise<void>;
   searchUsers: (searchQuery: string) => Promise<void>;
   addFriendByUser: (friendUser: UserData) => Promise<boolean>;
+  fetchRank: () => Promise<any>;
+  fetchRankProgress: () => Promise<any>;
+  fetchLeaderboard: () => Promise<any>;
 }

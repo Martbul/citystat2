@@ -9,7 +9,6 @@ interface CenterCameraOnUserButtonProps {
 }
 
 const CenterCameraOnUserButton = memo(({ userLocation, centerOnUser }: CenterCameraOnUserButtonProps) => {
-  // Memoize the computed values
   const isLocationAvailable = useMemo(() => !!userLocation, [userLocation]);
   
   const buttonStyle = useMemo(() => [
@@ -18,7 +17,7 @@ const CenterCameraOnUserButton = memo(({ userLocation, centerOnUser }: CenterCam
   ], [isLocationAvailable]);
   
   const iconColor = useMemo(() => 
-    isLocationAvailable ? "#007AFF" : "#999", 
+    isLocationAvailable ? "#c8f751" : "#999", 
     [isLocationAvailable]
   );
 
@@ -28,11 +27,11 @@ const CenterCameraOnUserButton = memo(({ userLocation, centerOnUser }: CenterCam
         style={buttonStyle}
         onPress={centerOnUser}
         disabled={!isLocationAvailable}
-        activeOpacity={0.7}
+        
       >
         <Ionicons
           name="locate"
-          size={20}
+          size={22}
           color={iconColor}
         />
       </TouchableOpacity>

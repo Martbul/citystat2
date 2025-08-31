@@ -837,8 +837,8 @@ out geom;
                 style={{
                   lineColor: [
                     "case",
-                    // ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
-                    // "#c8f751",
+                    ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
+                    "#c8f751",
                     [
                       "in",
                       ["to-string", ["get", "id"]],

@@ -37,17 +37,24 @@ export const Card = ({ children, className = "" }: { children: React.ReactNode, 
 );
 
 // 5. CLICKABLE CARD (for navigation)
-export const ClickableCard = ({ onPress, children, className = "" }: { onPress:any, children: React.ReactNode, className?: string }) => (
+// FIXED CLICKABLE CARD COMPONENT
+export const ClickableCard = ({ 
+  onPress, 
+  children, 
+  className = "" 
+}: { 
+  onPress: () => void, 
+  children: React.ReactNode, 
+  className?: string 
+}) => (
   <TouchableOpacity 
-    onPress={onPress} 
-    activeOpacity={0.5} // closer to 1 = less fade
-    className={className}
+    onPress={onPress}
+    activeOpacity={0.6}
+    className={`flex flex-row justify-between items-center bg-white rounded-3xl p-6 shadow-sm border border-gray-100 ${className}`}
   >
-    <View className="flex flex-row justify-between items-center bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-      {children}
-      <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center">
-        <AntDesign name="arrowright" size={20} color="#6B7280" />
-      </View>
+    {children}
+    <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center">
+      <AntDesign name="arrowright" size={20} color="#6B7280" />
     </View>
   </TouchableOpacity>
 );
@@ -61,7 +68,7 @@ export const IconContainer = ({
   children
 }: { 
   size?: "small" | "medium" | "large", 
-  color?: "accent" | "green" | "blue" | "neutral" |"red" | "transparent",
+  color?: "accent" | "green" | "green2"|"blue" | "neutral" |"red" | "transparent",
   className?: string
   children: React.ReactNode 
 }) => {
@@ -74,6 +81,7 @@ export const IconContainer = ({
   const colorClasses = {
     accent: "bg-accent",
     green: "bg-iconGreen/10",
+    green2: "bg-iconGreen/5",
     blue: "bg-sessionBlue/10", 
     neutral: "bg-containerBg",
     red: "bg-red-600",
@@ -81,7 +89,7 @@ export const IconContainer = ({
   };
   
   return (
-    <View className={`${sizeClasses[size]} ${colorClasses[color]} rounded-2xl flex items-center justify-center shadow-sm ${className}`}>
+    <View className={`${sizeClasses[size]} ${colorClasses[color]} rounded-2xl flex items-center justify-center  ${className}`}>
       {children}
     </View>
   );
@@ -94,8 +102,8 @@ export const PageTitle = ({ children , className = ""}: { children: React.ReactN
   </Text>
 );
 
-export const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <Text className="text-textDark text-lg font-semibold mb-4">
+export const SectionTitle = ({ children, className = "" }: { children: React.ReactNode , className?: string}) => (
+  <Text className={`text-textDark text-lg font-semibold mb-4 ${className}`}>
     {children}
   </Text>
 );
@@ -144,8 +152,8 @@ export const RowLayout = ({ children,className}: { children: React.ReactNode, cl
   </View>
 );
 
-export const SpaceBetweenRow = ({ children }: { children: React.ReactNode }) => (
-  <View className="flex flex-row justify-between items-center">
+export const SpaceBetweenRow = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <View className={`flex flex-row justify-between items-center ${className}`}>
     {children}
   </View>
 );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Card, RowLayout, SectionSpacing, SectionTitle } from "./dev";
 
 interface RadioOption {
   label: string;
@@ -12,9 +13,7 @@ interface RadioSectionProps {
   selectedValue: string;
   onValueChange: (value: any) => void;
   containerStyle?: string;
-  titleStyle?: string;
-  cardStyle?: string;
-  disabled?: boolean; // ✅ Add this
+  disabled?: boolean;
 }
 
 const RadioSection: React.FC<RadioSectionProps> = ({
@@ -22,49 +21,40 @@ const RadioSection: React.FC<RadioSectionProps> = ({
   options,
   selectedValue,
   onValueChange,
-  containerStyle = "mt-6 mx-4",
-  titleStyle = "text-lg font-bold text-lightPrimaryText mb-2",
-  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden",
-  disabled = false // ✅ Default to false
+  containerStyle = "",
+  disabled = false
 }) => {
   return (
-    <View className={containerStyle}>
-      <Text className={titleStyle}>
-        {title}
-      </Text>
-      <View className={cardStyle}>
-        {options.map((option, index) => (
-          <View key={option.value}>
-            <View
-              className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${index === options.length - 1 ? "rounded-b-3xl" : ""} ${
+    <SectionSpacing className={containerStyle}>
+      <SectionTitle>{title}</SectionTitle>
+      <Card>
+        <View className="divide-y divide-gray-100">
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={option.value}
+              className={`py-4 ${index === 0 ? 'pt-0' : ''} ${index === options.length - 1 ? 'pb-0' : ''} ${
                 disabled ? "opacity-50" : ""
-              }`} // ✅ Dim the view when disabled
+              }`}
+              onPress={() => !disabled && onValueChange(option.value)}
+              disabled={disabled}
             >
-              <TouchableOpacity
-                className="flex-row items-center justify-between py-4 px-4"
-                onPress={() => !disabled && onValueChange(option.value)} // ✅ Prevent interaction if disabled
-                disabled={disabled} // ✅ Native disabled flag
-              >
-                <Text className="text-lightBlackText text-base">
+              <RowLayout className="justify-between">
+                <Text className="text-textBlack text-base font-medium">
                   {option.label}
                 </Text>
                 <View
                   className={`w-5 h-5 rounded-full border-2 ${
                     selectedValue === option.value
-                      ? "bg-lightPrimaryAccent border-lightPrimaryAccent"
+                      ? "bg-accent border-accent"
                       : "border-gray-300"
                   }`}
                 />
-              </TouchableOpacity>
-            </View>
-            {index < options.length - 1 && (
-              <View className="h-px bg-gray-100 ml-4" />
-            )}
-          </View>
-        ))}
-      </View>
-    </View>
+              </RowLayout>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Card>
+    </SectionSpacing>
   );
 };
-
 export default RadioSection;

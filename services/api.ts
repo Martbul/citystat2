@@ -292,6 +292,31 @@ class ApiService {
     });
   }
 
+    async fetchRank(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/rank`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  
+    async fetchRankProgress(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/rank/progress`, {
+      method: "GET",
+      token,
+    });
+  }
+
+
+
+  
+    async fetchLeaderboard(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/rank/leaderboard`, {
+      method: "GET",
+      token,
+    });
+  }
+
   
 }
 

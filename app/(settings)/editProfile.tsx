@@ -2,7 +2,7 @@ import InputEditor from "@/components/inputEditor";
 import Header from "@/components/header";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useImageUploader } from "@/utils/uploadthing";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import { openSettings } from "expo-linking";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,11 +11,19 @@ import {
   Image,
   ScrollView,
   StatusBar,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  PageContainer,
+  Card,
+  IconContainer,
+  RowLayout,
+  SectionSpacing,
+  BodyText,
+  MutedText,
+  CardTitle,
+} from "@/components/dev";
 
 const EditProfileScreen = () => {
   const { userData } = useUserData();
@@ -33,7 +41,7 @@ const EditProfileScreen = () => {
   const { openImagePicker, isUploading } = useImageUploader("imageUploader", {
     onClientUploadComplete: (res) => {
       console.log("Upload completed:", res);
-      Alert.alert("Upload Completed");
+      Alert.alert("Upload Completed", "Your profile picture has been updated successfully!");
       if (res && res[0]) {
         setUserProfilePic(res[0].url);
       }
@@ -46,14 +54,13 @@ const EditProfileScreen = () => {
 
   const handleImagePick = () => {
     openImagePicker({
-      // input: {}, // Add any input data your FileRouter expects
-      source: "library", // or "camera"
+      source: "library",
       onInsufficientPermissions: () => {
         Alert.alert(
-          "No Permissions",
-          "You need to grant permission to your Photos to use this",
+          "Camera Permission Required",
+          "Please grant access to your photo library to upload a profile picture.",
           [
-            { text: "Dismiss" },
+            { text: "Cancel", style: "cancel" },
             { text: "Open Settings", onPress: openSettings },
           ]
         );
@@ -70,289 +77,183 @@ const EditProfileScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground">
+    <PageContainer>
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Edit Profile" secondActionTitle="Save" />
-      <ScrollView className="flex-1 bg-lightBackground">
-        {/* Profile Picture Section */}
-        <View className="absolute top-[20px] left-14 -ml-10 z-10">
-          <View className="relative">
-            <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center overflow-hidden">
-              {userProfilePic ? (
-                <Image
-                  className="w-28 h-28"
-                  source={{ uri: userProfilePic }}
-                  style={{ borderRadius: 56 }}
-                />
-              ) : (
-                <Ionicons name="person" size={40} color="#cecece" />
-              )}
-              {isUploading && (
-                <View className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                  <ActivityIndicator color="#ffffff" />
-                </View>
-              )}
+      
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        {/* Profile Header Section */}
+        <View className="px-4 pt-6">
+          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 items-center py-8">
+            {/* Profile Picture */}
+            <View className="relative mb-4">
+              <View className="w-32 h-32 bg-containerBg rounded-full overflow-hidden shadow-lg">
+                {userProfilePic ? (
+                  <Image
+                    className="w-32 h-32"
+                    source={{ uri: userProfilePic }}
+                    style={{ borderRadius: 64 }}
+                  />
+                ) : (
+                  <View className="w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
+                    <Ionicons name="person" size={48} color="#9CA3AF" />
+                  </View>
+                )}
+                
+                {isUploading && (
+                  <View className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
+                    <View className="bg-white/20 rounded-full p-3">
+                      <ActivityIndicator size="large" color="#ffffff" />
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Edit Button */}
+              <TouchableOpacity
+                className="absolute -bottom-2 -right-2 bg-accent rounded-full p-3 shadow-lg border-4 border-white"
+                onPress={handleImagePick}
+                disabled={isUploading}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="camera" size={20} color="white" />
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              className="absolute -top-1 -right-1 bg-darkSurface rounded-full p-2 border-2 border-lightBackground"
-              onPress={handleImagePick}
-              disabled={isUploading}
-            >
-              <Ionicons name="pencil" size={14} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
+            {/* Current Name Display */}
+            <CardTitle className="text-center mb-1">
+              {displayName || "Your Name"}
+            </CardTitle>
+            <MutedText className="text-center">
+              @{userData?.userName || "username"}
+            </MutedText>
+          </Card>
         </View>
 
-        <View className="pt-36 px-4">
-          {/* Display Name */}
-          <View className="flex my-2">
-            <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
-              Display Name
-            </Text>
-            <InputEditor
-              data={displayName}
-              clearDataFunc={displayNameClearData}
-              setDataFunc={setDisplayName}
-            />
-          </View>
+        <View className="px-4">
+          <SectionSpacing>
+            <Card>
+              <RowLayout className="mb-4">
+                <IconContainer size="medium" color="blue" className="mr-3">
+                  <Feather name="user" size={20} color="#2563EB" />
+                </IconContainer>
+                <View className="flex-1">
+                  <CardTitle className="mb-1">Display Name</CardTitle>
+                  <MutedText className="text-sm">
+                    This is how others will see your name
+                  </MutedText>
+                </View>
+              </RowLayout>
+              <InputEditor
+                data={displayName}
+                clearDataFunc={displayNameClearData}
+                setDataFunc={setDisplayName}
+              />
+            </Card>
+          </SectionSpacing>
 
-          {/* About Me */}
-          <View className="flex my-2">
-            <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
-              About Me
-            </Text>
-            <InputEditor
-              data={aboutMe}
-              clearDataFunc={abtMeClearData}
-              setDataFunc={setAboutMe}
-            />
-          </View>
+          <SectionSpacing>
+            <Card>
+              <RowLayout className="mb-4">
+                <IconContainer size="medium" color="green" className="mr-3">
+                  <Feather name="edit-3" size={20} color="#059669" />
+                </IconContainer>
+                <View className="flex-1">
+                  <CardTitle className="mb-1">About Me</CardTitle>
+                  <MutedText className="text-sm">
+                    Tell others a bit about yourself
+                  </MutedText>
+                </View>
+              </RowLayout>
+              <InputEditor
+                data={aboutMe}
+                clearDataFunc={abtMeClearData}
+                setDataFunc={setAboutMe}
+              />
+            </Card>
+          </SectionSpacing>
+
+          <SectionSpacing>
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100">
+              <RowLayout className="mb-4">
+                <IconContainer size="medium" color="transparent" className="bg-purple-100 mr-3">
+                  <Ionicons name="stats-chart" size={20} color="#7C3AED" />
+                </IconContainer>
+                <CardTitle>Profile Completion</CardTitle>
+              </RowLayout>
+              
+              <View className="space-y-3">
+                <RowLayout className="justify-between">
+                  <RowLayout className="flex-1">
+                    <View className={`w-2 h-2 rounded-full mr-3 ${userProfilePic ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <BodyText className="flex-1">Profile Picture</BodyText>
+                  </RowLayout>
+                  {userProfilePic && <Ionicons name="checkmark" size={16} color="#059669" />}
+                </RowLayout>
+                
+                <RowLayout className="justify-between">
+                  <RowLayout className="flex-1">
+                    <View className={`w-2 h-2 rounded-full mr-3 ${displayName ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <BodyText className="flex-1">Display Name</BodyText>
+                  </RowLayout>
+                  {displayName && <Ionicons name="checkmark" size={16} color="#059669" />}
+                </RowLayout>
+                
+                <RowLayout className="justify-between">
+                  <RowLayout className="flex-1">
+                    <View className={`w-2 h-2 rounded-full mr-3 ${aboutMe ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <BodyText className="flex-1">About Me</BodyText>
+                  </RowLayout>
+                  {aboutMe && <Ionicons name="checkmark" size={16} color="#059669" />}
+                </RowLayout>
+              </View>
+              
+              <View className="mt-4">
+                <View className="bg-white/60 h-2 rounded-full overflow-hidden">
+                  <View 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${((userProfilePic ? 1 : 0) + (displayName ? 1 : 0) + (aboutMe ? 1 : 0)) / 3 * 100}%` 
+                    }}
+                  />
+                </View>
+                <MutedText className="text-xs text-center mt-2">
+                  {Math.round(((userProfilePic ? 1 : 0) + (displayName ? 1 : 0) + (aboutMe ? 1 : 0)) / 3 * 100)}% Complete
+                </MutedText>
+              </View>
+            </Card>
+          </SectionSpacing>
+
+          <SectionSpacing>
+            <Card className="bg-blue-50 border-blue-100">
+              <RowLayout className="mb-3">
+                <IconContainer size="small" color="transparent" className="bg-blue-100 mr-3">
+                  <Ionicons name="bulb" size={16} color="#2563EB" />
+                </IconContainer>
+                <CardTitle className="text-blue-700">Profile Tips</CardTitle>
+              </RowLayout>
+              
+              <View className="space-y-2">
+                <MutedText className="text-blue-600 text-sm leading-5">
+                  • Use a clear, recent photo for your profile picture
+                </MutedText>
+                <MutedText className="text-blue-600 text-sm leading-5">
+                  • Keep your display name professional and recognizable
+                </MutedText>
+                <MutedText className="text-blue-600 text-sm leading-5">
+                  • Write a brief, engaging description in your About Me
+                </MutedText>
+              </View>
+            </Card>
+          </SectionSpacing>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </PageContainer>
   );
 };
 
 export default EditProfileScreen;
-
-// import Header from "@/components/ui/header";
-// import InputEditor from "@/components/ui/inputEditor";
-// import { useUserData } from "@/Providers/UserDataProvider";
-// import { useImageUploader } from "@/utils/uploadthing";
-// import { Ionicons } from "@expo/vector-icons";
-// import React, { useEffect, useState } from "react";
-// import { openSettings } from "expo-linking";
-// import {
-//   Alert,
-//   Image,
-//   Pressable,
-//   ScrollView,
-//   StatusBar,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   View,
-// } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
-
-// const EditProfileScreen = () => {
-//   const { userData } = useUserData();
-
-//   useEffect(() => {
-//     const dsName = userData?.firstName! + " "+userData?.lastName;
-//     setDisplayName(dsName);
-//     setUserProfilePic(userData?.imageUrl!);
-//     // setAboutMe(userData.
-//   }, [userData]);
-
-//   const [displayName, setDisplayName] = useState("");
-//   // const [pronouns, setPronouns] = useState("");
-//   const [aboutMe, setAboutMe] = useState("");
-//   const [userProfilePic, setUserProfilePic] = useState("");
-
-//   const abtMeClearData = () => {
-//     setAboutMe("");
-//   };
-//   const displayNameClearData = () => {
-//     setDisplayName("");
-//   };
-
-//    const { openImagePicker, isUploading } = useImageUploader("imageUploader", {
-//     /**
-//      * Any props here are forwarded to the underlying `useUploadThing` hook.
-//      * Refer to the React API reference for more info.
-//      */
-//     onClientUploadComplete: () => Alert.alert("Upload Completed"),
-//     onUploadError: (error) => Alert.alert("Upload Error", error.message),
-//   });
-
-//   return (
-//     <SafeAreaView className="flex-1 bg-lightBackground">
-//       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
-//       <Header title="Edit Profile" secondActionTitle="Save" />
-//       <ScrollView className="flex-1 bg-lightBackground">
-//         {/* <View className="bg-lightBackground px-4 pt-6 pb-14 relative">
-
-//                              //TODO: v2 add the edit bg
-
-//           <TouchableOpacity className="absolute top-4 right-4 bg-darkSurface rounded-full p-2">
-//             <Ionicons name="pencil" size={16} color="#ffffff" />
-//           </TouchableOpacity>
-
-//           <View className="items-center mb-6 mt-8">
-//             <Text className="text-white text-2xl font-anybodyBold mb-1">
-//               Martin Kovachki
-//             </Text>
-//             <View className="flex-row items-center">
-//               <Text className="text-muted font-anybody">martinkovachki</Text>
-//               <View className="w-1 h-1 bg-accent rounded-full mx-2" />
-//               <Text className="text-accent text-xs">#</Text>
-//             </View>
-//           </View>
-//         </View> */}
-//  <Pressable
-//         onPress={() => {
-//           openImagePicker({
-//             input, // Matches the input schema from the FileRouter endpoint
-//             source: "library", // or "camera"
-//             onInsufficientPermissions: () => {
-//               Alert.alert(
-//                 "No Permissions",
-//                 "You need to grant permission to your Photos to use this",
-//                 [
-//                   { text: "Dismiss" },
-//                   { text: "Open Settings", onPress: openSettings },
-//                 ],
-//               );
-//             },
-//           })
-//         }}
-//       >
-//         <Text>Select Image</Text>
-//       </Pressable>
-//         {/* //TODO: Change to flex */}
-//         <View className="absolute top-[20px] left-14 -ml-10 z-10">
-//           <View className="relative">
-//             <View className="w-28 h-28 bg-lightSurface rounded-full flex items-center justify-center">
-//               <Image
-//                 className="w-28 h-28"
-//                 source={{ uri: userProfilePic }}
-//               ></Image>
-//             </View>
-
-//             <TouchableOpacity className="absolute -top-1 -right-1 bg-darkSurface rounded-full p-2 border-2 border-lightBackground">
-//               <Ionicons name="pencil" size={14} color="#ffffff" />
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-
-//         <View className="pt-36 px-4">
-//           {/*
-//                    //TODO: v2 add the edit status
-
-//           <View className="items-center mb-6">
-//             <TouchableOpacity className="flex-row items-center bg-darkSurface rounded-full px-4 py-2">
-//               <Ionicons name="add" size={16} color="#ffffff" className="mr-2" />
-//               <Text className="text-white font-anybody ml-2">Add Status</Text>
-//             </TouchableOpacity>
-//           </View> */}
-
-//           {/* <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               Display Name
-//             </Text>
-//             <View className="bg-darkSurface rounded-lg px-4 py-3 flex-row items-center">
-//               <TextInput
-//                 value={displayName}
-//                 onChangeText={setDisplayName}
-//                 className="flex-1 text-white font-anybody"
-//                 placeholderTextColor="#cecece"
-//               />
-//               <TouchableOpacity onPress={() => setDisplayName("")}>
-//                 <Ionicons name="close" size={20} color="#cecece" />
-//               </TouchableOpacity>
-//             </View>
-//           </View> */}
-
-//           <View className="flex my-2">
-//             <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
-//               Display Name
-//             </Text>
-//             <InputEditor
-//               data={displayName}
-//               clearDataFunc={displayNameClearData}
-//               setDataFunc={setDisplayName}
-//             />
-//           </View>
-
-//           {/* About Me */}
-//           {/* <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               About Me
-//             </Text>
-//             <TextInput
-//               value={aboutMe}
-//               onChangeText={setAboutMe}
-//               multiline
-//               numberOfLines={4}
-//               className="bg-darkSurface rounded-lg px-4 py-3 text-white font-anybody min-h-[100px]"
-//               placeholderTextColor="#cecece"
-//               textAlignVertical="top"
-//             />
-//           </View> */}
-
-//   <View className="flex my-2">
-//             <Text className="p-1 mx-2 text-lightPrimaryAccent font-bold">
-//              About Me
-//             </Text>
-//               <InputEditor
-//             data={aboutMe}
-//             clearDataFunc={abtMeClearData}
-//             setDataFunc={setAboutMe}
-//           />
-//           </View>
-//           {/*//TODO: v2 add Avatar Decoration */}
-//           {/* <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               Avatar Decoration
-//             </Text>
-//             <View className="bg-darkSurface rounded-lg p-4 items-center justify-center min-h-[60px]">
-//               <Text className="text-muted font-anybody">
-//                 No decoration selected
-//               </Text>
-//             </View>
-//           </View>
-//           <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               Profile Effect
-//             </Text>
-//             <View className="bg-darkSurface rounded-lg p-4 items-center justify-center min-h-[60px]">
-//               <Text className="text-muted font-anybody">None</Text>
-//             </View>
-//           </View>
-
-//           <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               Nameplate
-//             </Text>
-//             <View className="bg-darkSurface rounded-lg p-4 items-center justify-center min-h-[60px]">
-//               <Text className="text-muted font-anybody">None</Text>
-//             </View>
-//           </View>
-
-//           <View className="mb-6">
-//             <Text className="text-lightBlackText font-anybody mb-2">
-//               Legacy Username Badge
-//             </Text>
-//             <View className="bg-darkSurface rounded-lg p-4 items-center justify-center min-h-[60px]">
-//               <Text className="text-muted font-anybody">None</Text>
-//             </View>
-//           </View> */}
-//         </View>
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// export default EditProfileScreen;

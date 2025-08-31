@@ -2,6 +2,7 @@ import Panel from "@/components/panel";
 import React, { useState } from "react";
 import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "./primaryButton";
+import { Card, SectionSpacing, SectionTitle } from "./dev";
 
 interface SettingsTouchableSectionProps {
   title: string;
@@ -14,16 +15,12 @@ interface SettingsTouchableSectionProps {
     setSelectedOption: React.Dispatch<React.SetStateAction<any>>;
   }>;
   containerStyle?: string;
-  titleStyle?: string;
-  cardStyle?: string;
 }
 
 const SettingsTouchableSection: React.FC<SettingsTouchableSectionProps> = ({
   title,
   data,
-  containerStyle = "mt-6 mx-4",
-  titleStyle = "text-lg font-bold text-lightPrimaryText mb-2",
-  cardStyle = "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden",
+  containerStyle = "",
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
@@ -39,29 +36,25 @@ const SettingsTouchableSection: React.FC<SettingsTouchableSectionProps> = ({
   };
 
   return (
-    <View className={containerStyle}>
-      <Text className={titleStyle}>{title}</Text>
-
-      <View className={cardStyle}>
-        {data.map((item, index) => (
-          <View
-            className={`bg-lightSurface ${index === 0 ? "rounded-t-3xl" : ""} ${
-              index === data.length - 1 ? "rounded-b-3xl" : ""
-            }`}
-            key={item.label}
-          >
-            <Panel
-              pressFunc={() => openPopup(index)}
-              label={item.label}
-              icon={item.icon}
-              seconLabel={item.seconLabel}
-            />
-            {index < data.length - 1 && (
-              <View className="h-px bg-gray-100 ml-4" />
-            )}
-          </View>
-        ))}
-      </View>
+    <SectionSpacing className={containerStyle}>
+      <SectionTitle>{title}</SectionTitle>
+      <Card>
+        <View className="divide-y divide-gray-100">
+          {data.map((item, index) => (
+            <View
+              key={item.label}
+              className={`${index === 0 ? 'pt-0' : ''} ${index === data.length - 1 ? 'pb-0' : ''}`}
+            >
+              <Panel
+                pressFunc={() => openPopup(index)}
+                label={item.label}
+                icon={item.icon}
+                seconLabel={item.seconLabel}
+              />
+            </View>
+          ))}
+        </View>
+      </Card>
 
       <Modal
         visible={modalVisible}
@@ -73,39 +66,39 @@ const SettingsTouchableSection: React.FC<SettingsTouchableSectionProps> = ({
           <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6">
             {activeItemIndex !== null && (
               <>
-                <Text className="text-lg font-semibold mb-4">
+                <SectionTitle className="mb-4">
                   {data[activeItemIndex].label}
-                </Text>
-
-                {data[activeItemIndex].options.map((opt, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    className="py-2 border-b border-gray-200"
-                    onPress={() => {
-                      if (
-                        activeItemIndex !== null &&
-                        typeof data[activeItemIndex].setSelectedOption ===
-                          "function"
-                      ) {
-                        data[activeItemIndex].setSelectedOption(opt.value);
-                      }
-                      closePopup();
-                    }}
-                  >
-                    <Text className="text-lightPrimaryText text-base">
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                </SectionTitle>
+                <View className="divide-y divide-gray-200">
+                  {data[activeItemIndex].options.map((opt, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      className="py-3"
+                      onPress={() => {
+                        if (
+                          activeItemIndex !== null &&
+                          typeof data[activeItemIndex].setSelectedOption === "function"
+                        ) {
+                          data[activeItemIndex].setSelectedOption(opt.value);
+                        }
+                        closePopup();
+                      }}
+                    >
+                      <Text className="text-textBlack text-base font-medium">
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View className="mt-6">
+                  <PrimaryButton heading="Close" onPressAction={closePopup} />
+                </View>
               </>
             )}
-
-           
-            <PrimaryButton heading="Close" onPressAction={closePopup} />
           </View>
         </Pressable>
       </Modal>
-    </View>
+    </SectionSpacing>
   );
 };
 

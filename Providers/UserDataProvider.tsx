@@ -618,6 +618,98 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
+
+
+  
+  const fetchRank = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const success = await apiService.fetchRank(token);
+
+      console.log("fetchRank", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch rank";
+      setError(errorMessage);
+      console.error("Error while fetching rank:", err); 
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+  
+
+
+  const fetchRankProgress = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const success = await apiService.fetchRankProgress(token);
+
+      console.log("RankProgress", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch rank progress";
+      setError(errorMessage);
+      console.error("Error while fetching rank progress:", err); 
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+
+
+  
+
+  const fetchLeaderboard = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const success = await apiService.fetchLeaderboard(token);
+
+      console.log("Leaderboard", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch leaderboard";
+      setError(errorMessage);
+      console.error("Error while fetching leaderboard:", err); 
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+  
   
   
   
@@ -662,6 +754,9 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       updateUserField,
       updateUserNote,
       refreshUserData,
+      fetchRank,
+      fetchRankProgress,
+      fetchLeaderboard,
 
       // Legacy derived values (for backwards compatibility)
       completedTutorial: derivedValues.completedTutorial,

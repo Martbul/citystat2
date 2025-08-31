@@ -1,16 +1,48 @@
 import { mockUserData } from "@/mockData/mocks";
+import { useUserData } from "@/Providers/UserDataProvider";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function RankingScreen() {
   const router = useRouter();
+  const {
+    userData,
+    isLoading,
+    fetchRank,
+    fetchRankProgress,
+    fetchLeaderboard,
+  } = useUserData();
 
   const [selectedTab, setSelectedTab] = useState<string>("General");
+  const [rank, setRank] = useState();
+  const [rankProgress, setRankProgress] = useState();
+  const [leaderboard, setLeaderboard] = useState();
 
   const [leaderboardTab, setLeaderbardTab] = useState<"friends" | "global">(
     "friends"
   );
+
+  useEffect(() => {
+    const fetchings = async () => {
+      try {
+        const [rankRes, rankProgressRes, leaderboardRes] = await Promise.all([
+          fetchRank(),
+          fetchRankProgress(),
+          fetchLeaderboard(),
+        ]);
+        console.log("Rank:", rankRes);
+        console.log("Rank Progress:", rankProgressRes);
+        console.log("Leaderboard:", leaderboardRes);
+        setRank(rankRes);
+        setRankProgress(rankProgressRes);
+        setLeaderboard(leaderboardRes);
+      } catch (error) {
+        console.error("Error fetching ranking data:", error);
+      }
+    };
+    fetchings();
+  }, [userData]);
 
   const mockData = {
     friends: [

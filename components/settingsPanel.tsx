@@ -35,7 +35,7 @@ export default function SettingsPannel(props: {
   return (
     <SectionSpacing className="mb-3">
       <ClickableCard onPress={handlePress}>
-        <RowLayout>
+        <RowLayout className="">
           <IconContainer color="accent">{props.icon}</IconContainer>
           <CardTitle className="ml-4">{props.label}</CardTitle>
         </RowLayout>

@@ -71,7 +71,7 @@ export default function AddByUsername() {
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
-      <StatusBar barStyle="light-content" backgroundColor="#c9c9c9ff" />
+      <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
 
       <Header
         title="Add by Username"

@@ -1,7 +1,13 @@
+import {
+  CardTitle,
+  ClickableCard,
+  IconContainer,
+  RowLayout,
+  SectionSpacing,
+} from "@/components/dev";
 import PrimaryButton from "@/components/primaryButton";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { Ionicons } from "@expo/vector-icons";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { RelativePathString, useRouter } from "expo-router";
@@ -24,7 +30,7 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     console.log("refreshing user data");
-    refreshUserData()
+    refreshUserData();
   }, []);
 
   const onRefresh = useCallback(async () => {
@@ -72,7 +78,6 @@ export default function ProfileScreen() {
                 source={{ uri: userData?.imageUrl }}
               />
             </View>
-           
           </View>
         </View>
 
@@ -136,51 +141,36 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* Friends Section */}
-          <TouchableOpacity 
-            onPress={() => router.push("/(screens)/friends")}
-            className="mb-6"
-          >
-            <View className="flex flex-row justify-between items-center bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-              <View className="flex flex-row items-center">
-                <View className="w-12 h-12 bg-iconGreen/10 rounded-2xl flex items-center justify-center mr-4">
+          <SectionSpacing className="mb-3">
+            <ClickableCard onPress={() => router.push("/(screens)/friends")}>
+              <RowLayout className="">
+                <IconContainer color="green">
                   <Ionicons name="people" size={20} color="#10B981" />
-                </View>
-                <Text className="text-textDark text-lg font-semibold">
-                  Your Friends
-                </Text>
-              </View>
-              <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center">
-                <AntDesign name="arrowright" size={20} color="#6B7280" />
-              </View>
-            </View>
-          </TouchableOpacity>
+                </IconContainer>
+                <CardTitle className="ml-4"> Your Friends</CardTitle>
+              </RowLayout>
+            </ClickableCard>
+          </SectionSpacing>
 
-
-          {/* //! addoptimistic updates */}
-          <TouchableOpacity
-            onPress={() => router.push("/(screens)/editNote")}
-            className="mb-8"
-          >
-            <View className="flex flex-row items-center justify-between bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-              <View className="flex-1 flex flex-row items-center">
-                <View className="w-12 h-12 bg-sessionBlue/10 rounded-2xl flex items-center justify-center mr-4">
+          <SectionSpacing className="mb-8">
+            <ClickableCard onPress={() => router.push("/(screens)/editNote")}>
+              <RowLayout className="flex-1">
+                <IconContainer color="blue" className="mr-4">
                   <FontAwesome name="sticky-note-o" size={18} color="#3B82F6" />
-                </View>
+                </IconContainer>
                 <Text
                   className={`flex-1 text-lg font-medium ${
                     userData?.note ? "text-textBlack" : "text-textGray"
                   }`}
                   numberOfLines={2}
                 >
-                  {userData?.note ? userData.note : "Add a personal note (only visible to you)"}
+                  {userData?.note
+                    ? userData.note
+                    : "Add a personal note (only visible to you)"}
                 </Text>
-              </View>
-              <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center ml-3">
-                <AntDesign name="arrowright" size={20} color="#6B7280" />
-              </View>
-            </View>
-          </TouchableOpacity>
+              </RowLayout>
+            </ClickableCard>
+          </SectionSpacing>
         </ScrollView>
       </View>
     </SafeAreaView>

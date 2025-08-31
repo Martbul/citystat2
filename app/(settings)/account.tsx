@@ -9,12 +9,26 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryModal from "@/components/primaryModal";
+import {
+  PageContainer,
+  Card,
+  SectionTitle,
+  BodyText,
+  MutedText,
+  RowLayout,
+  SpaceBetweenRow,
+  SectionSpacing,
+  PageTitle,
+  CardTitle,
+  IconContainer,
+  ClickableCard,
+} from "@/components/dev";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 export default function Account() {
-  const [accountTab, setAccountTab] = useState<string>("Security");
   const { userData } = useUserData();
 
   const [accountInfo, setAccountInfo] = useState<any[]>([]);
@@ -41,21 +55,25 @@ export default function Account() {
           label: "Username",
           route: `/(settings)/editSetting?data=${userData?.userName}&header=Username`,
           seconLabel: userData?.userName,
+          icon: "person-outline",
         },
         {
           label: "Display Name",
           route: "/(settings)/editProfile",
           seconLabel: `${userData?.firstName} ${userData?.lastName || ""}`,
+          icon: "badge-outline",
         },
         {
           label: "Email",
           route: "/(settings)/account",
           seconLabel: userData?.email,
+          icon: "mail-outline",
         },
         {
           label: "Phone",
           route: `/(settings)/editSetting?data=${userData?.phoneNumber}&header=Phone`,
           seconLabel: userData?.phoneNumber,
+          icon: "call-outline",
         },
       ]);
 
@@ -63,45 +81,45 @@ export default function Account() {
         {
           label: "Password",
           route: "/(auth)/resetPassword",
+          icon: "lock-closed-outline",
+          description: "Update your password",
+        },
+        {
+          label: "Two-Factor Authentication",
+          route: "/(settings)/2fa",
+          icon: "shield-checkmark-outline",
+          description: "Add extra security to your account",
         },
       ]);
 
       setAccountManagement([
         {
           label: "Disable Account",
-          //TODO: MAKE THE FUNC FOR DISABLELING ACC -> add flag in db that the acc is disalbed(when user tries to logs -> alert that acc is disable and just able to see stats on index screen)
-          onConfirmFunc: () => console.log("conf"),
+          onConfirmFunc: () => console.log("disable account"),
+          icon: "pause-circle",
+          description: "Temporarily disable your account",
         },
         {
-          //TODO: MAKE THE FUNC DELETING DISABLELING ACC -> delete from cleark and db
-
           label: "Delete Account",
-          onConfirmFunc: () => console.log("conf"),
+          onConfirmFunc: () => console.log("delete account"),
+          icon: "trash",
+          description: "Permanently delete your account and all data",
         },
       ]);
     }
   }, [userData]);
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground">
+    <PageContainer>
       <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
       <Header title="Account" />
-      <TabSelector
-        tab={accountTab}
-        setTab={setAccountTab}
-        tabOne="Security"
-        tabTwo="Standing"
-      />
 
-      {accountTab === "Security" && (
-        <Security
-          accountInfo={accountInfo}
-          signInManagement={signInManagement}
-          accountManagement={accountManagement}
-          openModal={openModal}
-        />
-      )}
-      {accountTab === "Standing" && <Standing />}
+      <Security
+        accountInfo={accountInfo}
+        signInManagement={signInManagement}
+        accountManagement={accountManagement}
+        openModal={openModal}
+      />
 
       <PrimaryModal
         visible={modalVisible}
@@ -109,12 +127,17 @@ export default function Account() {
         title={modalLabel}
         confirmFn={modalConformationFunc}
       >
-        <Text className="text-center text-base">
-          Modal content for <Text className="font-semibold">{modalLabel}</Text>{" "}
-          goes here.
+        <Text className="text-center text-base text-textGray">
+          Are you sure you want to proceed with{" "}
+          <Text className="font-semibold text-textBlack">{modalLabel}</Text>?
+          {modalLabel.includes("Delete") && (
+            <Text className="text-red-500 font-medium">
+              {"\n\n"}This action cannot be undone.
+            </Text>
+          )}
         </Text>
       </PrimaryModal>
-    </SafeAreaView>
+    </PageContainer>
   );
 }
 
@@ -135,96 +158,88 @@ const Security = ({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 32 }}
     >
-      <SettingsRoutingSection title="Account Information" data={accountInfo} />
+      <View className="px-4 pt-6">
+        {/* Account Information */}
+        <SectionSpacing>
+          <SectionTitle>Personal Information</SectionTitle>
+          <View className="space-y-3">
+            {accountInfo.map((item, index) => (
+              <ClickableCard
+                key={index}
+                onPress={() => console.log("Navigate to", item.route)}
+              >
+                <RowLayout className="gap-4">
+                  <IconContainer size="medium" color="neutral">
+                    <Ionicons name={item.icon} size={20} color="#6B7280" />
+                  </IconContainer>
+                  <View className="flex-1">
+                    <BodyText className="font-semibold mb-1">
+                      {item.label}
+                    </BodyText>
+                    <MutedText className="text-sm">{item.seconLabel}</MutedText>
+                  </View>
+                </RowLayout>
+              </ClickableCard>
+            ))}
+          </View>
+        </SectionSpacing>
 
-      <SettingsRoutingSection
-        title="Security & Sign-in"
-        data={signInManagement}
-        containerStyle="mt-8 mx-4"
-      />
+        {/* Security & Sign-in */}
+        <SectionSpacing>
+          <SectionTitle>Security & Privacy</SectionTitle>
+          <View className="space-y-3">
+            {signInManagement.map((item, index) => (
+              <ClickableCard
+                key={index}
+                onPress={() => console.log("Navigate to", item.route)}
+              >
+                <RowLayout className="gap-4">
+                  <IconContainer size="medium" color="blue">
+                    <Ionicons name={item.icon} size={20} color="#3B82F6" />
+                  </IconContainer>
+                  <View className="flex-1">
+                    <BodyText className="font-semibold mb-1">
+                      {item.label}
+                    </BodyText>
+                    <MutedText className="text-sm">
+                      {item.description}
+                    </MutedText>
+                  </View>
+                </RowLayout>
+              </ClickableCard>
+            ))}
+          </View>
+        </SectionSpacing>
 
-      <View className="mt-8 mx-4">
-        <Text className="text-base font-semibold text-red-500 mb-3">
-          Account Management
-        </Text>
-        {accountManagement.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            className="py-4 border-b border-gray-200"
-            onPress={() => openModal(item.label, item.onConfirmFunc)}
-          >
-            <Text className="text-red-500 text-base">{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
-  );
-};
-
-const Standing = () => {
-  return (
-    <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
-      <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-        <Text className="text-2xl font-bold text-gray-900 mb-2">
-          Account Standing
-        </Text>
-        <Text className="text-base text-gray-600 leading-6">
-          Monitor your account status, compliance metrics, and standing within
-          the platform.
-        </Text>
-      </View>
-
-      <View className="space-y-4 mb-6">
-        <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-semibold text-gray-900">
-              Account Status
-            </Text>
-            <View className="bg-green-100 px-3 py-1 rounded-full">
-              <Text className="text-sm font-medium text-green-800">
-                Good Standing
-              </Text>
+        {/* Account Management - Danger Zone */}
+        <SectionSpacing>
+          <SectionTitle className="text-red-500 mb-3">Danger Zone</SectionTitle>
+          <Card className="border-red-200 bg-red-50/30">
+            <View className="space-y-4">
+              {accountManagement.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="flex-row items-center gap-4 py-2"
+                  onPress={() => openModal(item.label, item.onConfirmFunc)}
+                  activeOpacity={0.7}
+                >
+                  <IconContainer size="medium" color="red">
+                    <MaterialIcons name={item.icon} size={20} color="white" />
+                  </IconContainer>
+                  <View className="flex-1">
+                    <Text className="text-red-600 font-semibold text-base mb-1">
+                      {item.label}
+                    </Text>
+                    <Text className="text-red-500/80 text-sm">
+                      {item.description}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#DC2626" />
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
-          <Text className="text-gray-600">
-            Your account is in good standing with no violations or restrictions.
-          </Text>
-        </View>
-
-        <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-semibold text-gray-900">
-              Compliance Score
-            </Text>
-            <Text className="text-xl font-bold text-blue-600">95%</Text>
-          </View>
-          <Text className="text-gray-600">
-            Your compliance with platform policies and guidelines.
-          </Text>
-        </View>
-      </View>
-
-      {/* Recent Activity */}
-      <View className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <Text className="text-lg font-semibold text-gray-900 mb-4">
-          Recent Activity
-        </Text>
-        <View className="space-y-3">
-          <View className="flex-row justify-between items-center py-2">
-            <Text className="text-gray-600">Last Login</Text>
-            <Text className="text-gray-900 font-medium">Today, 2:30 PM</Text>
-          </View>
-          <View className="h-px bg-gray-100" />
-          <View className="flex-row justify-between items-center py-2">
-            <Text className="text-gray-600">Profile Updated</Text>
-            <Text className="text-gray-900 font-medium">3 days ago</Text>
-          </View>
-          <View className="h-px bg-gray-100" />
-          <View className="flex-row justify-between items-center py-2">
-            <Text className="text-gray-600">Security Check</Text>
-            <Text className="text-gray-900 font-medium">1 week ago</Text>
-          </View>
-        </View>
+          </Card>
+        </SectionSpacing>
       </View>
     </ScrollView>
   );

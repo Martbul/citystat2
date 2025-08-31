@@ -2,94 +2,10 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Modal } from "react-native";
 import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Header from "@/components/header";
+import { BodyText, Card, CardTitle, IconContainer, MutedText, PageContainer, PageTitle, RowLayout } from "@/components/dev";
 
-// Import your existing components
-const PageContainer = ({ children }) => (
-  <SafeAreaView className="flex-1 bg-containerBg">{children}</SafeAreaView>
-);
 
-const GradientHeader = ({ children }) => (
-  <View className="flex flex-row items-center justify-between gap-3 px-4 pt-8 pb-9 bg-gradient-to-br from-panelDark to-panelDarker">
-    {children}
-  </View>
-);
-
-const HeaderButton = ({ onPress, children }) => (
-  <TouchableOpacity
-    className="flex justify-center items-center w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20"
-    onPress={onPress}
-  >
-    {children}
-  </TouchableOpacity>
-);
-
-const Card = ({ children, className = "" }) => (
-  <View
-    className={`bg-white rounded-3xl p-6 shadow-sm border border-gray-100 ${className}`}
-  >
-    {children}
-  </View>
-);
-
-const IconContainer = ({
-  size = "medium",
-  color = "accent",
-  className = "",
-  children,
-}) => {
-  const sizeClasses = {
-    small: "w-8 h-8",
-    medium: "w-12 h-12",
-    large: "w-14 h-14",
-  };
-
-  const colorClasses = {
-    accent: "bg-accent",
-    green: "bg-green-100",
-    blue: "bg-blue-100",
-    neutral: "bg-gray-100",
-    red: "bg-red-100",
-    transparent: "bg-transparent",
-  };
-
-  return (
-    <View
-      className={`${sizeClasses[size]} ${colorClasses[color]} rounded-2xl flex items-center justify-center shadow-sm ${className}`}
-    >
-      {children}
-    </View>
-  );
-};
-
-const PageTitle = ({ children, className = "" }) => (
-  <Text className={`text-gray-900 text-3xl font-bold mb-2 ${className}`}>
-    {children}
-  </Text>
-);
-
-const CardTitle = ({ children, className = "" }) => (
-  <Text className={`text-gray-900 text-lg font-semibold ${className}`}>
-    {children}
-  </Text>
-);
-
-const BodyText = ({ children, className = "" }) => (
-  <Text className={`text-gray-800 text-base font-medium ${className}`}>
-    {children}
-  </Text>
-);
-
-const MutedText = ({ children, className = "" }) => (
-  <Text className={`text-gray-500 text-sm font-medium ${className}`}>
-    {children}
-  </Text>
-);
-
-const RowLayout = ({ children, className = "" }) => (
-  <View className={`flex flex-row items-center ${className}`}>{children}</View>
-);
-
-// Custom Calendar Components
 const CalendarDay = ({ day, data, onPress, isToday, isSelected }) => {
   const hasData =
     data && (data.steps > 0 || data.streetsVisited > 0 || data.timeActive > 0);
@@ -371,18 +287,8 @@ const CalendarScreen = () => {
 
   return (
     <PageContainer>
-      <GradientHeader>
-        <View className="flex-1">
-          <Text className="text-white text-2xl font-bold">Calendar</Text>
-          <MutedText className="text-white/70">
-            Track your daily progress
-          </MutedText>
-        </View>
-        <HeaderButton onPress={() => console.log("Today")}>
-          <Ionicons name="today" size={24} color="white" />
-        </HeaderButton>
-      </GradientHeader>
-
+            <Header title="Settings" />
+      
       <ScrollView className="flex-1 px-4">
         {/* Month Navigation */}
         <Card className="mt-6">

@@ -1,7 +1,6 @@
-import RadioSection from "@/components/radioSection";
-import SettingsTouchableSection from "@/components/settingsTouchableSection";
 import Slider from "@/components/Slider";
 import Header from "@/components/header";
+
 import {
   displayMessagesOptions,
   fontStyleOptions,
@@ -14,11 +13,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ScrollView,
   StatusBar,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { BodyText, Card, MutedText, PageContainer, SectionSpacing, SectionTitle, SpaceBetweenRow } from "@/components/dev";
+import RadioSection from "@/components/radioSection";
+import SettingsTouchableSection from "@/components/settingsTouchableSection";
 
 export default function Appearance() {
   const { settings, updateSettings, isLoading } = useUserData();
@@ -50,7 +50,6 @@ export default function Appearance() {
     ]);
 
     // Set zoom level from settings
-    //TODO: Zoom and contrast wtf??
     if (settings.zoomLevel) {
       setContrast(parseInt(settings.zoomLevel));
     }
@@ -78,8 +77,8 @@ export default function Appearance() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-lightBackground">
-      <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
+    <PageContainer>
+      <StatusBar barStyle="light-content" backgroundColor="#fafafa" />
       <Header title="Appearance" />
 
       <ScrollView
@@ -87,156 +86,137 @@ export default function Appearance() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        <RadioSection
-          title="Theme"
-          options={themeOptions}
-          selectedValue={settings.theme}
-          onValueChange={(value) => handleSettingUpdate({ theme: value })}
-          disabled={isLoading}
-        />
+        <View className="px-4 pt-6">
+          <RadioSection
+            title="Theme"
+            options={themeOptions}
+            selectedValue={settings.theme}
+            onValueChange={(value) => handleSettingUpdate({ theme: value })}
+            disabled={isLoading}
+          />
 
-        <RadioSection
-          title="Role Colors"
-          options={roleColorOptions}
-          selectedValue={settings.showRoleColors}
-          onValueChange={(value) =>
-            handleSettingUpdate({ showRoleColors: value })
-          }
-          disabled={isLoading}
-        />
+          <RadioSection
+            title="Role Colors"
+            options={roleColorOptions}
+            selectedValue={settings.showRoleColors}
+            onValueChange={(value) =>
+              handleSettingUpdate({ showRoleColors: value })
+            }
+            disabled={isLoading}
+          />
 
-        <SettingsTouchableSection
-          title="Display Settings"
-          data={displaySettings}
-          containerStyle="mt-6 mx-4"
-        />
+          <SettingsTouchableSection
+            title="Display Settings"
+            data={displaySettings}
+          />
 
-        <View className="mt-6 mx-4">
-          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <View className="bg-lightSurface rounded-3xl">
-              {/* <View className="py-4 px-4">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-lightPrimaryText font-medium">
-                    Zoom Level
-                  </Text>
-                  <Text className="text-lightSecondaryText">
-                    {settings.zoomLevel}%
-                  </Text>
-                </View>
+          {/* Zoom Level Section - Commented out but ready to use */}
+          {/* 
+          <SectionSpacing>
+            <SectionTitle>Zoom Level</SectionTitle>
+            <Card>
+              <SpaceBetweenRow className="mb-4">
+                <BodyText>Zoom Level</BodyText>
+                <MutedText>{settings.zoomLevel}%</MutedText>
+              </SpaceBetweenRow>
 
-                <Slider
-                  minimumValue={50}
-                  maximumValue={150}
-                  value={Number(settings.zoomLevel)} //TODO: Change zoom level to num in db, provider, interface...
-                  onValueChange={setZoomLevel}
-                  
-                  onSlidingComplete={  handleSettingUpdate({ showRoleColors: value })}
-                  z
-                  step={1}
-                  disabled={isLoading}
-                />
-                <TouchableOpacity
-                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
-                  onPress={resetZoomLevel}
-                  disabled={isLoading}
-                >
-                  <Text className="text-lightPrimaryAccent font-medium">
-                    Reset to default
-                  </Text>
-                </TouchableOpacity>
-              </View> */}
-            </View>
-          </View>
-        </View>
+              <Slider
+                minimumValue={50}
+                maximumValue={150}
+                value={Number(settings.zoomLevel)}
+                onValueChange={setZoomLevel}
+                onSlidingComplete={(value) => handleSettingUpdate({ zoomLevel: value.toString() })}
+                step={1}
+                disabled={isLoading}
+              />
 
-        <RadioSection
-          title="Message Previews"
-          options={displayMessagesOptions}
-          selectedValue={settings.messagesAllowance}
-          onValueChange={(value) =>
-            handleSettingUpdate({ messagesAllowance: value })
-          }
-          disabled={isLoading}
-        />
+              <TouchableOpacity
+                className="mt-4 bg-containerBg p-4 rounded-2xl items-center"
+                onPress={resetZoomLevel}
+                disabled={isLoading}
+              >
+                <BodyText className="text-accent font-semibold">
+                  Reset to default
+                </BodyText>
+              </TouchableOpacity>
+            </Card>
+          </SectionSpacing>
+          */}
 
-        <View className="mt-6 mx-4">
-          <Text className="text-lg font-bold text-lightPrimaryText mb-2">
-            Contrast
-          </Text>
-          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <View className="bg-lightSurface rounded-3xl">
-              <View className="py-4 px-4">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-lightPrimaryText font-medium">
-                    Contrast Level
-                  </Text>
-                  <Text className="text-lightSecondaryText">
-                    {Math.round(contrast)}%
-                  </Text>
-                </View>
-                <Slider
-                  minimumValue={50}
-                  maximumValue={150}
-                  value={contrast}
-                  onValueChange={setContrast}
-                  step={1}
-                />
-                <TouchableOpacity
-                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
-                  onPress={resetContrast}
-                >
-                  <Text className="text-lightPrimaryAccent font-medium">
-                    Reset to default
-                  </Text>
-                </TouchableOpacity>
+          <RadioSection
+            title="Message Previews"
+            options={displayMessagesOptions}
+            selectedValue={settings.messagesAllowance}
+            onValueChange={(value) =>
+              handleSettingUpdate({ messagesAllowance: value })
+            }
+            disabled={isLoading}
+          />
+
+          <SectionSpacing>
+            <SectionTitle>Contrast</SectionTitle>
+            <Card>
+              <SpaceBetweenRow className="mb-4">
+                <BodyText>Contrast Level</BodyText>
+                <MutedText>{Math.round(contrast)}%</MutedText>
+              </SpaceBetweenRow>
+
+              <Slider
+                minimumValue={50}
+                maximumValue={150}
+                value={contrast}
+                onValueChange={setContrast}
+                step={1}
+              />
+
+              <TouchableOpacity
+                className="mt-4 bg-containerBg p-4 rounded-2xl items-center"
+                onPress={resetContrast}
+              >
+                <BodyText className="text-accent font-semibold">
+                  Reset to default
+                </BodyText>
+              </TouchableOpacity>
+            </Card>
+          </SectionSpacing>
+
+          <SectionSpacing>
+            <SectionTitle>Saturation</SectionTitle>
+            <Card>
+              <SpaceBetweenRow className="mb-4">
+                <BodyText>Saturation Level</BodyText>
+                <MutedText>{Math.round(saturation)}%</MutedText>
+              </SpaceBetweenRow>
+
+              <Slider
+                minimumValue={0}
+                maximumValue={100}
+                value={saturation}
+                onValueChange={setSaturation}
+                step={1}
+              />
+
+              <TouchableOpacity
+                className="mt-4 bg-containerBg p-4 rounded-2xl items-center"
+                onPress={resetSaturation}
+              >
+                <BodyText className="text-accent font-semibold">
+                  Reset to default
+                </BodyText>
+              </TouchableOpacity>
+
+              <View className="mt-4">
+                <MutedText className="text-center leading-5">
+                  Reduce the colour saturation within the application for those with
+                  colour sensitivities. This does not affect the saturation of
+                  images, videos, role colours or other user-provided content by
+                  default.
+                </MutedText>
               </View>
-            </View>
-          </View>
-        </View>
-
-        <View className="mt-6 mx-4">
-          <Text className="text-lg font-bold text-lightPrimaryText mb-2">
-            Saturation
-          </Text>
-          <View className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <View className="bg-lightSurface rounded-3xl">
-              <View className="py-4 px-4">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-lightPrimaryText font-medium">
-                    Saturation Level
-                  </Text>
-                  <Text className="text-lightSecondaryText">
-                    {Math.round(saturation)}%
-                  </Text>
-                </View>
-                <Slider
-                  minimumValue={0}
-                  maximumValue={100}
-                  value={saturation}
-                  onValueChange={setSaturation}
-                  step={1}
-                />
-                <TouchableOpacity
-                  className="mt-3 bg-gray-100 p-3 rounded-xl items-center"
-                  onPress={resetSaturation}
-                >
-                  <Text className="text-lightPrimaryAccent font-medium">
-                    Reset to default
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-          <View className="flex items-center justify-center">
-            <Text className="text-lightPrimaryText text-sm mt-2">
-              Reduce the colour saturation within the application for those with
-              colour sensitivities. This does not affect the saturation of
-              images, videos, role colours or other user-provided content by
-              default.
-            </Text>
-          </View>
+            </Card>
+          </SectionSpacing>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </PageContainer>
   );
 }

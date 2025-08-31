@@ -6,7 +6,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View, Image } from "react-native";
+import { FlatList, Text, TouchableOpacity, View, Image, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Friends() {
@@ -20,18 +20,17 @@ export default function Friends() {
       if (userData?.id) {
         const data = await getFriends();
         console.log("Friends data:", data);
-        setFriends(data); // Now data is directly the friends array
+        setFriends(data); 
       }
     };
     getFnds();
   }, [userData?.id]);
 
-  // Alternative approach using a separate function for refresh
   const handleRefresh = async () => {
     if (userData?.id) {
       const data = await getFriends();
       console.log("Refreshed friends data:", data);
-      setFriends(data); // Now data is directly the friends array
+      setFriends(data);
     }
   };
 
@@ -87,7 +86,6 @@ export default function Friends() {
   };
 
   const renderEmptyComponent = () => {
-    // Add debugging info
     console.log("Rendering empty component. Friends length:", friends.length, "Search:", search);
     
     if (isLoading) {
@@ -126,13 +124,10 @@ export default function Friends() {
     router.push("/(screens)/addByUsername");
   };
 
-  // Debug info
-  console.log("Current friends state:", friends);
-  console.log("Filtered friends:", filteredFriends);
-  console.log("Is loading:", isLoading);
-
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
+            <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
+      
       <Header
         title="Friends"
         secondActionTitle="Add friends"
@@ -154,7 +149,7 @@ export default function Friends() {
           renderItem={renderFriendItem}
           ListEmptyComponent={renderEmptyComponent}
           refreshing={isLoading}
-          onRefresh={handleRefresh} // Use the new handleRefresh function
+          onRefresh={handleRefresh} 
           showsVerticalScrollIndicator={false}
         />
       </View>

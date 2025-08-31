@@ -39,16 +39,21 @@ const DashboardCard = (props: {
         <DashboardCard
           label="Stats"
           icon={<Ionicons name="stats-chart" size={24} color="black" />}
+          navigationPath={"/(screens)/stats" as RelativePathString}
         />
         <DashboardCard
           label="Global"
           icon={<Ionicons name="globe-outline" size={24} color="black" />}
+                    navigationPath={"/(screens)/global" as RelativePathString}
+
         />
       </View>
       <View className="flex flex-row gap-2">
         <DashboardCard
           label="Friends"
           icon={<FontAwesome5 name="user-friends" size={24} color="black" />}
+                    navigationPath={"/(screens)/friends" as RelativePathString}
+
         />
         <DashboardCard
           label="Calendar"
