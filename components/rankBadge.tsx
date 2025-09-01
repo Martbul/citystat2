@@ -19,7 +19,7 @@ export const RankBadge = ({ rank, size = "medium" }: { rank: number, size?: "sma
   return (
     <View className={`${sizeClasses[size]} ${getRankColor(rank)} rounded-full flex items-center justify-center`}>
       <Text className={`font-bold ${rank <= 3 ? 'text-white' : rank <= 10 ? 'text-white' : 'text-textDark'}`}>
-        #{rank}
+        {rank}
       </Text>
     </View>
   );

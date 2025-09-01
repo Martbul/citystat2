@@ -121,6 +121,7 @@ export interface UserDataContextType {
   getLocationPermission: () => Promise<any>;
   fetchVisitedStreets: () => Promise<any>;
   fetchUsersSameCity : () => Promise<any>;
+  fetchLocalLeaderboard: () => Promise<any>;
   saveVisitedStreets: (
     visitedStreets: SaveVisitedStreetsRequest
   ) => Promise<any>;
@@ -150,5 +151,5 @@ export interface UserDataContextType {
   addFriendByUser: (friendUser: UserData) => Promise<boolean>;
   fetchRank: () => Promise<any>;
   fetchRankProgress: () => Promise<any>;
-  fetchLeaderboard: () => Promise<any>;
+  fetchGlobalLeaderboard: () => Promise<any>;
 }

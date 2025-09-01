@@ -1,56 +1,43 @@
 import {
-  Card,
-  GradientHeader,
-  HeaderButton,
+  CardTitle,
+  ClickableCard,
+  IconContainer,
   MutedText,
   PageContainer,
   PageTitle,
   RowLayout,
   SectionSpacing,
-  SectionTitle,
 } from "@/components/dev";
-import { AchievementBadge } from "@/components/rankAchivementBadge";
 import { RankBadge } from "@/components/rankBadge";
 import { LeaderboardItem } from "@/components/rankingLeaderboard";
-import { RankLevelCard } from "@/components/rankLevelCard";
-import { RankProgressBar } from "@/components/rankProgressBar";
-import { RankStatCard } from "@/components/rankStatCard";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RankingScreen() {
-  const router = useRouter();
-  const {
-    userData,
-    isLoading,
-    fetchRank,
-    fetchRankProgress,
-    fetchLeaderboard,
-  } = useUserData();
+  const { userData, isLoading, fetchGlobalLeaderboard, fetchLocalLeaderboard } =
+    useUserData();
 
-  const [selectedTab, setSelectedTab] = useState<string>("General");
-
-  const [leaderboard, setLeaderboard] = useState();
-
-  const [leaderboardTab, setLeaderbardTab] = useState<"friends" | "global">(
-    "friends"
-  );
+  const [globalLeaderboard, setGlobalLeaderboard] = useState();
+  const [localLeaderboard, setLocalLeaderboard] = useState();
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState<
+    "Global" | "Local"
+  >("Global");
 
   useEffect(() => {
     const fetchings = async () => {
       try {
-        const [rankRes, rankProgressRes, leaderboardRes] = await Promise.all([
-          fetchRank(),
-          fetchRankProgress(),
-          fetchLeaderboard(),
+        const [globalLeaderboardRes, localLeaderboardRes] = await Promise.all([
+          fetchGlobalLeaderboard(),
+          fetchLocalLeaderboard(),
         ]);
-        console.log("Rank:", rankRes);
-        console.log("Rank Progress:", rankProgressRes);
-        console.log("Leaderboard:", leaderboardRes);
+        console.log("Global Leaderboard:", globalLeaderboardRes);
+        console.log("Local Leaderboard:", localLeaderboardRes);
+
+        setGlobalLeaderboard(globalLeaderboardRes.leaderboard);
+        setLocalLeaderboard(localLeaderboardRes.leaderboard);
       } catch (error) {
         console.error("Error fetching ranking data:", error);
       }
@@ -58,85 +45,13 @@ export default function RankingScreen() {
     fetchings();
   }, [userData]);
 
-  const stats = {
-    totalXP: 15750,
-    challengesCompleted: 127,
-    averageScore: 87.3,
-    streak: 12,
-    timeSpent: "48h 23m",
-    rank: 7,
+  const handleLeaderboardSelection = () => {
+    if (selectedLeaderboard === "Global") {
+      setSelectedLeaderboard("Local");
+    } else if (selectedLeaderboard === "Local") {
+      setSelectedLeaderboard("Global");
+    }
   };
-
-  const currentUser = {
-    id: "current",
-    name: "You",
-    level: "Gold Elite",
-    title: "Rising Star",
-    points: 15750,
-    avatar: null,
-    rank: 7,
-  };
-
-  const leaderboardData = [
-    {
-      id: "1",
-      name: "Alex Chen",
-      level: "Diamond",
-      title: "Champion",
-      points: 25890,
-      avatar: null,
-    },
-    {
-      id: "2",
-      name: "Sarah Kim",
-      level: "Diamond",
-      title: "Master",
-      points: 24100,
-      avatar: null,
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      level: "Platinum",
-      title: "Expert",
-      points: 22750,
-      avatar: null,
-    },
-    {
-      id: "4",
-      name: "Emma Davis",
-      level: "Platinum",
-      title: "Pro",
-      points: 20300,
-      avatar: null,
-    },
-    {
-      id: "5",
-      name: "Chris Wilson",
-      level: "Gold Elite",
-      title: "Veteran",
-      points: 18900,
-      avatar: null,
-    },
-    {
-      id: "6",
-      name: "Lisa Brown",
-      level: "Gold Elite",
-      title: "Skilled",
-      points: 16800,
-      avatar: null,
-    },
-    currentUser,
-    {
-      id: "8",
-      name: "Tom Garcia",
-      level: "Gold",
-      title: "Achiever",
-      points: 14200,
-      avatar: null,
-    },
-  ];
-
 
   if (isLoading) {
     return (
@@ -149,28 +64,57 @@ export default function RankingScreen() {
       </SafeAreaView>
     );
   }
+
   return (
     <PageContainer className="px-6 pt-8">
       <SectionSpacing className="my-4">
-        <PageTitle>Leaderboard</PageTitle>
-        <RowLayout>
-          <RankBadge rank={currentUser.rank} size="small" />
-          <MutedText className="ml-2">Your current rank</MutedText>
+        <PageTitle>{selectedLeaderboard} Leaderboard</PageTitle>
+        <RowLayout className="flex flex-row justify-between">
+          <View className="flex flex-row">
+            <RankBadge rank={9} size="small" />
+            <MutedText className="ml-2">Current rank</MutedText>
+          </View>
+          <View>
+            <SectionSpacing >
+              <ClickableCard arrowBoxClassName="w-7 h-7 mr-1" arrowSize={16} className="p-0" onPress={handleLeaderboardSelection}>
+                <RowLayout className="py-2 px-5">
+                  <CardTitle className="text-sm">
+                    {selectedLeaderboard === "Global" && "Local Leaderboard"}
+                    {selectedLeaderboard === "Local" && "Global Leaderboard"}
+                  </CardTitle>
+                </RowLayout>
+              </ClickableCard>
+            </SectionSpacing>
+            
+          </View>
         </RowLayout>
       </SectionSpacing>
 
-      <ScrollView>
-        {leaderboardData.map((user, index) => (
-          <LeaderboardItem
-            key={user.id}
-            user={user}
-            rank={index + 1}
-            isCurrentUser={user.id === "current"}
-          />
-        ))}
-      </ScrollView>
+      {globalLeaderboard && selectedLeaderboard === "Global" && (
+        <ScrollView>
+          {globalLeaderboard.map((user, index) => (
+            <LeaderboardItem
+              key={user.userId}
+              user={user}
+              rank={index + 1}
+              isCurrentUser={user.userId === userData?.id}
+            />
+          ))}
+        </ScrollView>
+      )}
 
-      
+      {localLeaderboard && selectedLeaderboard === "Local" && (
+        <ScrollView>
+          {localLeaderboard.map((user, index) => (
+            <LeaderboardItem
+              key={user.userId}
+              user={user}
+              rank={index + 1}
+              isCurrentUser={user.userId === userData?.id}
+            />
+          ))}
+        </ScrollView>
+      )}
     </PageContainer>
   );
 }

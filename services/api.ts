@@ -318,6 +318,13 @@ class ApiService {
   }
 
   
+    async fetchLocalLeaderboard(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/rank/leaderboard/local`, {
+      method: "GET",
+      token,
+    });
+  }
+  
 }
 
 export const apiService = new ApiService();

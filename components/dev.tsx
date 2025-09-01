@@ -40,11 +40,15 @@ export const Card = ({ children, className = "" }: { children: React.ReactNode, 
 export const ClickableCard = ({ 
   onPress, 
   children, 
-  className = "" 
+  className = "",
+  arrowSize = 20,
+  arrowBoxClassName = "",
 }: { 
   onPress: () => void, 
   children: React.ReactNode, 
   className?: string 
+  arrowSize?: number
+  arrowBoxClassName?: string
 }) => (
   <TouchableOpacity 
     onPress={onPress}
@@ -52,8 +56,8 @@ export const ClickableCard = ({
     className={`flex flex-row justify-between items-center bg-white rounded-3xl p-6 shadow-sm border border-gray-100 ${className}`}
   >
     {children}
-    <View className="w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center">
-      <AntDesign name="arrowright" size={20} color="#6B7280" />
+    <View className={`w-10 h-10 bg-containerBg rounded-2xl flex items-center justify-center ${arrowBoxClassName} `}>
+      <AntDesign name="arrowright" size={arrowSize} color="#6B7280" />
     </View>
   </TouchableOpacity>
 );

@@ -682,7 +682,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
 
   
 
-  const fetchLeaderboard = useCallback(async (): Promise<any> => {
+  const fetchGlobalLeaderboard = useCallback(async (): Promise<any> => {
     if (!user?.id) {
       return null;
     }
@@ -696,14 +696,46 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
 
       const success = await apiService.fetchLeaderboard(token);
 
-      console.log("Leaderboard", success);
+      console.log("Global Leaderboard", success);
 
       return success;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch leaderboard";
+        err instanceof Error ? err.message : "Failed to fetch global leaderboard";
       setError(errorMessage);
-      console.error("Error while fetching leaderboard:", err); 
+      console.error("Error while fetching global leaderboard:", err); 
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+  
+
+
+  
+
+  const fetchLocalLeaderboard = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const token = await getToken();
+      if (!token) return null;
+
+      const success = await apiService.fetchLocalLeaderboard(token);
+
+      console.log("Local Leaderboard", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch local leaderboard";
+      setError(errorMessage);
+      console.error("Error while fetching local leaderboard:", err); 
       return null;
     } finally {
       setIsLoading(false);
@@ -756,7 +788,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       refreshUserData,
       fetchRank,
       fetchRankProgress,
-      fetchLeaderboard,
+      fetchGlobalLeaderboard,
 
       // Legacy derived values (for backwards compatibility)
       completedTutorial: derivedValues.completedTutorial,
@@ -774,6 +806,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       updateCityStats,
       searchUsers,
       foundUsers,
+      fetchLocalLeaderboard,
     }),
     [
       userData,
@@ -800,6 +833,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       updateCityStats,
       searchUsers,
       foundUsers,
+      fetchLocalLeaderboard,
     ]
   );
 
