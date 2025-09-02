@@ -6,23 +6,21 @@ import { useEffect, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function Appearance() {
+export default function Accessibility() {
   const { settings, updateSettings, isLoading } = useUserData();
-
 
   const [colorsInfo, setColorsInfo] = useState<any[]>([]);
   const [motion, setMotion] = useState<any[]>([]);
   const [stickers, setStickers] = useState<any[]>([]);
 
-    const getDisplayValue = (value: any, options: any[]) => {
+  const getDisplayValue = (value: any, options: any[]) => {
     const option = options.find((opt) => opt.value === value);
     return option?.label || value;
   };
 
-   const handleSettingUpdate = async (settingUpdates: any) => {
+  const handleSettingUpdate = async (settingUpdates: any) => {
     await updateSettings(settingUpdates);
   };
-
 
   useEffect(() => {
     if (userData) {

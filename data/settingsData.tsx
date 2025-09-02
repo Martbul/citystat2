@@ -1,4 +1,4 @@
-import { FontAwesome5, Ionicons, AntDesign, Feather, MaterialCommunityIcons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons, AntDesign, Feather, MaterialCommunityIcons, MaterialIcons, FontAwesome, SimpleLineIcons } from "@expo/vector-icons";
 
 export const settings = [
   {
@@ -13,9 +13,7 @@ export const settings = [
   },
   {
     label: "Devices",
-    icon: () => (
-     <MaterialIcons name="devices" size={24} color="black" />
-    ),
+    icon: () => <MaterialIcons name="devices" size={24} color="black" />,
     route: "/(settings)/devices",
   },
   // {
@@ -25,7 +23,9 @@ export const settings = [
   // },
   {
     label: "Appearance",
-    icon: () => <MaterialCommunityIcons name="palette-outline" size={24} color="black" />,
+    icon: () => (
+      <MaterialCommunityIcons name="palette-outline" size={24} color="black" />
+    ),
     route: "/(settings)/appearance",
   },
   // {
@@ -54,13 +54,18 @@ export const settings = [
     route: "/(settings)/support",
   },
   {
-    label: "Acknowledgements",
-    icon: () => <AntDesign name="exclamationcircleo" size={24} color="black" />,
-    route: "/(settings)/acknowledgements",
+    label: "Info",
+    icon: () => <SimpleLineIcons name="info" size={24} color="black" />,
+    route: "/(settings)/info",
   },
-  {
-    label: "What's New",
-    icon: () => <AntDesign name="infocirlceo" size={24} color="black" />,
-    route: "/(settings)/whatsNew",
-  },
+  // {
+  //   label: "Acknowledgements",
+  //   icon: () => <AntDesign name="exclamationcircleo" size={24} color="black" />,
+  //   route: "/(settings)/acknowledgements",
+  // },
+  // {
+  //   label: "What's New",
+  //   icon: () => <AntDesign name="infocirlceo" size={24} color="black" />,
+  //   route: "/(settings)/whatsNew",
+  // },
 ];

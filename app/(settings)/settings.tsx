@@ -1,13 +1,10 @@
 import InputBox from "@/components/inputBox";
-import Panel from "@/components/panel";
 import Header from "@/components/header";
 import { settings } from "@/data/settingsData";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import React, { useMemo, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CardTitle, ClickableCard, IconContainer, RowLayout, SectionSpacing } from "@/components/dev";
-import { Ionicons } from "@expo/vector-icons";
 import SettingsPannel from "@/components/settingsPanel";
 
 const Settings = () => {

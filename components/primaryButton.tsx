@@ -19,16 +19,16 @@ export default function PrimaryButton(props: {
   };
 
   return (
-    <View>
-      <TouchableOpacity
-        className="w-full bg-lightPrimaryAccent mt-6 py-3 rounded-lg flex flex-row items-center justify-center gap-2 font-semibold"
-        onPress={handlePress}
-      >
+    <TouchableOpacity
+      className="w-full bg-lightPrimaryAccent mt-6 py-3 rounded-lg flex-row items-center justify-center"
+      onPress={handlePress}
+    >
+      <View className="flex-row items-center justify-center gap-2">
         {props.icon && props.icon}
-        <Text className="text-lightPrimaryText font-semibold">
+        <Text className="text-lightPrimaryText font-semibold text-center">
           {props.heading}
         </Text>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 }

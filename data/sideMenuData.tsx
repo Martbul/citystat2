@@ -1,4 +1,4 @@
-import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 
 export const menuItems = [
   {
@@ -7,14 +7,14 @@ export const menuItems = [
     route: "/friends",
   },
   {
-    label: "Achievements",
-    icon: () => <MaterialIcons name="emoji-events" size={24} color="#333" />,
-    route: "/achievements",
+    label: "Challenges",
+    icon: () => <FontAwesome6 name="star" size={20} color="black" />,
+    route: "/(screens)/challenges",
   },
   {
     label: "Statistics",
     icon: () => <MaterialIcons name="bar-chart" size={24} color="#333" />,
-    route: "/statistics",
+    route: "/(screens)/statisticsScreen",
   },
   {
     label: "Settings",

@@ -40,28 +40,28 @@ export default function Ranking() {
     isLoading,
     fetchRank,
     fetchRankProgress,
-    fetchLeaderboard,
+    fetchGlobalLeaderboard,
   } = useUserData();
 
   const [rank, setRank] = useState();
   const [rankProgress, setRankProgress] = useState<rankProgres | null>();
-  const [leaderboard, setLeaderboard] = useState();
+  const [globalLeaderboard, setGlobalLeaderboard] = useState();
 
   useEffect(() => {
     const fetchings = async () => {
       try {
-        const [rankRes, rankProgressRes, leaderboardRes] = await Promise.all([
+        const [rankRes, rankProgressRes, globalLeaderboardRes] = await Promise.all([
           fetchRank(),
           fetchRankProgress(),
-          fetchLeaderboard(),
+          fetchGlobalLeaderboard(),
         ]);
         console.log("Rank:", rankRes);
         console.log("Rank Progress:", rankProgressRes);
-        console.log("Leaderboard:", leaderboardRes);
+        console.log("Leaderboard:", globalLeaderboardRes);
 
         setRank(rankRes);
         setRankProgress(rankProgressRes);
-        setLeaderboard(leaderboardRes);
+        setGlobalLeaderboard(globalLeaderboardRes);
       } catch (error) {
         console.error("Error fetching ranking data:", error);
       }
@@ -69,7 +69,7 @@ export default function Ranking() {
     fetchings();
   }, [userData]);
 
-  if (isLoading || !rankProgress || !leaderboard) {
+  if (isLoading || !rankProgress || !globalLeaderboard) {
     return (
       <SafeAreaView className="flex-1 bg-containerBg">
         <View className="flex-1 justify-center items-center">
@@ -85,7 +85,6 @@ export default function Ranking() {
   return (
     <PageContainer>
       <StatusBar barStyle="light-content" backgroundColor="#fafafa" />
-
       <Header title="Rankings" />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-4 pt-2 gap-2">
@@ -112,7 +111,7 @@ export default function Ranking() {
                 />
                 <RankStatCard
                   title="Global Rank"
-                  value={`#${leaderboard?.currentUser.rank}`}
+                  value={`#${globalLeaderboard?.currentUser.rank}`}
                   icon="leaderboard"
                   color="blue"
                   trend={{ value: 3, isPositive: true }}

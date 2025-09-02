@@ -763,7 +763,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [userData]
   );
 
-  // Context value - much cleaner now
   const contextValue: UserDataContextType = useMemo(
     () => ({
       userData,
@@ -772,8 +771,8 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       fetchVisitedStreets,
       error,
-      settings, // Single settings object
-      addFriendByUser, // Add this new method
+      settings, 
+      addFriendByUser, 
       getFriends,
       fetchOtherUserProfile,
       saveLocationPermission,
