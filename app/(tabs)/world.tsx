@@ -42,6 +42,9 @@ Mapbox.setAccessToken(mapToken!);
 //!  LOG  Successfully processed 1696 streets
 //! user is in other screens buit streets are loaded(do not remove but do it once for performace purposses)
 
+
+//! make new separate functions for traking the user cause this only log the visited strrets and cant be sed for stats like favorete place and so on....
+
 const StreetTrackingMap = () => {
   const {
     getLocationPermission,
