@@ -101,9 +101,14 @@ export interface UserData {
 }
 
 export interface UserDataContextType {
+  // --- Core state ---
   userData: UserData | null;
   settings: Settings;
+  isLoading: boolean;
+  error: string | null;
+  foundUsers: UserData[];
 
+  // --- Derived values ---
   completedTutorial: boolean;
   status: Status;
   note: string;
@@ -113,19 +118,10 @@ export interface UserDataContextType {
   cityCoveragePct: number;
   daysActive: number;
   longestStreakDays: number;
-  foundUsers: UserData[];
-  isLoading: boolean;
-  error: string | null;
-  getFriends: () => Promise<Friend[]>;
+
+  // --- Core methods ---
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
-  getLocationPermission: () => Promise<any>;
-  fetchVisitedStreets: () => Promise<any>;
-  fetchUsersSameCity : () => Promise<any>;
-  fetchLocalLeaderboard: () => Promise<any>;
-  saveVisitedStreets: (
-    visitedStreets: SaveVisitedStreetsRequest
-  ) => Promise<any>;
-  fetchOtherUserProfile: (otherUserId: string) => Promise<any>;
+  refreshUserData: () => Promise<void>;
   updateUserDetails: (
     updates: Partial<
       Omit<
@@ -139,17 +135,35 @@ export interface UserDataContextType {
   ) => Promise<void>;
   updateUserField: (field: string, value: any) => Promise<void>;
   updateUserNote: (note: string) => Promise<void>;
-  refreshUserData: () => Promise<void>;
-  saveLocationPermission: (hasPermission: boolean) => Promise<any>;
+
+  // --- Friends ---
+  getFriends: () => Promise<Friend[]>;
+  addFriendByUser: (friendUser: UserData) => Promise<boolean>;
   removeFriend: (friendId: string) => Promise<void>;
+  searchUsers: (searchQuery: string) => Promise<void>;
+  fetchOtherUserProfile: (otherUserId: string) => Promise<any>;
+
+  // --- City / Stats ---
+  fetchVisitedStreets: () => Promise<any>;
+  saveVisitedStreets: (
+    visitedStreets: SaveVisitedStreetsRequest
+  ) => Promise<any>;
+  get2MainStats: () => Promise<any>;
+  getMainRadarChartData: () => Promise<any>;
   updateCityStats: (
     cityStats: Partial<
       Omit<CityStat, "id" | "createdAt" | "updatedAt" | "userId">
     >
   ) => Promise<void>;
-  searchUsers: (searchQuery: string) => Promise<void>;
-  addFriendByUser: (friendUser: UserData) => Promise<boolean>;
+  fetchUsersSameCity: () => Promise<any>;
+
+  // --- Leaderboards & Rankings ---
+  fetchLocalLeaderboard: () => Promise<any>;
+  fetchGlobalLeaderboard: () => Promise<any>;
   fetchRank: () => Promise<any>;
   fetchRankProgress: () => Promise<any>;
-  fetchGlobalLeaderboard: () => Promise<any>;
+
+  // --- Permissions ---
+  getLocationPermission: () => Promise<any>;
+  saveLocationPermission: (hasPermission: boolean) => Promise<any>;
 }

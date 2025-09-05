@@ -1,4 +1,9 @@
 import { Settings } from "@/types/settings";
+import {
+  SaveStreetVisitStatsRequest,
+  StreetVisitApiResponse,
+  UpdateUserActiveHoursRequest,
+} from "@/types/streetVisitStats";
 import { CityStat, Friend, UserData } from "@/types/user";
 import { SaveVisitedStreetsRequest } from "@/types/world";
 
@@ -21,6 +26,7 @@ class ApiService {
       ...(token && { Authorization: `Bearer ${token}` }),
       ...fetchOptions.headers,
     };
+    console.log("Tocken " + token);
 
     console.log(`Making request to: ${this.baseUrl}${endpoint}`);
 
@@ -292,39 +298,78 @@ class ApiService {
     });
   }
 
-    async fetchRank(token: string): Promise<any> {
+  async fetchRank(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/rank`, {
       method: "GET",
       token,
     });
   }
 
-  
-    async fetchRankProgress(token: string): Promise<any> {
+  async fetchRankProgress(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/rank/progress`, {
       method: "GET",
       token,
     });
   }
 
-
-
-  
-    async fetchLeaderboard(token: string): Promise<any> {
+  async fetchLeaderboard(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/rank/leaderboard`, {
       method: "GET",
       token,
     });
   }
 
-  
-    async fetchLocalLeaderboard(token: string): Promise<any> {
+  async fetchLocalLeaderboard(token: string): Promise<any> {
     return this.makeRequest<any>(`/api/rank/leaderboard/local`, {
       method: "GET",
       token,
     });
   }
-  
+
+  async get2MainStats(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/analytics/main2stats`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  async getMainRadarChartData(token: string): Promise<any> {
+    return this.makeRequest<any>(`/api/analytics/mainRadarChartData`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  public async updateUserActiveHours(
+    request: UpdateUserActiveHoursRequest,
+    token: string
+  ): Promise<StreetVisitApiResponse> {
+    return this.makeRequest<any>(`/api/users/activeHours`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(request),
+    });
+  }
+
+  public async getStreetVisitStats(
+    token: string
+  ): Promise<StreetVisitApiResponse> {
+    return this.makeRequest<any>(`/api/streets/visitStats`, {
+      method: "GET",
+      token,
+    });
+  }
+
+  public async saveStreetVisitStats(
+    request: SaveStreetVisitStatsRequest,
+    token: string
+  ): Promise<StreetVisitApiResponse> {
+    return this.makeRequest<any>(`/api/streets/visitStats`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(request),
+    });
+  }
 }
 
 export const apiService = new ApiService();

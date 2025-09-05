@@ -54,3 +54,24 @@ export interface FetchedVisitedStreet {
   entryLatitude: number;
   entryLongitude: number;
 }
+
+export interface StreetVisitData {
+  visitCount: number;
+  firstVisit: number;
+  lastVisit: number;
+  totalTimeSpent: number; // in seconds
+  averageTimeSpent: number;
+}
+
+export interface MapTrackingPanelProps {
+  isLocationSubscrActive: string;
+  currentStreetId: string | null;
+  streetData: StreetData | null;
+  sessionCountVisitedStreets: number;
+  allCountVisitedStreets: number;
+  onClose: () => void;
+  // New props for visit tracking
+  mostVisitedStreets?: Array<{ streetId: string; visitData: StreetVisitData }>;
+  currentStreetVisitData?: StreetVisitData | null;
+  streetsByTimeSpent:any;
+}

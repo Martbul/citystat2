@@ -10,6 +10,7 @@ import "react-native-reanimated";
 import "../global.css";
 import ErrorBoundary from "@/components/errorBoundary";
 import { StatusBar } from "react-native";
+import { LocationTrackingProvider } from "@/Providers/LocationTrackingProvider";
 
 
 export default function RootLayout() {
@@ -31,29 +32,37 @@ export default function RootLayout() {
         publishableKey={clerkPublishableKey}
       >
         <UserDataProvider>
-          <TailwindProvider>
-            <SideMenuDrawerProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(screens)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="(settings)"
-                  options={{ headerShown: false }}
-                />
+          <LocationTrackingProvider>
+            <TailwindProvider>
+              <SideMenuDrawerProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(screens)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(settings)"
+                    options={{ headerShown: false }}
+                  />
 
-                <Stack.Screen
-                  name="(tutorial)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar  />
-            </SideMenuDrawerProvider>
-          </TailwindProvider>
+                  <Stack.Screen
+                    name="(tutorial)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar />
+              </SideMenuDrawerProvider>
+            </TailwindProvider>
+          </LocationTrackingProvider>
         </UserDataProvider>
       </ClerkProvider>
     </ErrorBoundary>

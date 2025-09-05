@@ -97,6 +97,10 @@ Street streaks: Longest unbroken walk without repeating streets.
 Color map: Heatmap of how much of the city you’ve “painted” by visiting.   
 Friends overlap: Compare areas visited with friends (privacy-conscious, opt-in).
 Shared challenges: Community quests like "cover the whole city as a group."
+Everyday push notification to the user with reminder to start the apps traking
+
+- location tracking enabling is saved but not fetched 
+
 
 PREDICTIONS FEATURE:
 Predictive patterns: Where you’re most likely to be at a given time.

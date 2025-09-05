@@ -90,7 +90,10 @@ export default function HomeScreen() {
     return null;
   }
 
+
+
   if (isSignedIn) {
+  
     console.log("User is signed in: " + user.id);
   }
 

@@ -18,7 +18,7 @@ export const DashboardMenu = () => {
     return (
       <TouchableOpacity
         onPress={() => navigateToPath(props.navigationPath)}
-        className="bg-lightSurface px-4 py-2 rounded-2xl border border-lightNeutralGray shadow-sm h-16 items-center justify-center min-w-[45%] max-w-[48%]"
+        className="bg-white px-4 py-2 rounded-2xl border border-lightNeutralGray shadow-sm h-16 items-center justify-center flex-1"
       >
         <View className="flex flex-row items-center gap-2">
           <View className="rounded-full p-2 bg-transparent">{props.icon}</View>

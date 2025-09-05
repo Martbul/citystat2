@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 import { View, Text } from "react-native";
 import Svg, {
   Polygon,
@@ -15,33 +16,82 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getGridPoints, getLabelPosition, getPolygonPoints } from "@/utils/charts/radarChart";
-
-const chartData = [
-  { month: "1-6", desktop: 186, mobile: 80 },
-  { month: "7-11", desktop: 305, mobile: 200 },
-  { month: "12-16", desktop: 237, mobile: 120 },
-  { month: "17-21", desktop: 73, mobile: 190 },
-  { month: "22-26", desktop: 209, mobile: 130 },
-  { month: "27-31", desktop: 214, mobile: 140 },
-];
+import {
+  getGridPoints,
+  getLabelPosition,
+  getPolygonPoints,
+} from "@/utils/charts/radarChart";
+import { useUserData } from "@/Providers/UserDataProvider";
 
 interface CustomRadarChartProps {
   data: any[];
   size: number;
 }
 
+interface ChartDataItem {
+  month: string;
+  desktop: number;
+  mobile: number;
+}
+
+interface MainChartData {
+  currentMonth: {
+    total: number;
+    monthName: string;
+    intervals: Record<string, number>;
+  };
+  previousMonth: {
+    total: number;
+    monthName: string;
+    intervals: Record<string, number>;
+  };
+}
+
+// Helper function to ensure valid numbers
+const ensureValidNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) || !isFinite(num) ? 0 : num;
+};
+
+// Helper function to validate polygon points
+const validatePolygonPoints = (points: number[][]): string => {
+  return points
+    .map(([x, y]) => `${ensureValidNumber(x)},${ensureValidNumber(y)}`)
+    .join(" ");
+};
+
 const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
   const center = size / 2;
   const maxRadius = center - 50;
-  const maxValue = Math.max(...data.flatMap((d) => [d.desktop, d.mobile]));
+  
+  // Ensure all data values are valid numbers
+  const sanitizedData = data.map(item => ({
+    ...item,
+    desktop: ensureValidNumber(item.desktop),
+    mobile: ensureValidNumber(item.mobile)
+  }));
+  
+  // Calculate maxValue with fallback
+  const allValues = sanitizedData.flatMap((d) => [d.desktop, d.mobile]);
+  const maxValue = Math.max(...allValues, 1); // Ensure maxValue is at least 1
 
- const desktopPoints = getPolygonPoints(
-   data.map((d) => d.desktop),
-   center,
-   maxRadius
-   ,maxValue);
- const mobilePoints = getPolygonPoints(data.map((d) => d.mobile), center, maxRadius ,maxValue);
+  const desktopPoints = getPolygonPoints(
+    sanitizedData.map((d) => d.desktop),
+    center,
+    maxRadius,
+    maxValue
+  );
+  
+  const mobilePoints = getPolygonPoints(
+    sanitizedData.map((d) => d.mobile),
+    center,
+    maxRadius,
+    maxValue
+  );
+
+  // Validate that points are valid before rendering
+  const validDesktopPoints = Array.isArray(desktopPoints) && desktopPoints.length > 0;
+  const validMobilePoints = Array.isArray(mobilePoints) && mobilePoints.length > 0;
 
   return (
     <Svg width={size} height={size}>
@@ -50,7 +100,7 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
         {[0.2, 0.4, 0.6, 0.8, 1].map((scale, i) => (
           <Polygon
             key={i}
-            points={getGridPoints(scale, center, maxRadius, data)}
+            points={getGridPoints(scale, center, maxRadius, sanitizedData)}
             fill="none"
             stroke="#e5e7eb"
             strokeWidth="1"
@@ -58,8 +108,8 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
         ))}
 
         {/* Axis lines */}
-        {data.map((_, index) => {
-          const angle = (index * 2 * Math.PI) / data.length - Math.PI / 2;
+        {sanitizedData.map((_, index) => {
+          const angle = (index * 2 * Math.PI) / sanitizedData.length - Math.PI / 2;
           const x2 = center + Math.cos(angle) * maxRadius;
           const y2 = center + Math.sin(angle) * maxRadius;
           return (
@@ -67,8 +117,8 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
               key={index}
               x1={center}
               y1={center}
-              x2={x2}
-              y2={y2}
+              x2={ensureValidNumber(x2)}
+              y2={ensureValidNumber(y2)}
               stroke="#e5e7eb"
               strokeWidth="1"
             />
@@ -76,39 +126,57 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
         })}
 
         {/* Desktop data polygon */}
-        <Polygon
-          points={desktopPoints.map(([x, y]) => `${x},${y}`).join(" ")}
-          fill="#1F2937"
-          fillOpacity="0.3"
-          stroke="#1F2937"
-          strokeWidth="2"
-        />
+        {validDesktopPoints && (
+          <Polygon
+            points={validatePolygonPoints(desktopPoints)}
+            fill="#1F2937"
+            fillOpacity="0.3"
+            stroke="#1F2937"
+            strokeWidth="2"
+          />
+        )}
 
         {/* Mobile data polygon */}
-        <Polygon
-          points={mobilePoints.map(([x, y]) => `${x},${y}`).join(" ")}
-          fill="#c8f751"
-          fillOpacity="0.3"
-          stroke="#c8f751"
-          strokeWidth="2"
-        />
+        {validMobilePoints && (
+          <Polygon
+            points={validatePolygonPoints(mobilePoints)}
+            fill="#c8f751"
+            fillOpacity="0.3"
+            stroke="#c8f751"
+            strokeWidth="2"
+          />
+        )}
 
         {/* Data points */}
-        {desktopPoints.map(([x, y], index) => (
-          <Circle key={`desktop-${index}`} cx={x} cy={y} r="3" fill="#1F2937" />
-        ))}
-        {mobilePoints.map(([x, y], index) => (
-          <Circle key={`mobile-${index}`} cx={x} cy={y} r="3" fill="#c8f751" />
-        ))}
+        {validDesktopPoints &&
+          desktopPoints.map(([x, y], index) => (
+            <Circle
+              key={`desktop-${index}`}
+              cx={ensureValidNumber(x)}
+              cy={ensureValidNumber(y)}
+              r="3"
+              fill="#1F2937"
+            />
+          ))}
+        {validMobilePoints &&
+          mobilePoints.map(([x, y], index) => (
+            <Circle
+              key={`mobile-${index}`}
+              cx={ensureValidNumber(x)}
+              cy={ensureValidNumber(y)}
+              r="3"
+              fill="#c8f751"
+            />
+          ))}
 
         {/* Month labels */}
-        {data.map((item, index) => {
-          const pos = getLabelPosition(index, center, maxRadius, data);
+        {sanitizedData.map((item, index) => {
+          const pos = getLabelPosition(index, center, maxRadius, sanitizedData);
           return (
             <SvgText
               key={index}
-              x={pos.x}
-              y={pos.y + 4}
+              x={ensureValidNumber(pos.x)}
+              y={ensureValidNumber(pos.y) + 4}
               textAnchor="middle"
               fontSize="12"
               fill="#666"
@@ -123,6 +191,100 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
 };
 
 export function ChartRadar() {
+  const { userData, isLoading, getMainRadarChartData } = useUserData();
+  const [mainChartData, setMainChartData] = useState<MainChartData | null>(null);
+  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
+
+  // Transform API data to chart format
+  const transformDataForChart = (apiData: MainChartData | null): ChartDataItem[] => {
+    if (!apiData || !apiData.currentMonth || !apiData.previousMonth) {
+      return [];
+    }
+
+    const intervals = ["1-6", "7-11", "12-16", "17-21", "22-26", "27-31"];
+
+    return intervals.map((interval) => ({
+      month: interval,
+      desktop: ensureValidNumber(apiData.previousMonth.intervals[interval]), // Previous month data
+      mobile: ensureValidNumber(apiData.currentMonth.intervals[interval]), // Current month data
+    }));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const mainChartData = await getMainRadarChartData();
+        console.log("main chart data:", mainChartData);
+
+        setMainChartData(mainChartData);
+
+        // Transform the data for the chart
+        const transformedData = transformDataForChart(mainChartData);
+        setChartData(transformedData);
+      } catch (error) {
+        console.error("Error fetching main chart data:", error);
+        // Set fallback empty data
+        setChartData([
+          { month: "1-6", desktop: 0, mobile: 0 },
+          { month: "7-11", desktop: 0, mobile: 0 },
+          { month: "12-16", desktop: 0, mobile: 0 },
+          { month: "17-21", desktop: 0, mobile: 0 },
+          { month: "22-26", desktop: 0, mobile: 0 },
+          { month: "27-31", desktop: 0, mobile: 0 },
+        ]);
+      }
+    };
+
+    fetchData();
+  }, [userData]);
+
+  // Calculate trend percentage
+  const calculateTrend = () => {
+    if (!mainChartData) return { percentage: "0", direction: "up" as const };
+
+    const currentTotal = ensureValidNumber(mainChartData.currentMonth?.total);
+    const previousTotal = ensureValidNumber(mainChartData.previousMonth?.total);
+
+    if (previousTotal === 0) {
+      return currentTotal > 0
+        ? { percentage: "100", direction: "up" as const }
+        : { percentage: "0", direction: "up" as const };
+    }
+
+    const percentage = ((currentTotal - previousTotal) / previousTotal) * 100;
+    return {
+      percentage: Math.abs(percentage).toFixed(1),
+      direction: (percentage >= 0 ? "up" : "down"),
+    };
+  };
+
+  const trend = calculateTrend();
+
+  // Show loading state
+  if (isLoading || chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="items-center">
+          <CardTitle>Street Coverage Distribution</CardTitle>
+          <CardDescription>
+            Distribution of street coverage over the past month
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 280,
+            }}
+          >
+            <Text>Loading chart data...</Text>
+          </View>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="items-center">
@@ -155,7 +317,9 @@ export function ChartRadar() {
                 borderRadius: 6,
               }}
             />
-            <Text style={{ fontSize: 14, color: "#333" }}>Last Month</Text>
+            <Text style={{ fontSize: 14, color: "#333" }}>
+              {mainChartData?.previousMonth?.monthName || "Previous Month"}
+            </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View
@@ -166,19 +330,24 @@ export function ChartRadar() {
                 borderRadius: 6,
               }}
             />
-            <Text style={{ fontSize: 14, color: "#333" }}>Now</Text>
+            <Text style={{ fontSize: 14, color: "#333" }}>
+              {mainChartData?.currentMonth?.monthName || "Current Month"}
+            </Text>
           </View>
         </View>
       </CardContent>
+
       <CardFooter className="flex-col gap-2 pt-4">
         <View className="flex flex-row items-center gap-2">
           <Text className="text-sm leading-none font-medium">
-            📈 Trending up by 5.2% this month
+            {trend.direction === "up" ? "📈" : "📉"} Trending {trend.direction}{" "}
+            by {trend.percentage}% this month
           </Text>
         </View>
         <View className="flex flex-row items-center gap-2">
           <Text className="text-sm text-muted-foreground leading-none">
-            January - June 2024
+            Comparing {mainChartData?.previousMonth?.monthName} vs{" "}
+            {mainChartData?.currentMonth?.monthName}
           </Text>
         </View>
       </CardFooter>

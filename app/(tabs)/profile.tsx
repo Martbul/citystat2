@@ -6,6 +6,7 @@ import {
   SectionSpacing,
 } from "@/components/dev";
 import PrimaryButton from "@/components/primaryButton";
+import Spinner from "@/components/spinner";
 import { useUserData } from "@/Providers/UserDataProvider";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
@@ -48,6 +49,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView className="flex-1 bg-containerBg">
         <View className="flex-1 justify-center items-center">
+          <Spinner variant="orbital" size="lg"/>
           <Text className="text-textDarkGray text-lg">Loading profile...</Text>
         </View>
       </SafeAreaView>

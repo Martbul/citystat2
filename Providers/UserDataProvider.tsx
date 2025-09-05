@@ -742,6 +742,72 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user?.id, getToken]);
   
+
+   const get2MainStats = useCallback(async (): Promise<any> => {
+     if (!user?.id) {
+       return null;
+     }
+
+     try {
+       setIsLoading(true);
+       setError(null);
+
+       const token = await getToken();
+       if (!token) return null;
+
+       const success = await apiService.get2MainStats(token);
+
+       console.log("2 main stats ", success);
+
+       return success;
+     } catch (err) {
+       const errorMessage =
+         err instanceof Error
+           ? err.message
+           : "Failed to fetch 2 main stats";
+       setError(errorMessage);
+       console.error("Error while fetching 2 main stats: ", err);
+       return null;
+     } finally {
+       setIsLoading(false);
+     }
+   }, [user?.id, getToken]);
+  
+  
+  
+  
+   const getMainRadarChartData = useCallback(async (): Promise<any> => {
+     if (!user?.id) {
+       return null;
+     }
+
+     try {
+       setIsLoading(true);
+       setError(null);
+
+       const token = await getToken();
+       if (!token) return null;
+
+       const success = await apiService.getMainRadarChartData(token);
+
+       console.log("main chart data ", success);
+
+       return success;
+     } catch (err) {
+       const errorMessage =
+         err instanceof Error ? err.message : "Failed to fetch main chart data";
+       setError(errorMessage);
+       console.error("Error while fetching main chart data: ", err);
+       return null;
+     } finally {
+       setIsLoading(false);
+     }
+   }, [user?.id, getToken]);
+  
+  
+  
+  
+  
   
   
   
@@ -763,78 +829,97 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     [userData]
   );
 
-  const contextValue: UserDataContextType = useMemo(
-    () => ({
-      userData,
-      setUserData,
-      saveVisitedStreets,
-      isLoading,
-      fetchVisitedStreets,
-      error,
-      settings, 
-      addFriendByUser, 
-      getFriends,
-      fetchOtherUserProfile,
-      saveLocationPermission,
-      getLocationPermission,
-      fetchUsersSameCity,
+const contextValue: UserDataContextType = useMemo(
+  () => ({
+    // --- Core state ---
+    userData,
+    settings,
+    isLoading,
+    error,
+    foundUsers,
 
-      // Core methods
-      updateUserDetails,
-      updateSettings, // Single settings update method
-      updateUserField,
-      updateUserNote,
-      refreshUserData,
-      fetchRank,
-      fetchRankProgress,
-      fetchGlobalLeaderboard,
+    // --- Derived values ---
+    completedTutorial: derivedValues.completedTutorial,
+    status: derivedValues.status,
+    note: derivedValues.note,
+    friends: derivedValues.friends,
+    cityStats: derivedValues.cityStats,
+    totalKilometers: derivedValues.totalKilometers,
+    cityCoveragePct: derivedValues.cityCoveragePct,
+    daysActive: derivedValues.daysActive,
+    longestStreakDays: derivedValues.longestStreakDays,
 
-      // Legacy derived values (for backwards compatibility)
-      completedTutorial: derivedValues.completedTutorial,
-      status: derivedValues.status,
-      note: derivedValues.note,
-      friends: derivedValues.friends,
-      cityStats: derivedValues.cityStats,
-      totalKilometers: derivedValues.totalKilometers,
-      cityCoveragePct: derivedValues.cityCoveragePct,
-      daysActive: derivedValues.daysActive,
-      longestStreakDays: derivedValues.longestStreakDays,
+    // --- Core methods ---
+    setUserData,
+    refreshUserData,
+    updateUserDetails,
+    updateSettings,
+    updateUserField,
+    updateUserNote,
 
-      // Friends & City stats
-      removeFriend,
-      updateCityStats,
-      searchUsers,
-      foundUsers,
-      fetchLocalLeaderboard,
-    }),
-    [
-      userData,
-      getLocationPermission,
-      fetchVisitedStreets,
-      fetchUsersSameCity,
-      setUserData,
-      getFriends,
-      saveVisitedStreets,
-      isLoading,
-      error,
-      fetchOtherUserProfile,
-      saveLocationPermission,
-      addFriendByUser, 
-      settings,
-      updateUserDetails,
-      updateSettings,
-      updateUserField,
-      updateUserNote,
-      refreshUserData,
-      derivedValues,
+    // --- Friends ---
+    getFriends,
+    addFriendByUser,
+    removeFriend,
+    searchUsers,
+    fetchOtherUserProfile,
 
-      removeFriend,
-      updateCityStats,
-      searchUsers,
-      foundUsers,
-      fetchLocalLeaderboard,
-    ]
-  );
+    // --- City / Stats ---
+    fetchVisitedStreets,
+    saveVisitedStreets,
+    get2MainStats,
+    getMainRadarChartData,
+    updateCityStats,
+    fetchUsersSameCity,
+
+    // --- Leaderboards & Rankings ---
+    fetchLocalLeaderboard,
+    fetchGlobalLeaderboard,
+    fetchRank,
+    fetchRankProgress,
+
+    // --- Permissions ---
+    getLocationPermission,
+    saveLocationPermission,
+  }),
+  [
+    userData,
+    settings,
+    isLoading,
+    error,
+    foundUsers,
+
+    derivedValues,
+
+    setUserData,
+    refreshUserData,
+    updateUserDetails,
+    updateSettings,
+    updateUserField,
+    updateUserNote,
+
+    getFriends,
+    addFriendByUser,
+    removeFriend,
+    searchUsers,
+    fetchOtherUserProfile,
+
+    fetchVisitedStreets,
+    saveVisitedStreets,
+    get2MainStats,
+    getMainRadarChartData,
+    updateCityStats,
+    fetchUsersSameCity,
+
+    fetchLocalLeaderboard,
+    fetchGlobalLeaderboard,
+    fetchRank,
+    fetchRankProgress,
+
+    getLocationPermission,
+    saveLocationPermission,
+  ]
+);
 
   return (
     <UserDataContext.Provider value={contextValue}>
