@@ -110,3 +110,57 @@ Predictive patterns: Where you’re most likely to be at a given time.
 
 - [] v2 - mutyple cities
 
+
+NOW FIX: 
+street_visit_stat in db is empty
+
+
+
+-----------------------------------------------------------------
+FUTURE:
+
+MovementPatternService
+Gait Analysis: Detect walking patterns, stability, limping
+Daily Movement Score: Rate how active the user was
+Sedentary Time Tracking: Alert when user sits too long
+Movement Consistency: Track regular vs irregular movement patterns
+
+
+ActivityTrackingService
+Walking/Running Detection: Detect different movement types (walking, running, cycling, driving)
+Step Counter Integration: Track steps, distance, calories burned
+Route Recording: Save favorite walking routes, track route completion
+Activity Sessions: Detect when user starts/stops exercising
+Health Metrics: Heart rate zones, pace tracking, elevation gain
+
+
+SoundscapeTrackingService
+Ambient Noise Detection: Traffic, nature, crowds, quiet areas
+Noise Level Mapping: Create personal noise pollution maps
+Sound Environment Preferences: Track preferred acoustic environments
+Audio Location Fingerprinting: Identify locations by sound patterns
+
+
+
+NetworkConnectivityService
+WiFi Network Mapping: Automatically map and name WiFi networks by location
+Connection Quality Tracking: Signal strength, speed patterns by location
+Data Usage Patterns: Where you use most cellular data
+Connectivity Dead Zones: Map areas with poor connection
+
+
+
+CommuteAnalysisService
+Route Optimization: Track which routes are fastest at different times
+Transportation Mode Detection: Walking, driving, public transit, cycling
+Commute Stress Analysis: Correlate routes with mood/stress indicators
+Cost Tracking: Fuel costs, parking fees, transit expenses by route
+
+
+MoodLocationService
+Emotional Geography: Map your emotional states to locations
+Mood Pattern Recognition: Predict mood based on location/time
+Therapeutic Location Discovery: Find places that improve mood
+Emotional Support Mapping: Where you go when feeling certain ways 
+
+-----------------------------------------------------------

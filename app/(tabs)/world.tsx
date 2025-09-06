@@ -12,6 +12,7 @@ import LocationEnablerPanel from "@/components/locationEnablerPanel";
 import VisitedStreetsLayer from "@/components/displyVisitedStreets";
 import MapTrackingPanel from "@/components/mapMenu";
 import Spinner from "@/components/spinner";
+import { useAuth } from "@clerk/clerk-expo";
 
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
@@ -19,13 +20,9 @@ Mapbox.setAccessToken(mapToken!);
 //!  LOG  Successfully processed 1696 streets
 //! user is in other screens buit streets are loaded(do not remove but do it once for performace purposses)
 
-
-//! make new separate functions for traking the user cause this only log the visited strrets and cant be sed for stats like favorete place and so on....
-
 const StreetTrackingMap = () => {
   const { isLoading } = useUserData();
 
-  // Use the new location tracking context
   const {
     userLocation,
     currentStreetId,
@@ -48,11 +45,12 @@ const StreetTrackingMap = () => {
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
+  const { getToken } = useAuth();
+
   useEffect(() => {
-    console.log("useEffect running");
     const initializeTracking = async () => {
       console.log("initializeTracking called");
-      if (hasLocationPermission && !isTracking) {
+      if (!isTracking) {
         try {
           console.log("About to start tracking");
           await startTracking(true);
@@ -66,7 +64,6 @@ const StreetTrackingMap = () => {
 
     initializeTracking();
 
-    // Now you can safely restore the cleanup function
     return () => {
       console.log("Cleanup function running");
       if (isTracking) {
@@ -75,6 +72,7 @@ const StreetTrackingMap = () => {
       }
     };
   }, [hasLocationPermission, isTracking, startTracking, stopTracking]);
+
   // Update highlighted streets when current street changes
   useEffect(() => {
     setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
@@ -82,7 +80,9 @@ const StreetTrackingMap = () => {
 
   const handleRequestLocationPermission = useCallback(async () => {
     try {
-      const granted = await requestLocationPermission();
+      const token = await getToken();
+
+      const granted = await requestLocationPermission(token);
       if (!granted) {
         Alert.alert(
           "Permission Denied",
@@ -204,7 +204,7 @@ const StreetTrackingMap = () => {
                   lineColor: [
                     "case",
                     ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
-                    "#c8f751",
+                    "#797979",
                     [
                       "in",
                       ["to-string", ["get", "id"]],
@@ -216,7 +216,7 @@ const StreetTrackingMap = () => {
                   lineWidth: [
                     "case",
                     ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
-                    6, // Current street thicker
+                    3, // Current street thicker
                     [
                       "in",
                       ["to-string", ["get", "id"]],
@@ -291,8 +291,8 @@ const StreetTrackingMap = () => {
         />
       )}
 
-      {/* Loading indicator */}
-      {!streetData && isTracking && (
+        //! the app is sometimes stuck loading streets
+      {!streetData &&  (
         <View className="absolute inset-0 bg-black/30 justify-center items-center z-50 pointer-events-none">
           <Spinner />
           <Text className="text-white text-lg">Loading streets...</Text>
@@ -341,6 +341,5 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
-
 
 export default StreetTrackingMap;

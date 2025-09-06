@@ -4,6 +4,12 @@ import {
   StreetVisitApiResponse,
   UpdateUserActiveHoursRequest,
 } from "@/types/streetVisitStats";
+import {
+  SaveStationarySessionsRequest,
+  SaveTimeSpentLocationsRequest,
+  TimeSpentAnalyticsResponse,
+  TimeSpentLocationResponse,
+} from "@/types/timeSpentTraker";
 import { CityStat, Friend, UserData } from "@/types/user";
 import { SaveVisitedStreetsRequest } from "@/types/world";
 
@@ -351,16 +357,14 @@ class ApiService {
     });
   }
 
-  public async getStreetVisitStats(
-    token: string
-  ): Promise<StreetVisitApiResponse> {
+  async getStreetVisitStats(token: string): Promise<StreetVisitApiResponse> {
     return this.makeRequest<any>(`/api/streets/visitStats`, {
       method: "GET",
       token,
     });
   }
 
-  public async saveStreetVisitStats(
+  async saveStreetVisitStats(
     request: SaveStreetVisitStatsRequest,
     token: string
   ): Promise<StreetVisitApiResponse> {
@@ -369,6 +373,119 @@ class ApiService {
       token,
       body: JSON.stringify(request),
     });
+  }
+
+  async saveTimeSpentLocations(
+    request: SaveTimeSpentLocationsRequest,
+    token: string
+  ): Promise<{ savedLocations?: number; message?: string }> {
+    return this.makeRequest<any>(`/api/timeSpent/locations`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Save stationary sessions to database
+  async saveStationarySessions(
+    request: SaveStationarySessionsRequest,
+    token: string
+  ): Promise<{ savedSessions?: number; message?: string }> {
+    return this.makeRequest<any>(`/api/timeSpent/sessions`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Get user's time spent locations
+  async getTimeSpentLocations(
+    token: string,
+    options?: {
+      limit?: number;
+      sortBy?: "totalTime" | "visitCount" | "recent";
+      minTimeSpent?: number; // minimum seconds
+    }
+  ): Promise<TimeSpentLocationResponse[]> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.append("limit", options.limit.toString());
+    if (options?.sortBy) params.append("sortBy", options.sortBy);
+    if (options?.minTimeSpent)
+      params.append("minTimeSpent", options.minTimeSpent.toString());
+
+    return this.makeRequest<any>(
+      `/api/timeSpent/locations${params.toString()}`,
+      {
+        method: "GET",
+        token,
+      }
+    );
+  }
+
+  // Get time spent analytics
+  async getTimeSpentAnalytics(
+    token: string,
+    options?: {
+      startDate?: string; // ISO date string
+      endDate?: string; // ISO date string
+      includeHourlyPattern?: boolean;
+      includeWeeklyPattern?: boolean;
+    }
+  ): Promise<TimeSpentAnalyticsResponse | null> {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.append("startDate", options.startDate);
+    if (options?.endDate) params.append("endDate", options.endDate);
+    if (options?.includeHourlyPattern)
+      params.append("includeHourlyPattern", "true");
+    if (options?.includeWeeklyPattern)
+      params.append("includeWeeklyPattern", "true");
+
+    return this.makeRequest<any>(
+      `/api/analytics/timeSpent${params.toString()}`,
+      {
+        method: "GET",
+        token,
+      }
+    );
+  }
+
+  // Update location details (name, category, etc.)
+  async updateTimeSpentLocation(
+    locationId: string,
+    updates: {
+      placeName?: string;
+      address?: string;
+      placeType?: string;
+    },
+    token: string
+  ): Promise<{ message?: string }> {
+    return this.makeRequest<any>(`/api/timeSpent/locations${locationId}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(updates),
+    });
+  }
+
+  // Get nearby time spent locations (for finding existing locations when creating new ones)
+  async getNearbyTimeSpentLocations(
+    latitude: number,
+    longitude: number,
+    radiusMeters: number,
+    token: string
+  ): Promise<TimeSpentLocationResponse[]> {
+    const params = new URLSearchParams({
+      lat: latitude.toString(),
+      lng: longitude.toString(),
+      radius: radiusMeters.toString(),
+    });
+
+    return this.makeRequest<any>(
+      `/api/timeSpent/locations/nearby${params.toString()}`,
+      {
+        method: "GET",
+        token,
+      }
+    );
   }
 }
 

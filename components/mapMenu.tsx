@@ -83,6 +83,7 @@ const MapTrackingPanel = memo(
       fetchLocation();
       const currStreetName = getCurrentStreetName(currentStreetId, streetData);
       setCurrentStreet(currStreetName);
+      console.log("zzzzzzzzz "+allCountVisitedStreets)
     }, [
       fetchLocation,
       getCurrentStreetName,

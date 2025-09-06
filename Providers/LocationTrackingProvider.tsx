@@ -12,6 +12,7 @@ import {
 import type { UserCoords, StreetData, VisitedStreet } from "@/types/world";
 import { useAuth } from "@clerk/clerk-expo";
 
+
 interface LocationTrackingContextType {
   // Location state
   userLocation: UserCoords | null;
@@ -38,13 +39,15 @@ interface LocationTrackingContextType {
   getMonthlyActiveTime: () => number;
 
   // Control methods
-  startTracking: (enableBackground?: boolean) => Promise<void>;
+  startTracking: (
+    enableBackground: boolean
+  ) => Promise<void>;
   stopTracking: () => Promise<void>;
   isTracking: boolean;
 
   // Permission status
   hasLocationPermission: boolean;
-  requestLocationPermission: () => Promise<boolean>;
+  requestLocationPermission: (token: string | null) => Promise<boolean>;
 }
 
 const LocationTrackingContext =
@@ -70,10 +73,12 @@ export const LocationTrackingProvider: React.FC<
   const [currentSessionDuration, setCurrentSessionDuration] = useState(0);
 
   const locationService = LocationTrackingService.getInstance();
-      const { getToken } = useAuth();
-
+  const { getToken } = useAuth();
 
   useEffect(() => {
+    const handlePermissionStatusUpdate = (hasPermission: boolean) => {
+      setHasLocationPermission(hasPermission);
+    };
     // Set up event listeners
     const handleLocationUpdate = (location: UserCoords) => {
       setUserLocation(location);
@@ -106,7 +111,7 @@ export const LocationTrackingProvider: React.FC<
     locationService.addStreetChangeListener(handleStreetChange);
     locationService.addVisitCountUpdateListener(handleVisitCountUpdate);
     locationService.addActiveHoursUpdateListener(handleActiveHoursUpdate);
-
+    locationService.addPermissionStatusListener(handlePermissionStatusUpdate);
     // Initialize state from service
     setCurrentStreetId(locationService.getCurrentStreetId());
     setStreetData(locationService.getStreetData());
@@ -128,76 +133,79 @@ export const LocationTrackingProvider: React.FC<
       locationService.removeStreetChangeListener(handleStreetChange);
       locationService.removeVisitCountUpdateListener(handleVisitCountUpdate);
       locationService.removeActiveHoursUpdateListener(handleActiveHoursUpdate);
+      locationService.removePermissionStatusListener(
+        handlePermissionStatusUpdate
+      );
       clearInterval(sessionInterval);
     };
   }, []);
 
-const startTracking = async (enableBackground: boolean = true) => {
-  try {
-    await locationService.startLocationTracking(enableBackground);
-    setIsTracking(true);
-    setHasLocationPermission(true);
-    setCurrentSessionDuration(0); // Reset session duration
-  } catch (error) {
-    console.error("Failed to start tracking:", error);
-    setHasLocationPermission(false);
-    throw error;
-  }
-};
+  const startTracking = async (
+    enableBackground: boolean
+  ) => {
+    try {
+      const token = await getToken()
+      await locationService.startLocationTracking(token, enableBackground);
+      setIsTracking(true);
+      setHasLocationPermission(true);
+      setCurrentSessionDuration(0);
+    } catch (error) {
+      console.error("Failed to start tracking:", error);
+      setHasLocationPermission(false);
+      throw error;
+    }
+  };
 
-  
-  //! this is calling react hooks with is wrong
-const stopTracking = async () => {
-  try {
-    const token = await getToken();
+  const stopTracking = async () => {
+    try {
+      const token = await getToken();
+      await locationService.stopLocationTracking(token);
+      setIsTracking(false);
+      setCurrentSessionDuration(0);
+    } catch (error) {
+      console.error("Failed to stop tracking:", error);
+      throw error;
+    }
+  };
 
-    // Pass the token to the service
-    await locationService.stopLocationTracking(token);
-    setIsTracking(false);
-    setCurrentSessionDuration(0);
-  } catch (error) {
-    console.error("Failed to stop tracking:", error);
-    throw error;
-  }
-};
-    const requestLocationPermission = async (): Promise<boolean> => {
-      try {
-        await startTracking(true);
-        return true;
-      } catch (error) {
-        console.error("Permission denied:", error);
-        return false;
-      }
-    };
+  const requestLocationPermission = async (
+    token: string | null
+  ): Promise<boolean> => {
+    try {
+      return await locationService.requestLocationPermission(token);
+    } catch (error) {
+      console.error("Permission denied:", error);
+      return false;
+    }
+  };
+  const getStreetVisitData = (streetId: string): StreetVisitData | null => {
+    return locationService.getStreetVisitData(streetId);
+  };
 
-    const getStreetVisitData = (streetId: string): StreetVisitData | null => {
-      return locationService.getStreetVisitData(streetId);
-    };
+  const getAllStreetVisitData = (): Map<string, StreetVisitData> => {
+    return locationService.getAllStreetVisitData();
+  };
 
-    const getAllStreetVisitData = (): Map<string, StreetVisitData> => {
-      return locationService.getAllStreetVisitData();
-    };
+  const getMostVisitedStreets = (limit: number = 10) => {
+    return locationService.getMostVisitedStreets(limit);
+  };
 
-    const getMostVisitedStreets = (limit: number = 10) => {
-      return locationService.getMostVisitedStreets(limit);
-    };
+  const getStreetsByTimeSpent = (limit: number = 10) => {
+    return locationService.getStreetsByTimeSpent(limit);
+  };
 
-    const getStreetsByTimeSpent = (limit: number = 10) => {
-      return locationService.getStreetsByTimeSpent(limit);
-    };
+  // Active hours methods
+  const getDailyActiveTime = (date?: string) => {
+    return locationService.getDailyActiveTime(date);
+  };
 
-    // Active hours methods
-    const getDailyActiveTime = (date?: string) => {
-      return locationService.getDailyActiveTime(date);
-    };
+  const getWeeklyActiveTime = () => {
+    return locationService.getWeeklyActiveTime();
+  };
 
-    const getWeeklyActiveTime = () => {
-      return locationService.getWeeklyActiveTime();
-    };
-
-    const getMonthlyActiveTime = () => {
-      return locationService.getMonthlyActiveTime();
-    };
+  const getMonthlyActiveTime = () => {
+    return locationService.getMonthlyActiveTime();
+  };
 
   const contextValue: LocationTrackingContextType = {
     // Location state
