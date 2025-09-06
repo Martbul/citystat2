@@ -10,6 +10,7 @@ import {
   StreetVisitData,
 } from "../services/LocationTrackingService";
 import type { UserCoords, StreetData, VisitedStreet } from "@/types/world";
+import { useAuth } from "@clerk/clerk-expo";
 
 interface LocationTrackingContextType {
   // Location state
@@ -69,6 +70,8 @@ export const LocationTrackingProvider: React.FC<
   const [currentSessionDuration, setCurrentSessionDuration] = useState(0);
 
   const locationService = LocationTrackingService.getInstance();
+      const { getToken } = useAuth();
+
 
   useEffect(() => {
     // Set up event listeners
@@ -142,17 +145,21 @@ const startTracking = async (enableBackground: boolean = true) => {
   }
 };
 
+  
+  //! this is calling react hooks with is wrong
 const stopTracking = async () => {
   try {
-    await locationService.stopLocationTracking();
+    const token = await getToken();
+
+    // Pass the token to the service
+    await locationService.stopLocationTracking(token);
     setIsTracking(false);
-    setCurrentSessionDuration(0); // Reset session duration
+    setCurrentSessionDuration(0);
   } catch (error) {
     console.error("Failed to stop tracking:", error);
     throw error;
   }
 };
-
     const requestLocationPermission = async (): Promise<boolean> => {
       try {
         await startTracking(true);

@@ -22,30 +22,10 @@ import {
   getPolygonPoints,
 } from "@/utils/charts/radarChart";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { ChartDataItem, CustomRadarChartProps, MainChartData } from "@/types/radarChart";
+import Spinner from "../spinner";
 
-interface CustomRadarChartProps {
-  data: any[];
-  size: number;
-}
 
-interface ChartDataItem {
-  month: string;
-  desktop: number;
-  mobile: number;
-}
-
-interface MainChartData {
-  currentMonth: {
-    total: number;
-    monthName: string;
-    intervals: Record<string, number>;
-  };
-  previousMonth: {
-    total: number;
-    monthName: string;
-    intervals: Record<string, number>;
-  };
-}
 
 // Helper function to ensure valid numbers
 const ensureValidNumber = (value: any): number => {
@@ -260,7 +240,6 @@ export function ChartRadar() {
 
   const trend = calculateTrend();
 
-  // Show loading state
   if (isLoading || chartData.length === 0) {
     return (
       <Card>
@@ -278,6 +257,7 @@ export function ChartRadar() {
               height: 280,
             }}
           >
+            <Spinner/>
             <Text>Loading chart data...</Text>
           </View>
         </CardContent>

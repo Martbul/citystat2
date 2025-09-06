@@ -1,29 +1,3 @@
-import * as turf from "@turf/turf";
-import * as Location from "expo-location";
-import {
-  BUFFER_GETTING_STREETS,
-  LOCATION_ACCURACY,
-  LOCATION_DISTANCE_THRESHOLD_M,
-  LOCATION_UPDATE_INTERVAL_MS,
-  LOCATION_UPDATE_THROTTLE_MS,
-  METERS_IN_KILOMETER,
-  MIN_MOVEMENT_DISTANCE_METERS,
-  STREET_DATA_REFRESH_DISTANCE_KM,
-  STREET_LOGGING_DISTANCE_METERS,
-  STREET_PROXIMITY_THRESHOLD_METERS,
-  TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS,
-  TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
-} from "@/constants/world";
-import type {
-  FetchedVisitedStreet,
-  SaveVisitedStreetsRequest,
-  Street,
-  StreetData,
-  UserCoords,
-  VisitedStreet,
-  VisitedStreetRequest,
-} from "@/types/world";
-import { logEvent } from "@/utils/logger";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useUserData } from "@/Providers/UserDataProvider";
@@ -75,10 +49,14 @@ const StreetTrackingMap = () => {
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
   useEffect(() => {
+    console.log("useEffect running");
     const initializeTracking = async () => {
+      console.log("initializeTracking called");
       if (hasLocationPermission && !isTracking) {
         try {
-          await startTracking(true); // Enable background tracking
+          console.log("About to start tracking");
+          await startTracking(true);
+          console.log("Tracking started successfully");
         } catch (error) {
           console.error("Failed to start tracking:", error);
           Alert.alert("Error", "Failed to start location tracking");
@@ -88,14 +66,15 @@ const StreetTrackingMap = () => {
 
     initializeTracking();
 
-    // Cleanup on unmount
+    // Now you can safely restore the cleanup function
     return () => {
+      console.log("Cleanup function running");
       if (isTracking) {
+        console.log("About to stop tracking");
         stopTracking().catch(console.error);
       }
     };
   }, [hasLocationPermission, isTracking, startTracking, stopTracking]);
-
   // Update highlighted streets when current street changes
   useEffect(() => {
     setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
@@ -118,46 +97,43 @@ const StreetTrackingMap = () => {
     }
   }, [requestLocationPermission]);
 
+  const centerOnUser = useCallback(() => {
+    if (userLocation && cameraRef.current) {
+      cameraRef.current.setCamera({
+        centerCoordinate: [userLocation.longitude, userLocation.latitude],
+        zoomLevel: 15,
+        animationDuration: 1000,
+      });
+    }
+  }, [userLocation]);
 
-const centerOnUser = useCallback(() => {
-  if (userLocation && cameraRef.current) {
-    cameraRef.current.setCamera({
-      centerCoordinate: [userLocation.longitude, userLocation.latitude],
-      zoomLevel: 15,
-      animationDuration: 1000,
-    });
+  const toggleMapMenu = useCallback(() => {
+    setIsMapMenuOpen((prev) => !prev);
+  }, []);
+
+  const handleMapMenuClose = useCallback(() => {
+    setIsMapMenuOpen(false);
+  }, []);
+
+  // Get analytics data for the menu
+  const getMostVisitedData = useCallback(() => {
+    return getMostVisitedStreets(5);
+  }, [getMostVisitedStreets]);
+
+  const getTimeSpentData = useCallback(() => {
+    return getStreetsByTimeSpent(5);
+  }, [getStreetsByTimeSpent]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-containerBg">
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-textDarkGray text-lg">Loading map...</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
-}, [userLocation]);
 
-const toggleMapMenu = useCallback(() => {
-  setIsMapMenuOpen((prev) => !prev);
-}, []);
-
-const handleMapMenuClose = useCallback(() => {
-  setIsMapMenuOpen(false);
-}, []);
-
-// Get analytics data for the menu
-const getMostVisitedData = useCallback(() => {
-  return getMostVisitedStreets(5);
-}, [getMostVisitedStreets]);
-
-const getTimeSpentData = useCallback(() => {
-  return getStreetsByTimeSpent(5);
-}, [getStreetsByTimeSpent]);
-  
-  
-   if (isLoading) {
-     return (
-       <SafeAreaView className="flex-1 bg-containerBg">
-         <View className="flex-1 justify-center items-center">
-           <Text className="text-textDarkGray text-lg">Loading map...</Text>
-         </View>
-       </SafeAreaView>
-     );
-   }
-  
-  
   return (
     <View className="flex-1">
       <MapView

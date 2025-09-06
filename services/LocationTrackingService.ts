@@ -27,7 +27,6 @@ import type {
   // StreetVisitCount,
 } from "@/types/world";
 import { apiService } from "./api";
-import { useAuth } from "@clerk/clerk-expo";
 
 const BACKGROUND_LOCATION_TASK = "background-location-task";
 const STREET_DATA_STORAGE_KEY = "@street_data";
@@ -77,7 +76,6 @@ export class LocationTrackingService {
   private streetVisitCounts: Map<string, StreetVisitData> = new Map();
   private currentSessionId: string = this.generateSessionId();
   private isBackgroundTaskRegistered: boolean = false;
-  // Active hours tracking
   private activeHoursData: ActiveHoursData = {
     totalActiveHours: 0,
     currentSessionStart: null,
@@ -398,10 +396,9 @@ export class LocationTrackingService {
       console.error("Error starting background location updates:", error);
     }
   }
-  public async stopLocationTracking() {
-    const { getToken } = useAuth();
-    const token = await getToken();
-
+  // In your service
+  public async stopLocationTracking(token: string|null) {
+    
     // Stop active hours tracking
     this.stopActiveHoursTracking();
 
@@ -812,7 +809,7 @@ out geom;
         token
       );
 
-      if (result && result.status === "success") {
+      if (result) {
         console.log(
           "Successfully saved active hours:",
           this.activeHoursData.totalActiveHours

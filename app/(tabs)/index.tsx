@@ -113,7 +113,7 @@ export default function HomeScreen() {
       return (
         <SafeAreaView>
           <StatusBar backgroundColor="#fafafa" barStyle="dark-content" />
-          <View className="mx-4 mt-9 pb-10 rounded-b-2xl gap-4">
+          <View className="mx-4 mt-3 rounded-b-2xl gap-4" >
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
@@ -145,7 +145,7 @@ export default function HomeScreen() {
 
             <SuggestedExplorersSection />
 
-            <SectionSpacing className="">
+            <SectionSpacing className="mb-1">
               <ClickableCard onPress={() => console.log("suuu")}>
                 <RowLayout>
                   <IconContainer color="accent">
