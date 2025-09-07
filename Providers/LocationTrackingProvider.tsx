@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import {
   LocationTrackingService,
@@ -11,7 +12,6 @@ import {
 } from "../services/LocationTrackingService";
 import type { UserCoords, StreetData, VisitedStreet } from "@/types/world";
 import { useAuth } from "@clerk/clerk-expo";
-
 
 interface LocationTrackingContextType {
   // Location state
@@ -39,15 +39,15 @@ interface LocationTrackingContextType {
   getMonthlyActiveTime: () => number;
 
   // Control methods
-  startTracking: (
-    enableBackground: boolean
-  ) => Promise<void>;
+  startTracking: (enableBackground: boolean) => Promise<void>;
   stopTracking: () => Promise<void>;
   isTracking: boolean;
 
   // Permission status
   hasLocationPermission: boolean;
   requestLocationPermission: (token: string | null) => Promise<boolean>;
+
+  initializeData:() => Promise<void>;
 }
 
 const LocationTrackingContext =
@@ -88,6 +88,7 @@ export const LocationTrackingProvider: React.FC<
       streetId: string | null,
       coords: UserCoords
     ) => {
+      console.log("handling new street change:", streetId)
       setCurrentStreetId(streetId);
       // Refresh visited streets and street IDs
       setVisitedStreets(locationService.getVisitedStreets());
@@ -112,6 +113,7 @@ export const LocationTrackingProvider: React.FC<
     locationService.addVisitCountUpdateListener(handleVisitCountUpdate);
     locationService.addActiveHoursUpdateListener(handleActiveHoursUpdate);
     locationService.addPermissionStatusListener(handlePermissionStatusUpdate);
+
     // Initialize state from service
     setCurrentStreetId(locationService.getCurrentStreetId());
     setStreetData(locationService.getStreetData());
@@ -140,23 +142,32 @@ export const LocationTrackingProvider: React.FC<
     };
   }, []);
 
-  const startTracking = async (
-    enableBackground: boolean
-  ) => {
+  const initializeData = async () => {
     try {
-      const token = await getToken()
-      await locationService.startLocationTracking(token, enableBackground);
-      setIsTracking(true);
-      setHasLocationPermission(true);
-      setCurrentSessionDuration(0);
+      const token = await getToken();
+
+      await locationService.initializeData(token);
     } catch (error) {
-      console.error("Failed to start tracking:", error);
+      console.error("Failed to initializeData:", error);
       setHasLocationPermission(false);
       throw error;
     }
   };
 
-  const stopTracking = async () => {
+
+  const startTracking = useCallback(async(enableBackground: boolean) => {
+    try {
+      await locationService.startLocationTracking(enableBackground);
+      setIsTracking(true);
+      setHasLocationPermission(true);
+      setCurrentSessionDuration(0);
+    } catch (error) {
+      console.error("Failed to start tracking:", error);
+      throw error;
+    }
+  },[]);
+
+  const stopTracking = useCallback(async () => {
     try {
       const token = await getToken();
       await locationService.stopLocationTracking(token);
@@ -166,7 +177,7 @@ export const LocationTrackingProvider: React.FC<
       console.error("Failed to stop tracking:", error);
       throw error;
     }
-  };
+  }, []);
 
   const requestLocationPermission = async (
     token: string | null
@@ -236,6 +247,10 @@ export const LocationTrackingProvider: React.FC<
     // Permission status
     hasLocationPermission,
     requestLocationPermission,
+
+    //Data
+    initializeData,
+    
   };
 
   return (

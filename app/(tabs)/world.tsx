@@ -13,6 +13,7 @@ import VisitedStreetsLayer from "@/components/displyVisitedStreets";
 import MapTrackingPanel from "@/components/mapMenu";
 import Spinner from "@/components/spinner";
 import { useAuth } from "@clerk/clerk-expo";
+import { LocationTrackingService } from "@/services/LocationTrackingService";
 
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
@@ -21,7 +22,7 @@ Mapbox.setAccessToken(mapToken!);
 //! user is in other screens buit streets are loaded(do not remove but do it once for performace purposses)
 
 const StreetTrackingMap = () => {
-  const { isLoading } = useUserData();
+  const { isLoading, userData } = useUserData();
 
   const {
     userLocation,
@@ -30,6 +31,7 @@ const StreetTrackingMap = () => {
     visitedStreets,
     allVisitedStreetIds,
     startTracking,
+    initializeData,
     stopTracking,
     isTracking,
     hasLocationPermission,
@@ -48,8 +50,11 @@ const StreetTrackingMap = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
-    const initializeTracking = async () => {
-      console.log("initializeTracking called");
+    const initializeComponentData = async () => {
+      console.log("initializeComponentData called");
+
+        initializeData()
+
       if (!isTracking) {
         try {
           console.log("About to start tracking");
@@ -62,7 +67,7 @@ const StreetTrackingMap = () => {
       }
     };
 
-    initializeTracking();
+    initializeComponentData();
 
     return () => {
       console.log("Cleanup function running");
@@ -72,6 +77,8 @@ const StreetTrackingMap = () => {
       }
     };
   }, [hasLocationPermission, isTracking, startTracking, stopTracking]);
+
+
 
   // Update highlighted streets when current street changes
   useEffect(() => {
@@ -272,7 +279,7 @@ const StreetTrackingMap = () => {
         />
       )}
 
-      {!hasLocationPermission && (
+      {!hasLocationPermission && !isLoading    && userData &&  (
         <LocationEnablerPanel
           requestLocationPermission={handleRequestLocationPermission}
         />

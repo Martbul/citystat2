@@ -38,7 +38,6 @@ const MapTrackingPanel = memo(
       fetchVisitedStreets,
       // isLoading,
     } = useUserData();
-    const [totalVisited] = useState(156);
     const [currentStreet, setCurrentStreet] = useState("Unknown Street");
     const [location, setLocation] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +64,9 @@ const MapTrackingPanel = memo(
           setLocation("Permission denied");
           return;
         }
+
+        console.log(streetsByTimeSpent)
+        console.log("currentStreetId: ",currentStreetId)
 
         const pos = await Location.getCurrentPositionAsync({});
         const geo = await Location.reverseGeocodeAsync(pos.coords);

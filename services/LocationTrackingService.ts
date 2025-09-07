@@ -2,7 +2,7 @@ import * as turf from "@turf/turf";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AppState } from 'react-native';
+import { AppState } from "react-native";
 import {
   BUFFER_GETTING_STREETS,
   LOCATION_ACCURACY,
@@ -58,9 +58,9 @@ export interface StreetVisitData {
   averageTimeSpent: number;
 }
 export interface ActiveHoursData {
-  totalActiveHours: number; // Total hours spent tracking
-  currentSessionStart: number | null; // When current session started
-  dailyActiveTime: Map<string, number>; // Daily tracking time in seconds
+  totalActiveHours: number;
+  currentSessionStart: number | null;
+  dailyActiveTime: Map<string, number>;
 }
 
 export class LocationTrackingService {
@@ -326,136 +326,138 @@ export class LocationTrackingService {
     this.persistData();
   }
 
+  public async initializeData(token: string | null): Promise<void> {
+  if (!token) return;
 
-public async startLocationTracking(
-  token: string | null,
-  enableBackground: boolean
-) {
   try {
-    // Initialize permissions first
+    console.log("Starting data initialization...");
+    
+    // 1. Initialize permissions first
     await this.initializePermissions(token);
-
-
-    if (token) {
-      await this.loadVisitedStreetsFromDatabase(token);
+    
+    // 2. Load server data (permissions will be checked in context)
+    await this.syncServerData(token);
+    
+    // 3. If we have a current location, check street proximity immediately
+    if (this.previousUserCoords && this.streetData) {
+      console.log("Re-checking street proximity after data sync");
+      this.checkStreetProximity(this.previousUserCoords);
     }
     
-    // Request foreground permissions
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      throw new Error("Foreground location permission not granted");
-    }
-
-    // Start active hours tracking
-    this.startActiveHoursTracking();
-
-    // Get initial location
-    const initialLocation = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
-      timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
-    });
-
-    this.handleLocationUpdate(initialLocation);
-
-    // Start foreground location watching
-    const subscription = await Location.watchPositionAsync(
-      {
-        accuracy: LOCATION_ACCURACY,
-        timeInterval: LOCATION_UPDATE_INTERVAL_MS,
-        distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
-      },
-      (location) => {
-        this.handleLocationUpdate(location);
-      }
-    );
-
-    this.locationSubscription = subscription;
-
-    // Request background permissions and start background tracking if needed
-    if (enableBackground) {
-      try {
-        const backgroundStatus = await Location.requestBackgroundPermissionsAsync();
-        if (backgroundStatus.status === "granted") {
-          await this.startBackgroundLocationUpdates();
-        } else {
-          console.warn("Background location permission not granted - continuing with foreground only");
-        }
-      } catch (backgroundError) {
-        console.warn("Failed to start background location (continuing with foreground):", backgroundError);
-        // Don't throw here - foreground tracking is still working
-      }
-    }
-
-    console.log("Location tracking started successfully");
+    console.log("Data initialization completed successfully");
   } catch (error) {
-    // Clean up if something went wrong
-    if (this.locationSubscription) {
-      this.locationSubscription.remove();
-      this.locationSubscription = null;
-    }
-    this.stopActiveHoursTracking();
-    
-    console.error("Error starting location tracking:", error);
+    console.error("Failed to initialize data:", error);
     throw error;
   }
 }
 
 
+private async loadActiveHoursFromServer(token: string): Promise<void> {
+  try {
+    // Add this API call to your service
+    //! dont create separete call for hourse , pull the from the user obj
+    const serverActiveHours = (await apiService.fetchUser(token)).activeHours;
+    console.log("serverActiveHours: ",serverActiveHours)
+    if (serverActiveHours && serverActiveHours > this.activeHoursData.totalActiveHours) {
+      // Server has more recent data, use it
+      this.activeHoursData.totalActiveHours = serverActiveHours;
+      
+      // Notify listeners
+      this.activeHoursUpdateListeners.forEach(listener => 
+        listener(this.activeHoursData.totalActiveHours)
+      );
+    }
+  } catch (error) {
+    console.error("Failed to load active hours from server:", error);
+    // Continue with local data
+  }
+}
 
-  // public async startLocationTracking(
-  //   token: string | null,
-  //   enableBackground: boolean
-  // ) {
-  //   try {
-  //     //! maybe remove this not sure
-  //     await this.initializePermissions(token);
-  //     // Request foreground permissions
-  //     const { status } = await Location.requestForegroundPermissionsAsync();
-  //     if (status !== "granted") {
-  //       throw new Error("Foreground location permission not granted");
-  //     }
+private async syncServerData(token: string): Promise<void> {
+  try {
+    // Load visited streets from server and merge with local data
+    const serverDataLoaded = await this.loadVisitedStreetsFromDatabase(token);
+    
+    if (serverDataLoaded) {
+      console.log("Server data synchronized successfully");
+    }
+    
+    // Load any other server data (active hours, preferences, etc.)
+    await this.loadActiveHoursFromServer(token);
+    
+    // After loading server data, persist the merged state locally
+    await this.persistData();
+    
+  } catch (error) {
+    console.error("Error syncing server data:", error);
+    // Don't throw - allow app to work with local data only
+  }
+}
 
-  //     // Request background permissions if needed
-  //     if (enableBackground) {
-  //       const backgroundStatus =
-  //         await Location.requestBackgroundPermissionsAsync();
-  //       if (backgroundStatus.status !== "granted") {
-  //         console.warn("Background location permission not granted");
-  //       } else {
-  //         await this.startBackgroundLocationUpdates();
-  //       }
-  //     }
+  public async startLocationTracking(
+    enableBackground: boolean
+  ) {
+    try {
+      
+      this.startActiveHoursTracking();
 
-  //     // Start active hours tracking
-  //     this.startActiveHoursTracking();
+      // Get initial location
+      const initialLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
+      });
 
-  //     // Get initial location
-  //     const initialLocation = await Location.getCurrentPositionAsync({
-  //       accuracy: Location.Accuracy.High,
-  //       timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
-  //     });
+      this.handleLocationUpdate(initialLocation);
 
-  //     this.handleLocationUpdate(initialLocation);
+      // Start foreground location watching
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: LOCATION_ACCURACY,
+          timeInterval: LOCATION_UPDATE_INTERVAL_MS,
+          distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
+        },
+        (location) => {
+          this.handleLocationUpdate(location);
+        }
+      );
 
-  //     // Start foreground location watching
-  //     const subscription = await Location.watchPositionAsync(
-  //       {
-  //         accuracy: LOCATION_ACCURACY,
-  //         timeInterval: LOCATION_UPDATE_INTERVAL_MS,
-  //         distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
-  //       },
-  //       (location) => {
-  //         this.handleLocationUpdate(location);
-  //       }
-  //     );
+      this.locationSubscription = subscription;
 
-  //     this.locationSubscription = subscription;
-  //     console.log("Location tracking started successfully");
-  //   } catch (error) {
-  //     console.error("Error starting location tracking:", error);
-  //     throw error;
-  //   }
-  // }
+      // Request background permissions and start background tracking if needed
+      if (enableBackground) {
+        try {
+          const backgroundStatus =
+            await Location.requestBackgroundPermissionsAsync();
+          if (backgroundStatus.status === "granted") {
+            await this.startBackgroundLocationUpdates();
+          } else {
+            console.warn(
+              "Background location permission not granted - continuing with foreground only"
+            );
+          }
+        } catch (backgroundError) {
+          console.warn(
+            "Failed to start background location (continuing with foreground):",
+            backgroundError
+          );
+          // Don't throw here - foreground tracking is still working
+        }
+      }
+
+      console.log("Location tracking started successfully");
+    } catch (error) {
+      // Clean up if something went wrong
+      if (this.locationSubscription) {
+        this.locationSubscription.remove();
+        this.locationSubscription = null;
+      }
+      this.stopActiveHoursTracking();
+
+      console.error("Error starting location tracking:", error);
+      throw error;
+    }
+  }
+
   private async loadPermissionStatus(token: string) {
     try {
       const saved = await apiService.getLocationPermission(token);
@@ -467,71 +469,53 @@ public async startLocationTracking(
     }
   }
 
-  private async initializePermissions(token: string | null) {
-    try {
-      if (!token) return;
 
-      // Load user's explicit choice from database
-      const savedPermission = await this.loadPermissionStatus(token);
-      console.log("User's saved permission choice:", savedPermission);
-
-      // Check current system permission
-      const { status } = await Location.getForegroundPermissionsAsync();
-      const hasSystemPermission = status === "granted";
-      console.log("System permission status:", status);
-
-      if (savedPermission === true && hasSystemPermission) {
-        console.log(
-          "Starting tracking: User opted in + system permission granted"
-        );
-        this.setHasLocationPermission(true);
-      } else if (savedPermission === true && !hasSystemPermission) {
-        console.log(
-          "User opted in but system permission revoked - requesting permission"
-        );
-        await this.requestLocationPermission(token);
-      } else if (savedPermission === false || savedPermission === null) {
-        console.log("User hasn't opted in to location tracking");
-        this.setHasLocationPermission(false);
-      }
-    } catch (error) {
-      console.error("Error initializing permissions:", error);
+private async initializePermissions(token: string | null) {
+  try {
+    if (!token) return;
+     
+    // Request foreground permissions first
+    const { status: requestStatus } = await Location.requestForegroundPermissionsAsync();
+    if (requestStatus !== "granted") {
+      console.log("Foreground location permission denied by user");
       this.setHasLocationPermission(false);
+      return;
     }
+
+    // Load user's explicit choice from database
+    const savedPermission = await this.loadPermissionStatus(token);
+    console.log("User's saved permission choice:", savedPermission);
+
+    // Check current system permission (should be granted from above request)
+    const { status: currentStatus } = await Location.getForegroundPermissionsAsync();
+    const hasSystemPermission = currentStatus === "granted";
+    console.log("System permission status:", currentStatus);
+
+    if (savedPermission === true && hasSystemPermission) {
+      console.log(
+        "Starting tracking: User opted in + system permission granted"
+      );
+      this.setHasLocationPermission(true);
+    } else if (savedPermission === true && !hasSystemPermission) {
+      console.log(
+        "User opted in but system permission revoked - this shouldn't happen after request"
+      );
+      this.setHasLocationPermission(false);
+    } else if (savedPermission === false) {
+      console.log("User explicitly opted out of location tracking");
+      this.setHasLocationPermission(false);
+    } else if (savedPermission === null) {
+      console.log("User hasn't made a choice yet - treating permission request as opt-in");
+      // Since they just granted permission, save this as opt-in
+      await this.savePermissionStatus(token, true);
+      this.setHasLocationPermission(true);
+    }
+  } catch (error) {
+    console.error("Error initializing permissions:", error);
+    this.setHasLocationPermission(false);
   }
-  // private  async initializePermissions() {
-  //   try {
-  //     // Load user's explicit choice from database
-  //     const savedPermission = await loadPermissionStatus(token);
-  //     console.log("User's saved permission choice:", savedPermission);
+}
 
-  //     // Check current system permission
-  //     const { status } = await Location.getForegroundPermissionsAsync();
-  //     const hasSystemPermission = status === "granted";
-  //     console.log("System permission status:", status);
-
-  //     if (savedPermission === true && hasSystemPermission) {
-  //       // User explicitly opted in AND system allows it - start tracking
-  //       console.log(
-  //         "Starting tracking: User opted in + system permission granted"
-  //       );
-  //       setHasLocationPermission(true);
-  //       await startLocationTracking();
-  //     } else if (savedPermission === true && !hasSystemPermission) {
-  //       // User opted in but system permission was revoked - ask again
-  //       console.log(
-  //         "User opted in but system permission revoked - requesting permission"
-  //       );
-  //       await requestLocationPermission();
-  //     } else if (savedPermission === false || savedPermission === null) {
-  //       console.log("User hasn't opted in to location tracking");
-  //       setHasLocationPermission(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error initializing permissions:", error);
-  //     setHasLocationPermission(false);
-  //   }
-  // };
   private async savePermissionStatus(token: string, hasPermission: boolean) {
     try {
       await apiService.saveLocationPermission(hasPermission, token);
@@ -541,117 +525,129 @@ public async startLocationTracking(
     }
   }
 
-public async loadVisitedStreetsFromDatabase(token: string) {
-  try {
-    console.log('Loading visited streets from database...');
-    const response = await apiService.fetchVisitedStreets(token);
-    
-    if (response.status === 'success' && response.data) {
-      // Convert API response to internal format
-      response.data.forEach(streetData => {
-        const visitData: StreetVisitData = {
-          visitCount: streetData.visitCount,
-          firstVisit: streetData.firstVisit,
-          lastVisit: streetData.lastVisit,
-          totalTimeSpent: streetData.totalTimeSpent,
-          averageTimeSpent: streetData.averageTimeSpent,
-        };
-        
-        this.streetVisitCounts.set(streetData.streetId, visitData);
-        this.allVisitedStreetIds.add(streetData.streetId);
-      });
-      
-      // Persist the loaded data
-      await this.persistData();
-      
-      console.log(`Loaded ${response.data.length} visited streets from database`);
-      
-      // Notify listeners about the updated data
-      this.activeHoursUpdateListeners.forEach(listener => 
-        listener(this.activeHoursData.totalActiveHours)
-      );
-      
-      return true;
-    } else {
-      console.warn('Failed to load visited streets:', response.message);
+  public async loadVisitedStreetsFromDatabase(token: string) {
+    try {
+      console.log("Loading visited streets from database...");
+      const response = await apiService.fetchVisitedStreets(token);
+
+      if (response.status === "success" && response.data) {
+        // Convert API response to internal format
+        response.data.forEach((streetData) => {
+          const visitData: StreetVisitData = {
+            visitCount: streetData.visitCount,
+            firstVisit: streetData.firstVisit,
+            lastVisit: streetData.lastVisit,
+            totalTimeSpent: streetData.totalTimeSpent,
+            averageTimeSpent: streetData.averageTimeSpent,
+          };
+
+          this.streetVisitCounts.set(streetData.streetId, visitData);
+          this.allVisitedStreetIds.add(streetData.streetId);
+        });
+
+        // Persist the loaded data
+        await this.persistData();
+
+        console.log(
+          `Loaded ${response.data.length} visited streets from database`
+        );
+
+        // Notify listeners about the updated data
+        this.activeHoursUpdateListeners.forEach((listener) =>
+          listener(this.activeHoursData.totalActiveHours)
+        );
+
+        return true;
+      } else {
+        console.warn("Failed to load visited streets:", response.message);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error loading visited streets from database:", error);
       return false;
     }
-  } catch (error) {
-    console.error('Error loading visited streets from database:', error);
-    return false;
   }
-}
   private async startBackgroundLocationUpdates() {
-  try {
-    // Check if task is already registered
-    const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK);
-    
-    if (this.isBackgroundTaskRegistered && isTaskDefined) {
-      console.log('Background location updates already running');
-      return;
-    }
+    try {
+      // Check if task is already registered
+      const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK);
 
-    // Check if app is in foreground - required to start background location
-    if (AppState.currentState !== 'active') {
-      console.log('Cannot start background location - app not in foreground');
-      // We'll try to start it later when app becomes active
-      this.scheduleBackgroundLocationStart();
-      return;
-    }
+      if (this.isBackgroundTaskRegistered && isTaskDefined) {
+        console.log("Background location updates already running");
+        return;
+      }
 
-    // Stop any existing updates first (cleanup)
-    if (isTaskDefined) {
-      try {
-        await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
-      } catch (stopError) {
-        console.log('Error stopping existing background task (continuing):', stopError);
+      // Check if app is in foreground - required to start background location
+      if (AppState.currentState !== "active") {
+        console.log("Cannot start background location - app not in foreground");
+        // We'll try to start it later when app becomes active
+        this.scheduleBackgroundLocationStart();
+        return;
+      }
+
+      // Stop any existing updates first (cleanup)
+      if (isTaskDefined) {
+        try {
+          await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+        } catch (stopError) {
+          console.log(
+            "Error stopping existing background task (continuing):",
+            stopError
+          );
+        }
+      }
+
+      // Start new background updates
+      await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: LOCATION_UPDATE_INTERVAL_MS * 2, // Less frequent in background
+        distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
+        foregroundService: {
+          notificationTitle: "Street Tracking",
+          notificationBody: "Tracking your visited streets",
+        },
+      });
+
+      this.isBackgroundTaskRegistered = true;
+      console.log("Background location updates started successfully");
+    } catch (error) {
+      console.error("Error starting background location updates:", error);
+      this.isBackgroundTaskRegistered = false;
+
+      // If it failed because app is in background, schedule it for later
+      if (error.message && error.message.includes("background")) {
+        console.log("Will retry background location when app becomes active");
+        this.scheduleBackgroundLocationStart();
+      } else {
+        throw error;
       }
     }
-
-    // Start new background updates
-    await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-      accuracy: Location.Accuracy.Balanced,
-      timeInterval: LOCATION_UPDATE_INTERVAL_MS * 2, // Less frequent in background
-      distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
-      foregroundService: {
-        notificationTitle: "Street Tracking",
-        notificationBody: "Tracking your visited streets",
-      },
-    });
-
-    this.isBackgroundTaskRegistered = true;
-    console.log("Background location updates started successfully");
-  } catch (error) {
-    console.error("Error starting background location updates:", error);
-    this.isBackgroundTaskRegistered = false;
-    
-    // If it failed because app is in background, schedule it for later
-    if (error.message && error.message.includes('background')) {
-      console.log('Will retry background location when app becomes active');
-      this.scheduleBackgroundLocationStart();
-    } else {
-      throw error;
-    }
   }
-}
 
-// Add this helper method to schedule background location start:
-private scheduleBackgroundLocationStart() {
-  const handleAppStateChange = (nextAppState: string) => {
-    if (nextAppState === 'active' && !this.isBackgroundTaskRegistered) {
-      console.log('App became active - attempting to start background location');
-      this.startBackgroundLocationUpdates().catch(error => {
-        console.error('Failed to start background location on app active:', error);
-      });
-      
-      // Remove the listener after successful attempt
-      subscription?.remove();
-    }
-  };
+  // Add this helper method to schedule background location start:
+  private scheduleBackgroundLocationStart() {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === "active" && !this.isBackgroundTaskRegistered) {
+        console.log(
+          "App became active - attempting to start background location"
+        );
+        this.startBackgroundLocationUpdates().catch((error) => {
+          console.error(
+            "Failed to start background location on app active:",
+            error
+          );
+        });
 
-  const subscription = AppState.addEventListener('change', handleAppStateChange);
-}
+        // Remove the listener after successful attempt
+        subscription?.remove();
+      }
+    };
 
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+  }
 
   // private async startBackgroundLocationUpdates() {
   //   try {
@@ -686,33 +682,37 @@ private scheduleBackgroundLocationStart() {
     }
 
     // Stop background tracking - check if task exists first
-  try {
-    const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK);
-    if (isTaskDefined && this.isBackgroundTaskRegistered) {
-      await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
-      console.log('Background location updates stopped');
-    } else if (!isTaskDefined && this.isBackgroundTaskRegistered) {
-      console.log('Task was not defined but flag was set - resetting flag');
-    }
-  } catch (error) {
-    console.log('Error stopping background location updates (safe to ignore):', error);
-  } finally {
-    // Always reset the flag regardless of success/failure
-    this.isBackgroundTaskRegistered = false;
-  }
-
-   // Save any pending data
-  if (token) {
     try {
-      await this.saveVisitedStreetsToDatabase(token);
-      await this.saveActiveHoursToDatabase(token);
-    } catch (error) {
-      console.error('Error saving data during stop:', error);
-    }
+      const isTaskDefined = TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK);
+      if (isTaskDefined && this.isBackgroundTaskRegistered) {
+        await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+        console.log("Background location updates stopped");
+      } else if (!isTaskDefined && this.isBackgroundTaskRegistered) {
+        console.log("Task was not defined but flag was set - resetting flag");
+      }
+  } catch (error) {
+  // This is expected when task doesn't exist - completely normal
+  if (error.message?.includes('TaskNotFoundException')) {
+    console.log("Background task already stopped or not found - this is normal");
+  } else {
+    console.log("Unexpected error stopping background location:", error);
   }
-  
-  await this.persistData();
-  console.log("Location tracking stopped");
+} finally {
+  this.isBackgroundTaskRegistered = false;
+}
+
+    // Save any pending data
+    if (token) {
+      try {
+        await this.saveVisitedStreetsToDatabase(token);
+        await this.saveActiveHoursToDatabase(token);
+      } catch (error) {
+        console.error("Error saving data during stop:", error);
+      }
+    }
+
+    await this.persistData();
+    console.log("Location tracking stopped");
   }
 
   public static async handleBackgroundLocationUpdate(
@@ -767,10 +767,19 @@ private scheduleBackgroundLocationStart() {
         listener(newUserCoords)
       );
 
-      // Check street proximity
-      if (this.streetData) {
-        this.checkStreetProximity(newUserCoords);
-      }
+       console.log("=== LOCATION UPDATE DEBUG ===");
+    console.log("Current street ID:", this.currentStreetId);
+    console.log("Street data exists:", !!this.streetData);
+    console.log("Street data features count:", this.streetData?.features?.length || 0);
+    console.log("User coordinates:", newUserCoords);
+    // console.log("Has location permission:", this.hasLocationPermission);
+    
+    // Check street proximity
+    if (this.streetData) {
+      this.checkStreetProximity(newUserCoords);
+    } else {
+      console.log("No street data available for proximity check");
+    }
 
       // Fetch new street data if needed
       if (!this.streetData || this.shouldRefreshStreetData(newUserCoords)) {
@@ -779,6 +788,11 @@ private scheduleBackgroundLocationStart() {
 
       this.previousUserCoords = newUserCoords;
       this.persistData(); // Persist state changes
+
+
+
+      
+
     } catch (error) {
       console.error("Error handling location update:", error);
     }
@@ -897,50 +911,123 @@ out geom;
     return distance > STREET_DATA_REFRESH_DISTANCE_KM;
   }
 
+  // private checkStreetProximity(userCoords: UserCoords) {
+  //   if (!this.streetData || !this.streetData.features.length) {
+  //     return;
+  //   }
+
+  //   const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
+  //   const proximityThresholdKm =
+  //     STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
+
+  //   let foundStreet: string | null = null;
+  //   let closestDistance = Infinity;
+  //   let closestStreetName = null;
+
+  //   this.streetData.features.forEach((street) => {
+  //     try {
+  //       if (
+  //         !street.geometry.coordinates ||
+  //         street.geometry.coordinates.length < 2
+  //       ) {
+  //         return;
+  //       }
+
+  //       const streetLine = turf.lineString(street.geometry.coordinates);
+  //       const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
+  //         units: "kilometers",
+  //       });
+
+  //       if (
+  //         distanceKm <= proximityThresholdKm &&
+  //         distanceKm < closestDistance
+  //       ) {
+  //         closestDistance = distanceKm;
+  //         foundStreet = street.id;
+  //         closestStreetName = street.properties?.name || "Unnamed";
+  //       }
+  //     } catch (error) {
+  //       console.warn(`Error processing street ${street.id}:`, error);
+  //     }
+  //   });
+
+  //   if (foundStreet && foundStreet !== this.currentStreetId) {
+  //     this.handleStreetChange(foundStreet, userCoords);
+  //   }
+  // }
+
   private checkStreetProximity(userCoords: UserCoords) {
-    if (!this.streetData || !this.streetData.features.length) {
-      return;
-    }
-
-    const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-    const proximityThresholdKm =
-      STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
-
-    let foundStreet: string | null = null;
-    let closestDistance = Infinity;
-    let closestStreetName = null;
-
-    this.streetData.features.forEach((street) => {
-      try {
-        if (
-          !street.geometry.coordinates ||
-          street.geometry.coordinates.length < 2
-        ) {
-          return;
-        }
-
-        const streetLine = turf.lineString(street.geometry.coordinates);
-        const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
-          units: "kilometers",
-        });
-
-        if (
-          distanceKm <= proximityThresholdKm &&
-          distanceKm < closestDistance
-        ) {
-          closestDistance = distanceKm;
-          foundStreet = street.id;
-          closestStreetName = street.properties?.name || "Unnamed";
-        }
-      } catch (error) {
-        console.warn(`Error processing street ${street.id}:`, error);
-      }
-    });
-
-    if (foundStreet && foundStreet !== this.currentStreetId) {
-      this.handleStreetChange(foundStreet, userCoords);
-    }
+  if (!this.streetData || !this.streetData.features.length) {
+    console.log("No street data available for proximity check");
+    return;
   }
+
+  const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
+  const proximityThresholdKm = STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
+
+  console.log("=== STREET PROXIMITY CHECK ===");
+  console.log("User point:", [userCoords.longitude, userCoords.latitude]);
+  console.log("Proximity threshold (km):", proximityThresholdKm);
+  console.log("Total streets to check:", this.streetData.features.length);
+
+  let foundStreet: string | null = null;
+  let closestDistance = Infinity;
+  let closestStreetName = null;
+  let checkedStreets = 0;
+  let validStreets = 0;
+
+  this.streetData.features.forEach((street) => {
+    checkedStreets++;
+    try {
+      if (!street.geometry.coordinates || street.geometry.coordinates.length < 2) {
+        console.log(`Street ${street.id} has invalid coordinates`);
+        return;
+      }
+
+      validStreets++;
+      const streetLine = turf.lineString(street.geometry.coordinates);
+      const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
+        units: "kilometers",
+      });
+
+      // Log details for very close streets
+      if (distanceKm <= proximityThresholdKm * 2) { // Double threshold for debugging
+        console.log(`Street ${street.id} (${street.properties?.name || 'Unnamed'}): ${distanceKm}km away`);
+      }
+
+      if (distanceKm <= proximityThresholdKm && distanceKm < closestDistance) {
+        closestDistance = distanceKm;
+        foundStreet = street.id;
+        closestStreetName = street.properties?.name || "Unnamed";
+        //!!!!!!!!!!!!!!!!!!!
+        //  this.setCurrentStreetId(foundStreet)
+        console.log(`NEW CLOSEST: ${foundStreet} (${closestStreetName}) at ${distanceKm}km`);
+      }
+    } catch (error) {
+      console.warn(`Error processing street ${street.id}:`, error);
+    }
+  });
+
+  console.log("=== PROXIMITY CHECK RESULTS ===");
+  console.log("Checked streets:", checkedStreets);
+  console.log("Valid streets:", validStreets);
+  console.log("Closest distance:", closestDistance);
+  console.log("Found street:", foundStreet);
+  console.log("Current street before change:", this.currentStreetId);
+
+  if (foundStreet && foundStreet !== this.currentStreetId) {
+    console.log(`STREET CHANGE: ${this.currentStreetId} -> ${foundStreet}`);
+    this.handleStreetChange(foundStreet, userCoords);
+  } else if (!foundStreet && this.currentStreetId) {
+    console.log(`USER LEFT STREET: ${this.currentStreetId} -> null`);
+    this.handleStreetChange(null, userCoords);
+  } else if (!foundStreet) {
+    console.log("User not on any street");
+  } else {
+    console.log(`User still on same street: ${foundStreet}`);
+  }
+}
+
 
   private handleStreetChange(newStreetId: string | null, coords: UserCoords) {
     const now = Date.now();
@@ -1000,7 +1087,9 @@ out geom;
       );
     }
 
+    //? setting the new street Id
     this.currentStreetId = newStreetId;
+    
     this.persistData();
   }
 
@@ -1172,11 +1261,17 @@ out geom;
       entryLongitude: street.coordinates.longitude,
     }));
   }
+  
 
-  // Public getters
+  // Public getters & setters
   public getCurrentStreetId(): string | null {
     return this.currentStreetId;
   }
+
+    public setCurrentStreetId(streetId:string)  {
+     this.currentStreetId = streetId;
+  }
+
 
   public getStreetData(): StreetData | null {
     return this.streetData;

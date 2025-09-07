@@ -113,7 +113,8 @@ Predictive patterns: Where you’re most likely to be at a given time.
 
 NOW FIX: 
 street_visit_stat in db is empty
-
+if user is not in the bbox of the city he has chosen do not save visited streets or street_visit_stat or activeHours - noting
+wrong time in lastLogin & lastActivity and prob. in many more(prob. some timezones shit)
 
 
 -----------------------------------------------------------------

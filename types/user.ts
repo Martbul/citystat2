@@ -66,6 +66,28 @@ export interface UserData {
   userName?: string;
   imageUrl: string;
   phoneNumber?: string;
+  city?: string;
+  
+  // City location data
+  cityName?: string;
+  cityCountry?: string;
+  cityState?: string;
+  cityLat?: number;
+  cityLng?: number;
+  cityDisplayName?: string;
+  
+  // City statistics
+  cityAllStreetsCount?: number;
+  cityAllKilometers?: number;
+  cityBboxNorth?: number;
+  cityBboxSouth?: number;
+  cityBboxEast?: number;
+  cityBboxWest?: number;
+  
+  // User activity data
+  activeHours?: number;
+  
+  // User profile fields
   role: Role;
   completedTutorial: boolean;
   aboutMe?: string;
@@ -73,31 +95,206 @@ export interface UserData {
   deleteAccount: boolean;
   note?: string;
   status: Status;
-
-  cityName?: string;
-  cityCountry?: string;
-  cityState?: string;
-  cityCoords?: {
-    lat: number;
-    lng: number;
-  };
-  selectedCity?: {
-    name: string;
-    country: string;
-    state?: string;
-    lat: number;
-    lon: number;
-    display_name: string;
-  };
+  
+  // Timestamps
   createdAt: string;
   updatedAt: string;
-
+  lastActivity: string;
+  lastLogin: string;
+  
+  // Relationships
   cityStats?: CityStat;
   settings?: Settings;
   devices?: Device;
   friends?: Friend[];
   friendOf?: Friend[];
   visitedStreets?: VisitedStreet[];
+  streetVisitStats?: StreetVisitStat[];
+  rankId?: string;
+  rank?: Rank;
+  timeSpentLocations?: TimeSpentLocation[];
+  stationarySessions?: StationarySession[];
+  timeSpentSummaries?: TimeSpentSummary[];
+}
+
+// Street Visit Statistics Interface
+export interface StreetVisitStat {
+  id: string;
+  userId: string;
+  streetId: string;
+  streetName?: string;
+  visitCount: number;
+  totalTimeSpent: number; // seconds
+  averageTimeSpent: number; // seconds
+  firstVisit: string; // ISO date string
+  lastVisit: string; // ISO date string
+  longestSession?: number; // seconds
+  shortestSession?: number; // seconds
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Rank Interface
+export interface Rank {
+  id: string;
+  userId: string;
+  points: number;
+  level: Level;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Level Enum
+export enum Level {
+  Iron = 'Iron',
+  Bronze = 'Bronze',
+  Silver = 'Silver',
+  Gold = 'Gold',
+  Platinum = 'Platinum',
+  Diamond = 'Diamond',
+  Master = 'Master',
+  Grandmaster = 'Grandmaster'
+}
+
+// Time Spent Location Interface
+export interface TimeSpentLocation {
+  id: string;
+  userId: string;
+  
+  // Location data
+  centerLatitude: number;
+  centerLongitude: number;
+  radius: number;
+  address?: string;
+  placeName?: string;
+  placeType?: string;
+  
+  // Time tracking data
+  totalTimeSpent: number; // seconds
+  visitCount: number;
+  firstVisit: string; // ISO date string
+  lastVisit: string; // ISO date string
+  lastSessionDuration: number; // seconds
+  
+  // Statistics
+  averageSessionDuration?: number;
+  longestSessionDuration?: number; // seconds
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  
+  // Relations
+  stationarySessions?: StationarySession[];
+  timeSpentLocationCategories?: TimeSpentLocationCategory[];
+}
+
+// Stationary Session Interface
+export interface StationarySession {
+  id: string;
+  userId: string;
+  timeSpentLocationId?: string;
+  
+  // Session data
+  startTime: string; // ISO date string
+  endTime?: string; // ISO date string
+  duration?: number; // seconds
+  
+  // Location data for this specific session
+  startLatitude: number;
+  startLongitude: number;
+  endLatitude?: number;
+  endLongitude?: number;
+  
+  // Session metadata
+  sessionId: string;
+  isCompleted: boolean;
+  endReason?: string; // "movement", "timeout", "manual", etc.
+  
+  // Movement data during session
+  maxDistanceFromCenter?: number;
+  averageSpeed?: number;
+  movementCount?: number;
+  
+  // Context data
+  dayOfWeek?: number; // 0-6, Sunday = 0
+  hourOfDay?: number; // 0-23
+  weather?: string;
+  temperature?: number;
+  
+  createdAt: string;
+  updatedAt: string;
+  
+  // Relations
+  timeSpentLocation?: TimeSpentLocation;
+}
+
+// Time Spent Summary Interface
+export interface TimeSpentSummary {
+  id: string;
+  userId: string;
+  
+  // Time period
+  date: string; // ISO date string
+  summaryType: TimeSpentSummaryType;
+  
+  // Aggregated data
+  totalTimeSpent: number; // seconds
+  totalSessions: number;
+  uniqueLocations: number;
+  averageSessionDuration: number;
+  longestSession: number; // seconds
+  
+  // Top location for this period
+  topLocationId?: string;
+  topLocationTime?: number; // seconds
+  
+  // Activity patterns
+  mostActiveHour?: number; // 0-23
+  leastActiveHour?: number; // 0-23
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Time Spent Summary Type Enum
+export enum TimeSpentSummaryType {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY'
+}
+
+// Location Category Interface
+export interface LocationCategory {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string; // Hex color
+  icon?: string; // Icon name or emoji
+  createdAt: string;
+  updatedAt: string;
+  
+  // Relations
+  timeSpentLocations?: TimeSpentLocationCategory[];
+}
+
+// Time Spent Location Category Junction Interface
+export interface TimeSpentLocationCategory {
+  id: string;
+  timeSpentLocationId: string;
+  locationCategoryId: string;
+  
+  // Optional: confidence score for auto-categorization
+  confidence?: number; // 0.0 - 1.0
+  isAutoGenerated: boolean;
+  
+  createdAt: string;
+  
+  // Relations
+  timeSpentLocation?: TimeSpentLocation;
+  locationCategory?: LocationCategory;
 }
 
 export interface UserDataContextType {
