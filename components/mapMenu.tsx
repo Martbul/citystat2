@@ -31,12 +31,11 @@ const MapTrackingPanel = memo(
     allCountVisitedStreets,
     mostVisitedStreets = [],
     currentStreetVisitData,
-    streetsByTimeSpent,
+    streetsByTimeSpent = [],
     onClose,
   }: MapTrackingPanelProps) => {
     const {
       fetchVisitedStreets,
-      // isLoading,
     } = useUserData();
     const [currentStreet, setCurrentStreet] = useState("Unknown Street");
     const [location, setLocation] = useState<string | null>(null);
@@ -62,11 +61,16 @@ const MapTrackingPanel = memo(
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           setLocation("Permission denied");
+          setIsLoading(false);
           return;
         }
 
-        console.log(streetsByTimeSpent)
-        console.log("currentStreetId: ",currentStreetId)
+        console.log("=== MAP MENU DEBUG INFO ===");
+        console.log("mostVisitedStreets length:", mostVisitedStreets.length);
+        console.log("streetsByTimeSpent length:", streetsByTimeSpent.length);
+        console.log("currentStreetId:", currentStreetId);
+        console.log("sessionCountVisitedStreets:", sessionCountVisitedStreets);
+        console.log("allCountVisitedStreets:", allCountVisitedStreets);
 
         const pos = await Location.getCurrentPositionAsync({});
         const geo = await Location.reverseGeocodeAsync(pos.coords);
@@ -75,23 +79,31 @@ const MapTrackingPanel = memo(
           [place.city].filter(Boolean).join(", ") || "Unknown Location";
         setLocation(readable);
       } catch (err) {
+        console.error("Error fetching location:", err);
         setLocation("Location unavailable");
       } finally {
         setIsLoading(false);
       }
-    }, []);
+    }, [mostVisitedStreets.length, streetsByTimeSpent.length, currentStreetId, sessionCountVisitedStreets, allCountVisitedStreets]);
 
     useEffect(() => {
       fetchLocation();
       const currStreetName = getCurrentStreetName(currentStreetId, streetData);
       setCurrentStreet(currStreetName);
-      console.log("zzzzzzzzz "+allCountVisitedStreets)
+      
+      console.log("=== MAP MENU STATE UPDATE ===");
+      console.log("Current street name:", currStreetName);
+      console.log("Session streets:", sessionCountVisitedStreets);
+      console.log("Total streets:", allCountVisitedStreets);
+      
     }, [
       fetchLocation,
       getCurrentStreetName,
       currentStreetId,
       streetData,
       fetchVisitedStreets,
+      sessionCountVisitedStreets,
+      allCountVisitedStreets
     ]);
 
     const handleOverlayPress = useCallback(() => {
@@ -197,38 +209,78 @@ const MapTrackingPanel = memo(
                   </View>
                 </View>
 
+                {/* Most visited streets section - only show if we have data */}
                 {mostVisitedStreets.length > 0 && (
-                  <View className="items-center">
-                    <Text className="text-xl font-bold text-lime-300 mb-0.5">
-                      {mostVisitedStreets
-                        .slice(0, 3)
-                        .map(({ streetId, visitData }) => {
-                          const street = streetData?.features.find(
-                            (f) => f.id === streetId
-                          );
-                          const streetName =
-                            street?.properties?.name || `Street ${streetId}`;
-
-                          return (
-                            <View
-                              key={streetId}
-                              className="flex flex-row gap-4"
-                            >
-                              <Text
-                                numberOfLines={1}
-                                className="text-xl font-bold text-accent mb-0.5"
-                              >
-                                {streetName}
-                              </Text>
-                              <Text className="text-xl font-bold text-accent mb-0.5">
-                                x{visitData.visitCount}
-                              </Text>
-                            </View>
-                          );
-                        })}
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <Text className="text-gray-400 text-xs mb-2 font-semibold tracking-wide">
+                      MOST VISITED STREETS
                     </Text>
-                    <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
-                      MOST VISITED
+                    {mostVisitedStreets.slice(0, 3).map(({ streetId, visitData }) => {
+                      const street = streetData?.features.find(
+                        (f) => f.id === streetId
+                      );
+                      const streetName =
+                        street?.properties?.name || `Street ${streetId}`;
+
+                      return (
+                        <View
+                          key={streetId}
+                          className="flex flex-row justify-between items-center py-1"
+                        >
+                          <Text
+                            numberOfLines={1}
+                            className="text-white text-sm flex-1 mr-2"
+                          >
+                            {streetName}
+                          </Text>
+                          <Text className="text-lime-300 text-sm font-bold">
+                            {visitData.visitCount}x
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Streets by time spent section - only show if we have data */}
+                {streetsByTimeSpent.length > 0 && (
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <Text className="text-gray-400 text-xs mb-2 font-semibold tracking-wide">
+                      MOST TIME SPENT
+                    </Text>
+                    {streetsByTimeSpent.slice(0, 3).map(({ streetId, visitData }) => {
+                      const street = streetData?.features.find(
+                        (f) => f.id === streetId
+                      );
+                      const streetName =
+                        street?.properties?.name || `Street ${streetId}`;
+                      const timeInMinutes = Math.floor(visitData.totalTimeSpent / 60);
+
+                      return (
+                        <View
+                          key={streetId}
+                          className="flex flex-row justify-between items-center py-1"
+                        >
+                          <Text
+                            numberOfLines={1}
+                            className="text-white text-sm flex-1 mr-2"
+                          >
+                            {streetName}
+                          </Text>
+                          <Text className="text-lime-300 text-sm font-bold">
+                            {timeInMinutes}m
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Show message if no data available */}
+                {mostVisitedStreets.length === 0 && streetsByTimeSpent.length === 0 && (
+                  <View className="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <Text className="text-gray-400 text-sm text-center">
+                      Start exploring to see your street statistics!
                     </Text>
                   </View>
                 )}
@@ -244,167 +296,3 @@ const MapTrackingPanel = memo(
 MapTrackingPanel.displayName = "MapTrackingPanel";
 
 export default MapTrackingPanel;
-
-//  const MapTrackingPanel: React.FC<MapTrackingPanelProps> = ({
-//   isLocationSubscrActive,
-//   currentStreetId,
-//   streetData,
-//   sessionCountVisitedStreets,
-//   allCountVisitedStreets,
-//   mostVisitedStreets = [],
-//   currentStreetVisitData,
-//   onClose,
-// }) => {
-//   return (
-//     <View style={styles.panel}>
-//       {/* Your existing panel content */}
-//       <View style={styles.statsContainer}>
-//         <Text style={styles.title}>Street Tracking Stats</Text>
-
-//         <View style={styles.statRow}>
-//           <Text style={styles.label}>Status:</Text>
-//           <Text style={styles.value}>{isLocationSubscrActive}</Text>
-//         </View>
-
-//         <View style={styles.statRow}>
-//           <Text style={styles.label}>Session Streets:</Text>
-//           <Text style={styles.value}>{sessionCountVisitedStreets}</Text>
-//         </View>
-
-//         <View style={styles.statRow}>
-//           <Text style={styles.label}>Total Streets:</Text>
-//           <Text style={styles.value}>{allCountVisitedStreets}</Text>
-//         </View>
-
-//         {/* Current street visit info */}
-//         {currentStreetVisitData && (
-//           <View style={styles.currentStreetInfo}>
-//             <Text style={styles.sectionTitle}>Current Street</Text>
-//             <Text style={styles.visitInfo}>
-//               Visit #{currentStreetVisitData.visitCount}
-//             </Text>
-//             <Text style={styles.visitInfo}>
-//               Avg: {Math.floor(currentStreetVisitData.averageTimeSpent / 60)}min
-//             </Text>
-//             <Text style={styles.visitInfo}>
-//               Total: {Math.floor(currentStreetVisitData.totalTimeSpent / 60)}min
-//             </Text>
-//           </View>
-//         )}
-
-//         {/* Most visited streets */}
-//         {mostVisitedStreets.length > 0 && (
-//           <View style={styles.statsSection}>
-//             <Text style={styles.sectionTitle}>Most Visited</Text>
-//             {mostVisitedStreets.slice(0, 3).map(({ streetId, visitData }) => {
-//               const street = streetData?.features.find(
-//                 (f) => f.id === streetId
-//               );
-//               const streetName =
-//                 street?.properties?.name || `Street ${streetId}`;
-
-//               return (
-//                 <View key={streetId} style={styles.statItem}>
-//                   <Text style={styles.statStreetName} numberOfLines={1}>
-//                     {streetName}
-//                   </Text>
-//                   <Text style={styles.statCount}>{visitData.visitCount}x</Text>
-//                 </View>
-//               );
-//             })}
-//           </View>
-//         )}
-//       </View>
-
-//       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-//         <Text style={styles.closeButtonText}>Close</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// };
-// export default MapTrackingPanel;
-// const styles = StyleSheet.create({
-//   panel: {
-//     position: "absolute",
-//     bottom: 0,
-//     left: 0,
-//     right: 0,
-//     backgroundColor: "white",
-//     borderTopLeftRadius: 20,
-//     borderTopRightRadius: 20,
-//     padding: 20,
-//     maxHeight: "50%",
-//   },
-//   statsContainer: {
-//     flex: 1,
-//   },
-//   title: {
-//     fontSize: 18,
-//     fontWeight: "bold",
-//     marginBottom: 15,
-//     textAlign: "center",
-//   },
-//   statRow: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     marginBottom: 8,
-//   },
-//   label: {
-//     fontSize: 14,
-//     color: "#666",
-//   },
-//   value: {
-//     fontSize: 14,
-//     fontWeight: "500",
-//   },
-//   currentStreetInfo: {
-//     marginTop: 15,
-//     padding: 10,
-//     backgroundColor: "#f0f0f0",
-//     borderRadius: 8,
-//   },
-//   sectionTitle: {
-//     fontSize: 16,
-//     fontWeight: "bold",
-//     marginBottom: 8,
-//   },
-//   visitInfo: {
-//     fontSize: 12,
-//     color: "#666",
-//     marginBottom: 2,
-//   },
-//   statsSection: {
-//     marginTop: 15,
-//   },
-//   statItem: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     paddingVertical: 4,
-//     paddingHorizontal: 8,
-//     marginBottom: 4,
-//     backgroundColor: "#f8f8f8",
-//     borderRadius: 4,
-//   },
-//   statStreetName: {
-//     fontSize: 12,
-//     flex: 1,
-//     marginRight: 8,
-//   },
-//   statCount: {
-//     fontSize: 12,
-//     fontWeight: "bold",
-//     color: "#8B00FF",
-//   },
-//   closeButton: {
-//     backgroundColor: "#c8f751",
-//     padding: 12,
-//     borderRadius: 8,
-//     alignItems: "center",
-//     marginTop: 15,
-//   },
-//   closeButtonText: {
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-// });

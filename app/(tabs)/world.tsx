@@ -13,13 +13,9 @@ import VisitedStreetsLayer from "@/components/displyVisitedStreets";
 import MapTrackingPanel from "@/components/mapMenu";
 import Spinner from "@/components/spinner";
 import { useAuth } from "@clerk/clerk-expo";
-import { LocationTrackingService } from "@/services/LocationTrackingService";
 
 const mapToken = process.env.EXPO_PUBLIC_CLERK_MAP_BOX_TOKEN;
 Mapbox.setAccessToken(mapToken!);
-
-//!  LOG  Successfully processed 1696 streets
-//! user is in other screens buit streets are loaded(do not remove but do it once for performace purposses)
 
 const StreetTrackingMap = () => {
   const { isLoading, userData } = useUserData();
@@ -44,6 +40,7 @@ const StreetTrackingMap = () => {
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
   const [mapZoom, setMapZoom] = useState(13);
   const [highlightedStreets, setHighlightedStreets] = useState<string[]>([]);
+  const [initializationComplete, setInitializationComplete] = useState(false);
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -51,23 +48,43 @@ const StreetTrackingMap = () => {
 
   useEffect(() => {
     const initializeComponentData = async () => {
-      console.log("initializeComponentData called");
+      if (initializationComplete) return;
+      
+      console.log("=== INITIALIZATION START ===");
+      console.log("isLoading:", isLoading);
+      console.log("userData:", !!userData);
+      console.log("hasLocationPermission:", hasLocationPermission);
+      console.log("isTracking:", isTracking);
 
-        initializeData()
-
-      if (!isTracking) {
-        try {
-          console.log("About to start tracking");
+      try {
+        // Step 1: Initialize data (this includes permission check and server sync)
+        console.log("Step 1: Initializing data...");
+        await initializeData();
+        
+        // Step 2: Start tracking if not already tracking and we have permission
+        if (!isTracking && hasLocationPermission) {
+          console.log("Step 2: Starting tracking...");
           await startTracking(true);
           console.log("Tracking started successfully");
-        } catch (error) {
-          console.error("Failed to start tracking:", error);
-          Alert.alert("Error", "Failed to start location tracking");
+        } else if (!hasLocationPermission) {
+          console.log("Step 2: Skipping tracking start - no location permission");
+        } else {
+          console.log("Step 2: Tracking already active");
         }
+        
+        setInitializationComplete(true);
+        console.log("=== INITIALIZATION COMPLETE ===");
+        
+      } catch (error) {
+        console.error("Initialization failed:", error);
+        Alert.alert("Error", "Failed to initialize location services");
       }
     };
 
-    initializeComponentData();
+    // Only initialize if we have user data and haven't completed initialization
+    if (userData && !initializationComplete) {
+      initializeComponentData();
+    }
 
     return () => {
       console.log("Cleanup function running");
@@ -76,21 +93,37 @@ const StreetTrackingMap = () => {
         stopTracking().catch(console.error);
       }
     };
-  }, [hasLocationPermission, isTracking, startTracking, stopTracking]);
-
-
+  }, [userData, isTracking, hasLocationPermission, initializationComplete]);
 
   // Update highlighted streets when current street changes
   useEffect(() => {
     setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
   }, [currentStreetId]);
 
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log("=== STATE UPDATE DEBUG ===");
+    console.log("currentStreetId:", currentStreetId);
+    console.log("visitedStreets length:", visitedStreets.length);
+    console.log("allVisitedStreetIds size:", allVisitedStreetIds.size);
+    console.log("streetData available:", !!streetData);
+    console.log("streetData features count:", streetData?.features?.length || 0);
+    console.log("hasLocationPermission:", hasLocationPermission);
+    console.log("isTracking:", isTracking);
+  }, [currentStreetId, visitedStreets, allVisitedStreetIds, streetData, hasLocationPermission, isTracking]);
+
   const handleRequestLocationPermission = useCallback(async () => {
     try {
       const token = await getToken();
-
       const granted = await requestLocationPermission(token);
-      if (!granted) {
+      
+      if (granted) {
+        console.log("Permission granted, starting tracking...");
+        // After permission is granted, start tracking
+        if (!isTracking) {
+          await startTracking(true);
+        }
+      } else {
         Alert.alert(
           "Permission Denied",
           "Location permission is required for street tracking."
@@ -102,7 +135,7 @@ const StreetTrackingMap = () => {
       Alert.alert("Error", "Failed to request location permission");
       return false;
     }
-  }, [requestLocationPermission]);
+  }, [requestLocationPermission, getToken, isTracking, startTracking]);
 
   const centerOnUser = useCallback(() => {
     if (userLocation && cameraRef.current) {
@@ -122,13 +155,17 @@ const StreetTrackingMap = () => {
     setIsMapMenuOpen(false);
   }, []);
 
-  // Get analytics data for the menu
+  // Get analytics data for the menu with debugging
   const getMostVisitedData = useCallback(() => {
-    return getMostVisitedStreets(5);
+    const data = getMostVisitedStreets(5);
+    console.log("Most visited streets data:", data.length);
+    return data;
   }, [getMostVisitedStreets]);
 
   const getTimeSpentData = useCallback(() => {
-    return getStreetsByTimeSpent(5);
+    const data = getStreetsByTimeSpent(5);
+    console.log("Time spent streets data:", data.length);
+    return data;
   }, [getStreetsByTimeSpent]);
 
   if (isLoading) {
@@ -279,7 +316,7 @@ const StreetTrackingMap = () => {
         />
       )}
 
-      {!hasLocationPermission && !isLoading    && userData &&  (
+      {!hasLocationPermission && !isLoading && userData && (
         <LocationEnablerPanel
           requestLocationPermission={handleRequestLocationPermission}
         />
@@ -298,11 +335,12 @@ const StreetTrackingMap = () => {
         />
       )}
 
-        //! the app is sometimes stuck loading streets
-      {!streetData &&  (
+      {(!streetData || !initializationComplete) && userData && (
         <View className="absolute inset-0 bg-black/30 justify-center items-center z-50 pointer-events-none">
           <Spinner />
-          <Text className="text-white text-lg">Loading streets...</Text>
+          <Text className="text-white text-lg">
+            {!streetData ? "Loading streets..." : "Initializing..."}
+          </Text>
         </View>
       )}
 

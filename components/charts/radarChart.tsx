@@ -317,6 +317,7 @@ export function ChartRadar() {
         </View>
       </CardContent>
 
+//! api returns wrong data in terms of months and that prob causeing overall wrong
       <CardFooter className="flex-col gap-2 pt-4">
         <View className="flex flex-row items-center gap-2">
           <Text className="text-sm leading-none font-medium">
@@ -324,8 +325,8 @@ export function ChartRadar() {
             by {trend.percentage}% this month
           </Text>
         </View>
-        <View className="flex flex-row items-center gap-2">
-          <Text className="text-sm text-muted-foreground leading-none">
+        <View className="flex flex-row items-center gap-2 ">
+          <Text className="text-sm text-muted-foreground leading-none pb-2">
             Comparing {mainChartData?.previousMonth?.monthName} vs{" "}
             {mainChartData?.currentMonth?.monthName}
           </Text>

@@ -8,9 +8,8 @@ import React, {
 } from "react";
 import {
   LocationTrackingService,
-  StreetVisitData,
 } from "../services/LocationTrackingService";
-import type { UserCoords, StreetData, VisitedStreet } from "@/types/world";
+import type { UserCoords, StreetData, VisitedStreet, StreetVisitData } from "@/types/world";
 import { useAuth } from "@clerk/clerk-expo";
 
 interface LocationTrackingContextType {
@@ -47,7 +46,7 @@ interface LocationTrackingContextType {
   hasLocationPermission: boolean;
   requestLocationPermission: (token: string | null) => Promise<boolean>;
 
-  initializeData:() => Promise<void>;
+  initializeData: () => Promise<void>;
 }
 
 const LocationTrackingContext =
@@ -75,11 +74,18 @@ export const LocationTrackingProvider: React.FC<
   const locationService = LocationTrackingService.getInstance();
   const { getToken } = useAuth();
 
+  // Force re-render when street visit data changes
+  const [, forceUpdate] = useState({});
+  const triggerUpdate = useCallback(() => {
+    forceUpdate({});
+  }, []);
+
   useEffect(() => {
     const handlePermissionStatusUpdate = (hasPermission: boolean) => {
+      console.log("Permission status updated:", hasPermission);
       setHasLocationPermission(hasPermission);
     };
-    // Set up event listeners
+
     const handleLocationUpdate = (location: UserCoords) => {
       setUserLocation(location);
     };
@@ -88,19 +94,28 @@ export const LocationTrackingProvider: React.FC<
       streetId: string | null,
       coords: UserCoords
     ) => {
-      console.log("handling new street change:", streetId)
+      console.log("handling new street change:", streetId);
       setCurrentStreetId(streetId);
+      
       // Refresh visited streets and street IDs
       setVisitedStreets(locationService.getVisitedStreets());
-      setAllVisitedStreetIds(locationService.getAllVisitedStreetIds());
+      setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
+      
+      // Trigger re-render for components that depend on visit data
+      triggerUpdate();
     };
+
     const handleVisitCountUpdate = (
       streetId: string,
       visitData: StreetVisitData
     ) => {
-      // Force re-render of components that depend on visit data
-      // This could trigger analytics updates, UI refreshes, etc.
       console.log(`Visit count updated for street ${streetId}:`, visitData);
+      
+      // Update the visited street IDs set
+      setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
+      
+      // Force components to re-render with updated visit data
+      triggerUpdate();
     };
 
     const handleActiveHoursUpdate = (activeHours: number) => {
@@ -115,12 +130,22 @@ export const LocationTrackingProvider: React.FC<
     locationService.addPermissionStatusListener(handlePermissionStatusUpdate);
 
     // Initialize state from service
-    setCurrentStreetId(locationService.getCurrentStreetId());
-    setStreetData(locationService.getStreetData());
-    setVisitedStreets(locationService.getVisitedStreets());
-    setAllVisitedStreetIds(locationService.getAllVisitedStreetIds());
-    setTotalActiveHours(locationService.getTotalActiveHours());
-    setIsTracking(locationService.isTracking());
+    const initializeFromService = () => {
+      setCurrentStreetId(locationService.getCurrentStreetId());
+      setStreetData(locationService.getStreetData());
+      setVisitedStreets(locationService.getVisitedStreets());
+      setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
+      setTotalActiveHours(locationService.getTotalActiveHours());
+      setIsTracking(locationService.isTracking());
+      
+      console.log("Initialized from service:");
+      console.log("- Current street ID:", locationService.getCurrentStreetId());
+      console.log("- Visited streets count:", locationService.getVisitedStreets().length);
+      console.log("- All visited street IDs count:", locationService.getAllVisitedStreetIds().size);
+      console.log("- Street data features count:", locationService.getStreetData()?.features?.length || 0);
+    };
+
+    initializeFromService();
 
     // Update session duration every 30 seconds when tracking
     const sessionInterval = setInterval(() => {
@@ -135,37 +160,50 @@ export const LocationTrackingProvider: React.FC<
       locationService.removeStreetChangeListener(handleStreetChange);
       locationService.removeVisitCountUpdateListener(handleVisitCountUpdate);
       locationService.removeActiveHoursUpdateListener(handleActiveHoursUpdate);
-      locationService.removePermissionStatusListener(
-        handlePermissionStatusUpdate
-      );
+      locationService.removePermissionStatusListener(handlePermissionStatusUpdate);
       clearInterval(sessionInterval);
     };
-  }, []);
+  }, [triggerUpdate]);
 
-  const initializeData = async () => {
+  const initializeData = useCallback(async () => {
     try {
       const token = await getToken();
-
+      console.log("Initializing data with token:", !!token);
+      
       await locationService.initializeData(token);
+      
+      // After initialization, update state from service again
+      setCurrentStreetId(locationService.getCurrentStreetId());
+      setStreetData(locationService.getStreetData());
+      setVisitedStreets(locationService.getVisitedStreets());
+      setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
+      setTotalActiveHours(locationService.getTotalActiveHours());
+      
+      console.log("Data initialized successfully");
+      console.log("- Street data available:", !!locationService.getStreetData());
+      console.log("- Total visited streets:", locationService.getAllVisitedStreetIds().size);
+      
     } catch (error) {
       console.error("Failed to initializeData:", error);
       setHasLocationPermission(false);
       throw error;
     }
-  };
+  }, [getToken]);
 
-
-  const startTracking = useCallback(async(enableBackground: boolean) => {
+  const startTracking = useCallback(async (enableBackground: boolean) => {
     try {
       await locationService.startLocationTracking(enableBackground);
       setIsTracking(true);
       setHasLocationPermission(true);
       setCurrentSessionDuration(0);
+      
+      console.log("Tracking started successfully");
     } catch (error) {
       console.error("Failed to start tracking:", error);
+      setHasLocationPermission(false);
       throw error;
     }
-  },[]);
+  }, []);
 
   const stopTracking = useCallback(async () => {
     try {
@@ -177,46 +215,50 @@ export const LocationTrackingProvider: React.FC<
       console.error("Failed to stop tracking:", error);
       throw error;
     }
-  }, []);
+  }, [getToken]);
 
   const requestLocationPermission = async (
     token: string | null
   ): Promise<boolean> => {
     try {
-      return await locationService.requestLocationPermission(token);
+      const granted = await locationService.requestLocationPermission(token);
+      setHasLocationPermission(granted);
+      return granted;
     } catch (error) {
       console.error("Permission denied:", error);
+      setHasLocationPermission(false);
       return false;
     }
   };
-  const getStreetVisitData = (streetId: string): StreetVisitData | null => {
+
+  const getStreetVisitData = useCallback((streetId: string): StreetVisitData | null => {
     return locationService.getStreetVisitData(streetId);
-  };
+  }, []);
 
-  const getAllStreetVisitData = (): Map<string, StreetVisitData> => {
+  const getAllStreetVisitData = useCallback((): Map<string, StreetVisitData> => {
     return locationService.getAllStreetVisitData();
-  };
+  }, []);
 
-  const getMostVisitedStreets = (limit: number = 10) => {
+  const getMostVisitedStreets = useCallback((limit: number = 10) => {
     return locationService.getMostVisitedStreets(limit);
-  };
+  }, []);
 
-  const getStreetsByTimeSpent = (limit: number = 10) => {
+  const getStreetsByTimeSpent = useCallback((limit: number = 10) => {
     return locationService.getStreetsByTimeSpent(limit);
-  };
+  }, []);
 
   // Active hours methods
-  const getDailyActiveTime = (date?: string) => {
+  const getDailyActiveTime = useCallback((date?: string) => {
     return locationService.getDailyActiveTime(date);
-  };
+  }, []);
 
-  const getWeeklyActiveTime = () => {
+  const getWeeklyActiveTime = useCallback(() => {
     return locationService.getWeeklyActiveTime();
-  };
+  }, []);
 
-  const getMonthlyActiveTime = () => {
+  const getMonthlyActiveTime = useCallback(() => {
     return locationService.getMonthlyActiveTime();
-  };
+  }, []);
 
   const contextValue: LocationTrackingContextType = {
     // Location state
@@ -248,9 +290,8 @@ export const LocationTrackingProvider: React.FC<
     hasLocationPermission,
     requestLocationPermission,
 
-    //Data
+    // Data
     initializeData,
-    
   };
 
   return (

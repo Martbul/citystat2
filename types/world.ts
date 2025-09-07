@@ -75,3 +75,17 @@ export interface MapTrackingPanelProps {
   currentStreetVisitData?: StreetVisitData | null;
   streetsByTimeSpent:any;
 }
+
+
+export interface StreetVisitData {
+  visitCount: number;
+  firstVisit: number;
+  lastVisit: number;
+  totalTimeSpent: number; // in seconds
+  averageTimeSpent: number;
+}
+export interface ActiveHoursData {
+  totalActiveHours: number;
+  currentSessionStart: number | null;
+  dailyActiveTime: Map<string, number>;
+}

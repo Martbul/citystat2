@@ -11,6 +11,8 @@ export default function QuickStats() {
       useState<number>(0);
     const [PercentCityStreetCouverage, setPercentCityStreetCouverage] =
       useState<number>(0);
+       const [city, setCity] =
+      useState<string>("Unknown");
 
   useEffect(() => {
     const fetchings = async () => {
@@ -20,6 +22,8 @@ export default function QuickStats() {
 
         setTotalKilometersCovered(mainStats.totalKilometersCovered);
         setPercentCityStreetCouverage(mainStats.PercentCityStreetCouverage);
+                setCity(mainStats.city);
+
       } catch (error) {
         console.error("Error fetching main stats data:", error);
       }
@@ -46,7 +50,7 @@ export default function QuickStats() {
         <StatCard
           title="Coverage"
           value={`${PercentCityStreetCouverage.toFixed(3)}%`}
-          subtitle="Sofia"
+          subtitle={city}
           icon={<MaterialIcons name="explore" size={20} color="#c8f751" />}
         />
       </View>
