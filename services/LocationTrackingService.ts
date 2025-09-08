@@ -316,46 +316,6 @@ export class LocationTrackingService {
     this.persistData();
   }
 
-//   public async initializeData(token: string | null): Promise<void> {
-//   if (!token) return;
-
-//   try {
-//     console.log("Starting data initialization...");
-    
-//     // 1. Load persisted data first (this includes street data and visit counts)
-//     await this.loadPersistedData();
-//     console.log("Persisted data loaded");
-    
-//     // 2. Initialize permissions 
-//     await this.initializePermissions(token);
-//     console.log("Permissions initialized");
-    
-//     // 3. Load server data and merge with local data
-//     await this.syncServerData(token);
-//     console.log("Server data synchronized");
-    
-//     // 4. Force update the allVisitedStreetIds from the visit counts
-//     this.refreshVisitedStreetIds();
-    
-//     // 5. If we have a current location, check street proximity immediately
-//     if (this.previousUserCoords && this.streetData) {
-//       console.log("Re-checking street proximity after data sync");
-//       this.checkStreetProximity(this.previousUserCoords);
-//     }
-    
-//     console.log("Data initialization completed successfully");
-//     console.log("- Street data features:", this.streetData?.features?.length || 0);
-//     console.log("- Visit counts:", this.streetVisitCounts.size);
-//     console.log("- All visited street IDs:", this.allVisitedStreetIds.size);
-//     console.log("- Current street ID:", this.currentStreetId);
-    
-//   } catch (error) {
-//     console.error("Failed to initialize data:", error);
-//     throw error;
-//   }
-// }
-
-
 
 public async initializeData(token: string | null): Promise<void> {
   if (!token) {
@@ -422,17 +382,6 @@ public async initializeData(token: string | null): Promise<void> {
   }
 }
 
-// private refreshVisitedStreetIds() {
-//   // Rebuild the set from visit counts
-//   this.allVisitedStreetIds = new Set(this.streetVisitCounts.keys());
-  
-//   // Also add any streets from the current session
-//   this.visitedStreets.forEach(street => {
-//     this.allVisitedStreetIds.add(street.streetId);
-//   });
-  
-//   console.log("Refreshed visited street IDs:", this.allVisitedStreetIds.size);
-// }
 
 
 private refreshVisitedStreetIds() {
@@ -474,10 +423,12 @@ private async syncServerData(token: string): Promise<void> {
     // Load visited streets from server and merge with local data
     const serverDataLoaded = await this.loadVisitedStreetsFromDatabase(token);
     
-    if (serverDataLoaded) {
-      console.log("Server data synchronized successfully");
+    if (!serverDataLoaded) {
+      console.log("ERROR SYNCHRONIZIATION");
     }
-    
+
+    console.log("-----------Server data synchronized successfully",serverDataLoaded);
+
     // Load any other server data (active hours, preferences, etc.)
     await this.loadActiveHoursFromServer(token);
     
@@ -621,51 +572,6 @@ private async initializePermissions(token: string | null) {
     }
   }
 
-//   public async loadVisitedStreetsFromDatabase(token: string) {
-//   try {
-//     console.log("Loading visited streets from database...");
-//     const response = await apiService.fetchVisitedStreets(token);
-
-//     if (response.status === "success" && response.data) {
-//       console.log(`Received ${response.data.length} visited streets from database`);
-      
-//       // Convert API response to internal format and merge with existing data
-//       response.data.forEach((streetData) => {
-//         console.log("debug++: ", streetData)
-//         const visitData: StreetVisitData = {
-//           visitCount: streetData.visitCount,
-//           firstVisit: streetData.firstVisit,
-//           lastVisit: streetData.lastVisit,
-//           totalTimeSpent: streetData.totalTimeSpent,
-//           averageTimeSpent: streetData.averageTimeSpent,
-//         };
-
-//         // Only update if server data is newer or we don't have local data
-//         const existingData = this.streetVisitCounts.get(streetData.streetId);
-//         if (!existingData || streetData.lastVisit > existingData.lastVisit) {
-//           this.streetVisitCounts.set(streetData.streetId, visitData);
-//         }
-        
-//         this.allVisitedStreetIds.add(streetData.streetId);
-//       });
-
-//       // Persist the merged data
-//       await this.persistData();
-
-//       console.log(`Final state after loading:`);
-//       console.log(`- Visit counts: ${this.streetVisitCounts.size}`);
-//       console.log(`- All visited street IDs: ${this.allVisitedStreetIds.size}`);
-
-//       return true;
-//     } else {
-//       console.warn("Failed to load visited streets:", response.message);
-//       return false;
-//     }
-//   } catch (error) {
-//     console.error("Error loading visited streets from database:", error);
-//     return false;
-//   }
-// }
 
 
 public async loadVisitedStreetsFromDatabase(token: string) {
@@ -673,11 +579,13 @@ public async loadVisitedStreetsFromDatabase(token: string) {
     console.log("Loading visited streets from database...");
     const response = await apiService.fetchVisitedStreets(token);
 
-    if (response.status === "success" && response.data) {
+    if (response.data && response.status == "success") {
       console.log(`Received ${response.data.length} visited streets from database`);
       
       // Convert API response to internal format and merge with existing data
       response.data.forEach((streetData) => {
+        //! maybe steetData dont have any of .viusutcounte ,firstVistit...
+        console.log("singlestreetdata:+++  ",streetData)
         const visitData: StreetVisitData = {
           visitCount: streetData.visitCount,
           firstVisit: streetData.firstVisit,
@@ -685,13 +593,15 @@ public async loadVisitedStreetsFromDatabase(token: string) {
           totalTimeSpent: streetData.totalTimeSpent,
           averageTimeSpent: streetData.averageTimeSpent,
         };
+        //! missmatch between visited streets and visitedStreetsData
 
         // Only update if server data is newer or we don't have local data
         const existingData = this.streetVisitCounts.get(streetData.streetId);
         if (!existingData || streetData.lastVisit > existingData.lastVisit) {
           this.streetVisitCounts.set(streetData.streetId, visitData);
         }
-        
+                  this.visitedStreets.push(streetData)
+
         this.allVisitedStreetIds.add(streetData.streetId);
       });
 
@@ -704,7 +614,7 @@ public async loadVisitedStreetsFromDatabase(token: string) {
 
       return true;
     } else {
-      console.warn("Failed to load visited streets:", response.message);
+      console.warn("Failed to load visited streets:", response);
       return false;
     }
   } catch (error) {
@@ -1080,8 +990,6 @@ out geom;
         closestDistance = distanceKm;
         foundStreet = street.id;
         closestStreetName = street.properties?.name || "Unnamed";
-        //!!!!!!!!!!!!!!!!!!!
-        //  this.setCurrentStreetId(foundStreet)
         console.log(`NEW CLOSEST: ${foundStreet} (${closestStreetName}) at ${distanceKm}km`);
       }
     } catch (error) {
@@ -1108,74 +1016,6 @@ out geom;
     console.log(`User still on same street: ${foundStreet}`);
   }
 }
-
-// // Fix the handleStreetChange method to ensure proper state updates
-// private handleStreetChange(newStreetId: string | null, coords: UserCoords) {
-//   const now = Date.now();
-//   console.log(`=== STREET CHANGE: ${this.currentStreetId} -> ${newStreetId} ===`);
-
-//   // Handle leaving current street
-//   if (this.currentStreetId && this.currentStreetId !== newStreetId) {
-//     const exitTime = now;
-//     const entryTime = this.streetEntryTime || now;
-//     const duration = Math.floor((exitTime - entryTime) / 1000);
-
-//     // Update the last visited street with duration
-//     this.visitedStreets = this.visitedStreets.map((street, index) => {
-//       if (
-//         index === this.visitedStreets.length - 1 &&
-//         street.streetId === this.currentStreetId
-//       ) {
-//         return { ...street, duration };
-//       }
-//       return street;
-//     });
-
-//     // Update visit statistics
-//     this.updateStreetVisitStats(this.currentStreetId, duration);
-
-//     console.log(
-//       `User left street ${this.currentStreetId}, spent ${duration} seconds`
-//     );
-//   }
-
-//   // Handle entering new street
-//   if (newStreetId && newStreetId !== this.currentStreetId) {
-//     const street = this.streetData?.features.find(
-//       (s) => s.id === newStreetId
-//     );
-//     const streetName =
-//       street?.properties?.name || `Unknown Street ${newStreetId}`;
-
-//     const visitedStreet: VisitedStreet = {
-//       streetId: newStreetId,
-//       streetName,
-//       timestamp: now,
-//       coordinates: coords,
-//     };
-
-//     this.visitedStreets.push(visitedStreet);
-//     this.allVisitedStreetIds.add(newStreetId);
-
-//     // Update visit count
-//     this.updateStreetVisitCount(newStreetId);
-
-//     this.streetEntryTime = now;
-//     console.log(`User entered street: ${streetName} (${newStreetId})`);
-//     console.log(`Session streets: ${this.visitedStreets.length}`);
-//     console.log(`Total visited streets: ${this.allVisitedStreetIds.size}`);
-//   }
-
-//   // Set the new street ID AFTER handling the change
-//   this.currentStreetId = newStreetId;
-  
-//   // Notify listeners with updated state
-//   this.streetChangeListeners.forEach((listener) =>
-//     listener(newStreetId, coords)
-//   );
-  
-//   this.persistData();
-// }
 
 
 
@@ -1296,56 +1136,6 @@ public getDebugState() {
   };
 }
 
-// Fix the updateStreetVisitCount method to ensure proper notifications
-// private updateStreetVisitCount(streetId: string) {
-//   const existing = this.streetVisitCounts.get(streetId);
-//   const now = Date.now();
-
-//   if (existing) {
-//     const updated: StreetVisitData = {
-//       ...existing,
-//       visitCount: existing.visitCount + 1,
-//       lastVisit: now,
-//     };
-//     this.streetVisitCounts.set(streetId, updated);
-//     console.log(`Updated visit count for ${streetId}: ${updated.visitCount}`);
-
-//     // Notify listeners
-//     this.visitCountUpdateListeners.forEach((listener) =>
-//       listener(streetId, updated)
-//     );
-//   } else {
-//     const newData: StreetVisitData = {
-//       visitCount: 1,
-//       firstVisit: now,
-//       lastVisit: now,
-//       totalTimeSpent: 0,
-//       averageTimeSpent: 0,
-//     };
-//     this.streetVisitCounts.set(streetId, newData);
-//     console.log(`Created new visit data for ${streetId}: first visit`);
-
-//     // Notify listeners
-//     this.visitCountUpdateListeners.forEach((listener) =>
-//       listener(streetId, newData)
-//     );
-//   }
-// }
-
-// // Add a method to get current state for debugging
-// public getDebugState() {
-//   return {
-//     currentStreetId: this.currentStreetId,
-//     streetDataFeatures: this.streetData?.features?.length || 0,
-//     visitedStreetsCount: this.visitedStreets.length,
-//     allVisitedStreetIdsCount: this.allVisitedStreetIds.size,
-//     streetVisitCountsSize: this.streetVisitCounts.size,
-//     isTracking: this.isTracking(),
-//     hasStreetData: !!this.streetData,
-//     hasUserLocation: !!this.previousUserCoords,
-//   };
-// }
- 
 
   private updateStreetVisitStats(streetId: string, duration: number) {
     const existing = this.streetVisitCounts.get(streetId);

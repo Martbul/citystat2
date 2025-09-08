@@ -22,10 +22,12 @@ import {
   getPolygonPoints,
 } from "@/utils/charts/radarChart";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { ChartDataItem, CustomRadarChartProps, MainChartData } from "@/types/radarChart";
+import {
+  ChartDataItem,
+  CustomRadarChartProps,
+  MainChartData,
+} from "@/types/radarChart";
 import Spinner from "../spinner";
-
-
 
 // Helper function to ensure valid numbers
 const ensureValidNumber = (value: any): number => {
@@ -43,14 +45,14 @@ const validatePolygonPoints = (points: number[][]): string => {
 const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
   const center = size / 2;
   const maxRadius = center - 50;
-  
+
   // Ensure all data values are valid numbers
-  const sanitizedData = data.map(item => ({
+  const sanitizedData = data.map((item) => ({
     ...item,
     desktop: ensureValidNumber(item.desktop),
-    mobile: ensureValidNumber(item.mobile)
+    mobile: ensureValidNumber(item.mobile),
   }));
-  
+
   // Calculate maxValue with fallback
   const allValues = sanitizedData.flatMap((d) => [d.desktop, d.mobile]);
   const maxValue = Math.max(...allValues, 1); // Ensure maxValue is at least 1
@@ -61,7 +63,7 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
     maxRadius,
     maxValue
   );
-  
+
   const mobilePoints = getPolygonPoints(
     sanitizedData.map((d) => d.mobile),
     center,
@@ -70,8 +72,10 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
   );
 
   // Validate that points are valid before rendering
-  const validDesktopPoints = Array.isArray(desktopPoints) && desktopPoints.length > 0;
-  const validMobilePoints = Array.isArray(mobilePoints) && mobilePoints.length > 0;
+  const validDesktopPoints =
+    Array.isArray(desktopPoints) && desktopPoints.length > 0;
+  const validMobilePoints =
+    Array.isArray(mobilePoints) && mobilePoints.length > 0;
 
   return (
     <Svg width={size} height={size}>
@@ -89,7 +93,8 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
 
         {/* Axis lines */}
         {sanitizedData.map((_, index) => {
-          const angle = (index * 2 * Math.PI) / sanitizedData.length - Math.PI / 2;
+          const angle =
+            (index * 2 * Math.PI) / sanitizedData.length - Math.PI / 2;
           const x2 = center + Math.cos(angle) * maxRadius;
           const y2 = center + Math.sin(angle) * maxRadius;
           return (
@@ -172,11 +177,15 @@ const CustomRadarChart: React.FC<CustomRadarChartProps> = ({ data, size }) => {
 
 export function ChartRadar() {
   const { userData, isLoading, getMainRadarChartData } = useUserData();
-  const [mainChartData, setMainChartData] = useState<MainChartData | null>(null);
+  const [mainChartData, setMainChartData] = useState<MainChartData | null>(
+    null
+  );
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
 
   // Transform API data to chart format
-  const transformDataForChart = (apiData: MainChartData | null): ChartDataItem[] => {
+  const transformDataForChart = (
+    apiData: MainChartData | null
+  ): ChartDataItem[] => {
     if (!apiData || !apiData.currentMonth || !apiData.previousMonth) {
       return [];
     }
@@ -234,7 +243,7 @@ export function ChartRadar() {
     const percentage = ((currentTotal - previousTotal) / previousTotal) * 100;
     return {
       percentage: Math.abs(percentage).toFixed(1),
-      direction: (percentage >= 0 ? "up" : "down"),
+      direction: percentage >= 0 ? "up" : "down",
     };
   };
 
@@ -257,7 +266,7 @@ export function ChartRadar() {
               height: 280,
             }}
           >
-            <Spinner/>
+            <Spinner />
             <Text>Loading chart data...</Text>
           </View>
         </CardContent>
@@ -273,7 +282,6 @@ export function ChartRadar() {
           Distribution of street coverage over the past month
         </CardDescription>
       </CardHeader>
-
       <CardContent>
         <View style={{ alignItems: "center" }}>
           <CustomRadarChart data={chartData} size={280} />
@@ -316,17 +324,16 @@ export function ChartRadar() {
           </View>
         </View>
       </CardContent>
-
-//! api returns wrong data in terms of months and that prob causeing overall wrong
+      {/* //! api returns wrong data in terms of months and that prob causeing */}
       <CardFooter className="flex-col gap-2 pt-4">
         <View className="flex flex-row items-center gap-2">
-          <Text className="text-sm leading-none font-medium">
+          <Text style={{ fontSize: 14, fontWeight: "500" }}>
             {trend.direction === "up" ? "📈" : "📉"} Trending {trend.direction}{" "}
             by {trend.percentage}% this month
           </Text>
         </View>
         <View className="flex flex-row items-center gap-2 ">
-          <Text className="text-sm text-muted-foreground leading-none pb-2">
+          <Text style={{ fontSize: 12, color: "#666" }}>
             Comparing {mainChartData?.previousMonth?.monthName} vs{" "}
             {mainChartData?.currentMonth?.monthName}
           </Text>

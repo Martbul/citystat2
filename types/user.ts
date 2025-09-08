@@ -104,7 +104,7 @@ export interface UserData {
   
   // Relationships
   cityStats?: CityStat;
-  settings?: Settings;
+  Settings?: Settings;
   devices?: Device;
   friends?: Friend[];
   friendOf?: Friend[];

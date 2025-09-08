@@ -235,7 +235,7 @@ const StreetTrackingMap = () => {
         {streetData && mapZoom >= 11 && (
           <>
             {/* All streets with dynamic coloring */}
-            <ShapeSource
+            {/* <ShapeSource
               id="allStreetsSource"
               shape={streetData}
               onPress={(event) => {
@@ -276,8 +276,9 @@ const StreetTrackingMap = () => {
               />
             </ShapeSource>
 
-            {/* Separate layer for current street highlight - more reliable */}
-            {currentStreetId &&
+              } */}
+
+              {currentStreetId &&
               streetData.features.some((f) => f.id === currentStreetId) && (
                 <ShapeSource
                   id="currentStreetHighlight"

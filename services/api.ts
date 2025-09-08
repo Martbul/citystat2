@@ -32,7 +32,7 @@ class ApiService {
       ...(token && { Authorization: `Bearer ${token}` }),
       ...fetchOptions.headers,
     };
-    console.log("Tocken " + token);
+    // console.log("Tocken " + token);
 
     console.log(`Making request to: ${this.baseUrl}${endpoint}`);
 
@@ -41,7 +41,7 @@ class ApiService {
       headers,
     });
 
-    console.log(`Response status: ${response.status}`);
+    // console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
       let errorText: string;

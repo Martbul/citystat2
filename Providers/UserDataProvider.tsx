@@ -193,7 +193,9 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   }, [isSignedIn]);
 
   const settings = useMemo(() => {
+    //! possible error
     const apiSettings = userData?.Settings || userData?.settings;
+    // const apiSettings = userData?.Settings
     return apiSettings
       ? { ...defaultSettings, ...apiSettings }
       : defaultSettings;
@@ -806,13 +808,6 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   
   
   
-  
-  
-  
-  
-  
-  
-
   // Derived values for backwards compatibility
   const derivedValues = useMemo(
     () => ({
