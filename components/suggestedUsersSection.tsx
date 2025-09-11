@@ -72,6 +72,12 @@ export const SuggestedExplorersSection = () => {
     ));
   };
 
+  if(userData && usersSameCity?.length === 0){
+    return(
+      <View className=""></View>
+    )
+  }
+
   return (
     <SectionSpacing>
       <Card>

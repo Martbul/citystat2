@@ -6,10 +6,13 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import {
-  LocationTrackingService,
-} from "../services/LocationTrackingService";
-import type { UserCoords, StreetData, VisitedStreet, StreetVisitData } from "@/types/world";
+import { LocationTrackingService } from "../services/LocationTrackingService";
+import type {
+  UserCoords,
+  StreetData,
+  VisitedStreet,
+  StreetVisitData,
+} from "@/types/world";
 import { useAuth } from "@clerk/clerk-expo";
 
 interface LocationTrackingContextType {
@@ -47,6 +50,7 @@ interface LocationTrackingContextType {
   requestLocationPermission: (token: string | null) => Promise<boolean>;
 
   initializeData: () => Promise<void>;
+  destroyService: (token?: string | null) => Promise<void>;
 }
 
 const LocationTrackingContext =
@@ -96,11 +100,11 @@ export const LocationTrackingProvider: React.FC<
     ) => {
       console.log("handling new street change:", streetId);
       setCurrentStreetId(streetId);
-      
+
       // Refresh visited streets and street IDs
       setVisitedStreets(locationService.getVisitedStreets());
       setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
-      
+
       // Trigger re-render for components that depend on visit data
       triggerUpdate();
     };
@@ -110,10 +114,10 @@ export const LocationTrackingProvider: React.FC<
       visitData: StreetVisitData
     ) => {
       console.log(`Visit count updated for street ${streetId}:`, visitData);
-      
+
       // Update the visited street IDs set
       setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
-      
+
       // Force components to re-render with updated visit data
       triggerUpdate();
     };
@@ -137,12 +141,21 @@ export const LocationTrackingProvider: React.FC<
       setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
       setTotalActiveHours(locationService.getTotalActiveHours());
       setIsTracking(locationService.isTracking());
-      
+
       console.log("Initialized from service:");
       console.log("- Current street ID:", locationService.getCurrentStreetId());
-      console.log("- Visited streets count:", locationService.getVisitedStreets().length);
-      console.log("- All visited street IDs count:", locationService.getAllVisitedStreetIds().size);
-      console.log("- Street data features count:", locationService.getStreetData()?.features?.length || 0);
+      console.log(
+        "- Visited streets count:",
+        locationService.getVisitedStreets().length
+      );
+      console.log(
+        "- All visited street IDs count:",
+        locationService.getAllVisitedStreetIds().size
+      );
+      console.log(
+        "- Street data features count:",
+        locationService.getStreetData()?.features?.length || 0
+      );
     };
 
     initializeFromService();
@@ -160,7 +173,9 @@ export const LocationTrackingProvider: React.FC<
       locationService.removeStreetChangeListener(handleStreetChange);
       locationService.removeVisitCountUpdateListener(handleVisitCountUpdate);
       locationService.removeActiveHoursUpdateListener(handleActiveHoursUpdate);
-      locationService.removePermissionStatusListener(handlePermissionStatusUpdate);
+      locationService.removePermissionStatusListener(
+        handlePermissionStatusUpdate
+      );
       clearInterval(sessionInterval);
     };
   }, [triggerUpdate]);
@@ -169,20 +184,25 @@ export const LocationTrackingProvider: React.FC<
     try {
       const token = await getToken();
       console.log("Initializing data with token:", !!token);
-      
+
       await locationService.initializeData(token);
-      
+
       // After initialization, update state from service again
       setCurrentStreetId(locationService.getCurrentStreetId());
       setStreetData(locationService.getStreetData());
       setVisitedStreets(locationService.getVisitedStreets());
       setAllVisitedStreetIds(new Set(locationService.getAllVisitedStreetIds()));
       setTotalActiveHours(locationService.getTotalActiveHours());
-      
+
       console.log("Data initialized successfully");
-      console.log("- Street data available:", !!locationService.getStreetData());
-      console.log("- Total visited streets:", locationService.getAllVisitedStreetIds().size);
-      
+      console.log(
+        "- Street data available:",
+        !!locationService.getStreetData()
+      );
+      console.log(
+        "- Total visited streets:",
+        locationService.getAllVisitedStreetIds().size
+      );
     } catch (error) {
       console.error("Failed to initializeData:", error);
       setHasLocationPermission(false);
@@ -196,7 +216,7 @@ export const LocationTrackingProvider: React.FC<
       setIsTracking(true);
       setHasLocationPermission(true);
       setCurrentSessionDuration(0);
-      
+
       console.log("Tracking started successfully");
     } catch (error) {
       console.error("Failed to start tracking:", error);
@@ -231,11 +251,53 @@ export const LocationTrackingProvider: React.FC<
     }
   };
 
-  const getStreetVisitData = useCallback((streetId: string): StreetVisitData | null => {
-    return locationService.getStreetVisitData(streetId);
-  }, []);
+  const destroyService = useCallback(
+    async (token?: string | null) => {
+      try {
+        console.log("Provider: Destroying location service...");
 
-  const getAllStreetVisitData = useCallback((): Map<string, StreetVisitData> => {
+        // Get token if not provided
+        const serviceToken = token || (await getToken());
+
+        // Destroy the service
+        await locationService.destroy(serviceToken);
+
+        // Reset provider state
+        setUserLocation(null);
+        setCurrentStreetId(null);
+        setStreetData(null);
+        setVisitedStreets([]);
+        setAllVisitedStreetIds(new Set());
+        setIsTracking(false);
+        setTotalActiveHours(0);
+        setCurrentSessionDuration(0);
+
+        console.log("Provider: Service destroyed and state reset");
+      } catch (error) {
+        console.error("Provider: Error destroying service:", error);
+
+        // Fallback cleanup without token
+        try {
+          await locationService.destroy();
+        } catch (fallbackError) {
+          console.error("Provider: Fallback cleanup failed:", fallbackError);
+        }
+      }
+    },
+    [getToken]
+  );
+
+  const getStreetVisitData = useCallback(
+    (streetId: string): StreetVisitData | null => {
+      return locationService.getStreetVisitData(streetId);
+    },
+    []
+  );
+
+  const getAllStreetVisitData = useCallback((): Map<
+    string,
+    StreetVisitData
+  > => {
     return locationService.getAllStreetVisitData();
   }, []);
 
@@ -292,6 +354,7 @@ export const LocationTrackingProvider: React.FC<
 
     // Data
     initializeData,
+    destroyService,
   };
 
   return (

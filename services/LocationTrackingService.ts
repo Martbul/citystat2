@@ -23,6 +23,7 @@ import type {
   SaveVisitedStreetsRequest,
   Street,
   StreetData,
+  StreetDataResponse,
   StreetVisitData,
   UserCoords,
   VisitedStreet,
@@ -52,8 +53,6 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
   }
 });
 
-
-
 export class LocationTrackingService {
   private static instance: LocationTrackingService | null = null;
   private locationSubscription: Location.LocationSubscription | null = null;
@@ -72,7 +71,8 @@ export class LocationTrackingService {
     currentSessionStart: null,
     dailyActiveTime: new Map(),
   };
-
+  private lastStreetDataFetch: number = 0;
+  private readonly MIN_FETCH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
   private activeHoursInterval: number | null = null;
 
   // Event listeners
@@ -285,26 +285,54 @@ export class LocationTrackingService {
     console.log("Stopped active hours tracking");
   }
 
+  // private updateActiveHours() {
+  //   if (!this.activeHoursData.currentSessionStart) return;
+
+  //   const now = Date.now();
+  //   const sessionDuration = now - this.activeHoursData.currentSessionStart;
+  //   const hoursToAdd = sessionDuration / (1000 * 60 * 60); // Convert to hours
+
+  //   // Update total active hours
+  //   this.activeHoursData.totalActiveHours += hoursToAdd;
+
+  //   // Update daily active time
+  //   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+  //   const currentDailyTime =
+  //     this.activeHoursData.dailyActiveTime.get(today) || 0;
+  //   this.activeHoursData.dailyActiveTime.set(
+  //     today,
+  //     currentDailyTime + Math.floor(sessionDuration / 1000) // Store daily time in seconds
+  //   );
+
+  //   // Reset session start for next interval
+  //   this.activeHoursData.currentSessionStart = now;
+
+  //   // Notify listeners
+  //   this.activeHoursUpdateListeners.forEach((listener) =>
+  //     listener(this.activeHoursData.totalActiveHours)
+  //   );
+
+  //   // Persist the updated data
+  //   this.persistData();
+  // }
+
   private updateActiveHours() {
     if (!this.activeHoursData.currentSessionStart) return;
 
     const now = Date.now();
-    const sessionDuration = now - this.activeHoursData.currentSessionStart;
-    const hoursToAdd = sessionDuration / (1000 * 60 * 60); // Convert to hours
+    const MINUTE_IN_MS = 60 * 1000;
 
-    // Update total active hours
-    this.activeHoursData.totalActiveHours += hoursToAdd;
+    // Add exactly one minute (since this runs every minute)
+    const minutesToAdd = 1 / 60; // 1 minute = 1/60 hours
+    this.activeHoursData.totalActiveHours += minutesToAdd;
 
-    // Update daily active time
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+    // Update daily active time (add 60 seconds)
+    const today = new Date().toISOString().split("T")[0];
     const currentDailyTime =
       this.activeHoursData.dailyActiveTime.get(today) || 0;
-    this.activeHoursData.dailyActiveTime.set(
-      today,
-      currentDailyTime + Math.floor(sessionDuration / 1000) // Store daily time in seconds
-    );
+    this.activeHoursData.dailyActiveTime.set(today, currentDailyTime + 60);
 
-    // Reset session start for next interval
+    // Update session start for next interval
     this.activeHoursData.currentSessionStart = now;
 
     // Notify listeners
@@ -316,136 +344,148 @@ export class LocationTrackingService {
     this.persistData();
   }
 
-
-public async initializeData(token: string | null): Promise<void> {
-  if (!token) {
-    console.log("No token provided - skipping server data sync");
-    return;
-  }
-
-  try {
-    console.log("=== STARTING DATA INITIALIZATION ===");
-    
-    // 1. Load persisted data first (this includes street data and visit counts)
-    console.log("Step 1: Loading persisted local data...");
-    await this.loadPersistedData();
-    console.log("✅ Persisted data loaded");
-    console.log("- Local visit counts:", this.streetVisitCounts.size);
-    console.log("- Local visited street IDs:", this.allVisitedStreetIds.size);
-    
-    // 2. Initialize permissions 
-    console.log("Step 2: Initializing permissions...");
-    await this.initializePermissions(token);
-    console.log("✅ Permissions initialized");
-    
-    // 3. Load and sync server data (this will call fetchVisitedStreets API)
-    console.log("Step 3: Syncing with server data...");
-    await this.syncServerData(token);
-    console.log("✅ Server data synchronized");
-    
-    // 4. Force update the allVisitedStreetIds from the visit counts (in case of any missed data)
-    console.log("Step 4: Final refresh of visited street IDs...");
-    this.refreshVisitedStreetIds();
-    console.log("✅ Street IDs refreshed");
-    
-    // 5. If we have a current location, check street proximity immediately
-    if (this.previousUserCoords && this.streetData) {
-      console.log("Step 5: Re-checking street proximity with current location...");
-      this.checkStreetProximity(this.previousUserCoords);
-      console.log("✅ Street proximity checked");
-    } else {
-      console.log("Step 5: No current location available for proximity check");
-    }
-    
-    console.log("=== DATA INITIALIZATION COMPLETED SUCCESSFULLY ===");
-    console.log("Final initialization state:");
-    console.log("- Street data features:", this.streetData?.features?.length || 0);
-    console.log("- Visit counts:", this.streetVisitCounts.size);
-    console.log("- All visited street IDs:", this.allVisitedStreetIds.size);
-    console.log("- Current street ID:", this.currentStreetId);
-    console.log("- Has user location:", !!this.previousUserCoords);
-    console.log("- Total active hours:", this.activeHoursData.totalActiveHours);
-    
-    // Debug: Show some sample data
-    if (this.allVisitedStreetIds.size > 0) {
-      console.log("Sample visited street IDs:", Array.from(this.allVisitedStreetIds).slice(0, 5));
-    }
-    if (this.streetVisitCounts.size > 0) {
-      const firstEntry = this.streetVisitCounts.entries().next().value;
-      console.log("Sample visit data:", firstEntry);
-    }
-    
-  } catch (error) {
-    console.error("Failed to initialize data:", error);
-    console.error("Error stack:", error.stack);
-    throw error;
-  }
-}
-
-
-
-private refreshVisitedStreetIds() {
-  // Rebuild the set from visit counts
-  this.allVisitedStreetIds = new Set(this.streetVisitCounts.keys());
-  
-  // Also add any streets from the current session
-  this.visitedStreets.forEach(street => {
-    this.allVisitedStreetIds.add(street.streetId);
-  });
-  
-  console.log("Refreshed visited street IDs:", this.allVisitedStreetIds.size);
-}
-
-
-private async loadActiveHoursFromServer(token: string): Promise<void> {
-  try {
-    // Add this API call to your service
-    //! dont create separete call for hourse , pull the from the user obj
-    const serverActiveHours = (await apiService.fetchUser(token)).activeHours;
-    console.log("serverActiveHours: ",serverActiveHours)
-    if (serverActiveHours && serverActiveHours > this.activeHoursData.totalActiveHours) {
-      // Server has more recent data, use it
-      this.activeHoursData.totalActiveHours = serverActiveHours;
-      
-      // Notify listeners
-      this.activeHoursUpdateListeners.forEach(listener => 
-        listener(this.activeHoursData.totalActiveHours)
-      );
-    }
-  } catch (error) {
-    console.error("Failed to load active hours from server:", error);
-    // Continue with local data
-  }
-}
-
-private async syncServerData(token: string): Promise<void> {
-  try {
-    // Load visited streets from server and merge with local data
-    const serverDataLoaded = await this.loadVisitedStreetsFromDatabase(token);
-    
-    if (!serverDataLoaded) {
-      console.log("ERROR SYNCHRONIZIATION");
+  public async initializeData(token: string | null): Promise<void> {
+    if (!token) {
+      console.log("No token provided - skipping server data sync");
+      return;
     }
 
-    console.log("-----------Server data synchronized successfully",serverDataLoaded);
-
-    // Load any other server data (active hours, preferences, etc.)
-    await this.loadActiveHoursFromServer(token);
-    
-    // After loading server data, persist the merged state locally
-    await this.persistData();
-    
-  } catch (error) {
-    console.error("Error syncing server data:", error);
-    // Don't throw - allow app to work with local data only
-  }
-}
-
-  public async startLocationTracking(
-    enableBackground: boolean
-  ) {
     try {
-      
+      console.log("=== STARTING DATA INITIALIZATION ===");
+
+      // 1. Load persisted data first (this includes street data and visit counts)
+      console.log("Step 1: Loading persisted local data...");
+      await this.loadPersistedData();
+      console.log("✅ Persisted data loaded");
+      console.log("- Local visit counts:", this.streetVisitCounts.size);
+      console.log("- Local visited street IDs:", this.allVisitedStreetIds.size);
+
+      // 2. Initialize permissions
+      console.log("Step 2: Initializing permissions...");
+      await this.initializePermissions(token);
+      console.log("✅ Permissions initialized");
+
+      // 3. Load and sync server data (this will call fetchVisitedStreets API)
+      console.log("Step 3: Syncing with server data...");
+      await this.syncServerData(token);
+      console.log("✅ Server data synchronized");
+
+      // 4. Force update the allVisitedStreetIds from the visit counts (in case of any missed data)
+      console.log("Step 4: Final refresh of visited street IDs...");
+      this.refreshVisitedStreetIds();
+      console.log("✅ Street IDs refreshed");
+
+      // 5. If we have a current location, check street proximity immediately
+      if (this.previousUserCoords && this.streetData) {
+        console.log(
+          "Step 5: Re-checking street proximity with current location..."
+        );
+        this.checkStreetProximity(this.previousUserCoords);
+        console.log("✅ Street proximity checked");
+      } else {
+        console.log(
+          "Step 5: No current location available for proximity check"
+        );
+      }
+
+      console.log("=== DATA INITIALIZATION COMPLETED SUCCESSFULLY ===");
+      console.log("Final initialization state:");
+      console.log(
+        "- Street data features:",
+        this.streetData?.features?.length || 0
+      );
+      console.log("- Visit counts:", this.streetVisitCounts.size);
+      console.log("- All visited street IDs:", this.allVisitedStreetIds.size);
+      console.log("- Current street ID:", this.currentStreetId);
+      console.log("- Has user location:", !!this.previousUserCoords);
+      console.log(
+        "- Total active hours:",
+        this.activeHoursData.totalActiveHours
+      );
+
+      // Debug: Show some sample data
+      if (this.allVisitedStreetIds.size > 0) {
+        console.log(
+          "Sample visited street IDs:",
+          Array.from(this.allVisitedStreetIds).slice(0, 5)
+        );
+      }
+      if (this.streetVisitCounts.size > 0) {
+        const firstEntry = this.streetVisitCounts.entries().next().value;
+        console.log("Sample visit data:", firstEntry);
+      }
+    } catch (e) {
+      let error = e as Error;
+      console.error("Failed to initialize data:", error);
+      console.error("Error stack:", error.stack);
+      throw error;
+    }
+  }
+
+  private refreshVisitedStreetIds() {
+    // Rebuild the set from visit counts
+    this.allVisitedStreetIds = new Set(this.streetVisitCounts.keys());
+
+    // Also add any streets from the current session
+    this.visitedStreets.forEach((street) => {
+      this.allVisitedStreetIds.add(street.streetId);
+    });
+
+    console.log("Refreshed visited street IDs:", this.allVisitedStreetIds.size);
+  }
+
+  private async loadActiveHoursFromServer(token: string): Promise<void> {
+    try {
+      // Add this API call to your service
+      //! dont create separete call for hourse , pull the from the user obj
+      const serverActiveHours = (await apiService.fetchUser(token)).activeHours;
+      console.log("serverActiveHours: ", serverActiveHours);
+      if (
+        serverActiveHours &&
+        serverActiveHours > this.activeHoursData.totalActiveHours
+      ) {
+        // Server has more recent data, use it
+        this.activeHoursData.totalActiveHours = serverActiveHours;
+
+        // Notify listeners
+        this.activeHoursUpdateListeners.forEach((listener) =>
+          listener(this.activeHoursData.totalActiveHours)
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load active hours from server:", error);
+      // Continue with local data
+    }
+  }
+
+  private async syncServerData(token: string): Promise<void> {
+    try {
+      // Load visited streets from server and merge with local data
+      const serverDataLoaded = await this.loadVisitedStreetsFromDatabase(token);
+
+      if (!serverDataLoaded) {
+        console.log("ERROR SYNCHRONIZIATION");
+      }
+
+      console.log(
+        "-----------Server data synchronized successfully",
+        serverDataLoaded
+      );
+
+      //! here if you receive from server visited street that is already in the arr do not add it
+      // Load any other server data (active hours, preferences, etc.)
+      await this.loadActiveHoursFromServer(token);
+
+      // After loading server data, persist the merged state locally
+      await this.persistData();
+    } catch (error) {
+      console.error("Error syncing server data:", error);
+      // Don't throw - allow app to work with local data only
+    }
+  }
+
+  public async startLocationTracking(enableBackground: boolean) {
+    try {
       this.startActiveHoursTracking();
 
       // Get initial location
@@ -516,52 +556,55 @@ private async syncServerData(token: string): Promise<void> {
     }
   }
 
+  private async initializePermissions(token: string | null) {
+    try {
+      if (!token) return;
 
-private async initializePermissions(token: string | null) {
-  try {
-    if (!token) return;
-     
-    // Request foreground permissions first
-    const { status: requestStatus } = await Location.requestForegroundPermissionsAsync();
-    if (requestStatus !== "granted") {
-      console.log("Foreground location permission denied by user");
+      // Request foreground permissions first
+      const { status: requestStatus } =
+        await Location.requestForegroundPermissionsAsync();
+      if (requestStatus !== "granted") {
+        console.log("Foreground location permission denied by user");
+        this.setHasLocationPermission(false);
+        return;
+      }
+
+      // Load user's explicit choice from database
+      const savedPermission = await this.loadPermissionStatus(token);
+      console.log("User's saved permission choice:", savedPermission);
+
+      // Check current system permission (should be granted from above request)
+      const { status: currentStatus } =
+        await Location.getForegroundPermissionsAsync();
+      const hasSystemPermission = currentStatus === "granted";
+      console.log("System permission status:", currentStatus);
+
+      if (savedPermission === true && hasSystemPermission) {
+        console.log(
+          "Starting tracking: User opted in + system permission granted"
+        );
+        this.setHasLocationPermission(true);
+      } else if (savedPermission === true && !hasSystemPermission) {
+        console.log(
+          "User opted in but system permission revoked - this shouldn't happen after request"
+        );
+        this.setHasLocationPermission(false);
+      } else if (savedPermission === false) {
+        console.log("User explicitly opted out of location tracking");
+        this.setHasLocationPermission(false);
+      } else if (savedPermission === null) {
+        console.log(
+          "User hasn't made a choice yet - treating permission request as opt-in"
+        );
+        // Since they just granted permission, save this as opt-in
+        await this.savePermissionStatus(token, true);
+        this.setHasLocationPermission(true);
+      }
+    } catch (error) {
+      console.error("Error initializing permissions:", error);
       this.setHasLocationPermission(false);
-      return;
     }
-
-    // Load user's explicit choice from database
-    const savedPermission = await this.loadPermissionStatus(token);
-    console.log("User's saved permission choice:", savedPermission);
-
-    // Check current system permission (should be granted from above request)
-    const { status: currentStatus } = await Location.getForegroundPermissionsAsync();
-    const hasSystemPermission = currentStatus === "granted";
-    console.log("System permission status:", currentStatus);
-
-    if (savedPermission === true && hasSystemPermission) {
-      console.log(
-        "Starting tracking: User opted in + system permission granted"
-      );
-      this.setHasLocationPermission(true);
-    } else if (savedPermission === true && !hasSystemPermission) {
-      console.log(
-        "User opted in but system permission revoked - this shouldn't happen after request"
-      );
-      this.setHasLocationPermission(false);
-    } else if (savedPermission === false) {
-      console.log("User explicitly opted out of location tracking");
-      this.setHasLocationPermission(false);
-    } else if (savedPermission === null) {
-      console.log("User hasn't made a choice yet - treating permission request as opt-in");
-      // Since they just granted permission, save this as opt-in
-      await this.savePermissionStatus(token, true);
-      this.setHasLocationPermission(true);
-    }
-  } catch (error) {
-    console.error("Error initializing permissions:", error);
-    this.setHasLocationPermission(false);
   }
-}
 
   private async savePermissionStatus(token: string, hasPermission: boolean) {
     try {
@@ -572,57 +615,85 @@ private async initializePermissions(token: string | null) {
     }
   }
 
+  private async loadVisitedStreetsFromDatabase(token: string) {
+    try {
+      console.log("Loading visited streets from database...");
+      const response = await apiService.fetchVisitedStreets(token);
 
+      if (response.data && response.status == "success") {
+        console.log(
+          `Received ${response.data.length} visited streets from database`
+        );
 
-public async loadVisitedStreetsFromDatabase(token: string) {
-  try {
-    console.log("Loading visited streets from database...");
-    const response = await apiService.fetchVisitedStreets(token);
+        // Convert API response to internal format and merge with existing data
+        response.data.forEach((streetData: StreetDataResponse) => {
+          console.log("singlestreetdata:+++  ", streetData);
 
-    if (response.data && response.status == "success") {
-      console.log(`Received ${response.data.length} visited streets from database`);
-      
-      // Convert API response to internal format and merge with existing data
-      response.data.forEach((streetData) => {
-        //! maybe steetData dont have any of .viusutcounte ,firstVistit...
-        console.log("singlestreetdata:+++  ",streetData)
-        const visitData: StreetVisitData = {
-          visitCount: streetData.visitCount,
-          firstVisit: streetData.firstVisit,
-          lastVisit: streetData.lastVisit,
-          totalTimeSpent: streetData.totalTimeSpent,
-          averageTimeSpent: streetData.averageTimeSpent,
-        };
-        //! missmatch between visited streets and visitedStreetsData
+          const visitData: StreetVisitData = {
+            visitCount: streetData.visitCount,
+            firstVisit: streetData.firstVisit,
+            lastVisit: streetData.lastVisit,
+            totalTimeSpent: streetData.totalTimeSpent,
+            averageTimeSpent: streetData.averageTimeSpent,
+          };
 
-        // Only update if server data is newer or we don't have local data
-        const existingData = this.streetVisitCounts.get(streetData.streetId);
-        if (!existingData || streetData.lastVisit > existingData.lastVisit) {
-          this.streetVisitCounts.set(streetData.streetId, visitData);
-        }
-                  this.visitedStreets.push(streetData)
+          // Only update visit counts if server data is newer or we don't have local data
+          const existingData = this.streetVisitCounts.get(streetData.streetId);
+          if (!existingData || streetData.lastVisit > existingData.lastVisit) {
+            this.streetVisitCounts.set(streetData.streetId, visitData);
+          }
 
-        this.allVisitedStreetIds.add(streetData.streetId);
-      });
+          // Check if this street is already in visitedStreets to prevent duplicates
+          const existsInVisitedStreets = this.visitedStreets.some(
+            (street) =>
+              street.streetId === streetData.streetId &&
+              street.timestamp === streetData.entryTimestamp
+          );
 
-      // Persist the merged data
-      await this.persistData();
+          if (!existsInVisitedStreets) {
+            // Convert server format to local VisitedStreet format
+            const visitedStreet: VisitedStreet = {
+              streetId: streetData.streetId,
+              streetName: streetData.streetName,
+              timestamp: streetData.entryTimestamp,
+              coordinates: {
+                latitude: parseFloat(streetData.entryLatitude),
+                longitude: parseFloat(streetData.entryLongitude),
+              },
+              duration: streetData.durationSeconds || undefined,
+            };
 
-      console.log(`Final state after loading:`);
-      console.log(`- Visit counts: ${this.streetVisitCounts.size}`);
-      console.log(`- All visited street IDs: ${this.allVisitedStreetIds.size}`);
+            this.visitedStreets.push(visitedStreet);
+          } else {
+            console.log(
+              `Street ${streetData.streetId} already exists in visitedStreets, skipping`
+            );
+          }
 
-      return true;
-    } else {
-      console.warn("Failed to load visited streets:", response);
+          this.allVisitedStreetIds.add(streetData.streetId);
+        });
+
+        // Persist the merged data
+        await this.persistData();
+
+        console.log(`Final state after loading:`);
+        console.log(`- Visit counts: ${this.streetVisitCounts.size}`);
+        console.log(`- Visited streets: ${this.visitedStreets.length}`);
+        console.log(
+          `- All visited street IDs: ${this.allVisitedStreetIds.size}`
+        );
+
+        return true;
+      } else {
+        console.log(response);
+        console.warn("Failed to load visited streets:", response);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error loading visited streets from database:", error);
       return false;
     }
-  } catch (error) {
-    console.error("Error loading visited streets from database:", error);
-    return false;
   }
-}
-
 
   private async startBackgroundLocationUpdates() {
     try {
@@ -667,7 +738,9 @@ public async loadVisitedStreetsFromDatabase(token: string) {
 
       this.isBackgroundTaskRegistered = true;
       console.log("Background location updates started successfully");
-    } catch (error) {
+    } catch (e) {
+      let error = e as Error;
+
       console.error("Error starting background location updates:", error);
       this.isBackgroundTaskRegistered = false;
 
@@ -706,7 +779,6 @@ public async loadVisitedStreetsFromDatabase(token: string) {
     );
   }
 
-
   public async stopLocationTracking(token: string | null) {
     this.stopActiveHoursTracking();
 
@@ -725,16 +797,18 @@ public async loadVisitedStreetsFromDatabase(token: string) {
       } else if (!isTaskDefined && this.isBackgroundTaskRegistered) {
         console.log("Task was not defined but flag was set - resetting flag");
       }
-  } catch (error) {
-  // This is expected when task doesn't exist - completely normal
-  if (error.message?.includes('TaskNotFoundException')) {
-    console.log("Background task already stopped or not found - this is normal");
-  } else {
-    console.log("Unexpected error stopping background location:", error);
-  }
-} finally {
-  this.isBackgroundTaskRegistered = false;
-}
+    } catch (e) {
+      let error = e as Error;
+      if (error.message?.includes("TaskNotFoundException")) {
+        console.log(
+          "Background task already stopped or not found - this is normal"
+        );
+      } else {
+        console.log("Unexpected error stopping background location:", error);
+      }
+    } finally {
+      this.isBackgroundTaskRegistered = false;
+    }
 
     // Save any pending data
     if (token) {
@@ -802,19 +876,22 @@ public async loadVisitedStreetsFromDatabase(token: string) {
         listener(newUserCoords)
       );
 
-       console.log("=== LOCATION UPDATE DEBUG ===");
-    console.log("Current street ID:", this.currentStreetId);
-    console.log("Street data exists:", !!this.streetData);
-    console.log("Street data features count:", this.streetData?.features?.length || 0);
-    console.log("User coordinates:", newUserCoords);
-    // console.log("Has location permission:", this.hasLocationPermission);
-    
-    // Check street proximity
-    if (this.streetData) {
-      this.checkStreetProximity(newUserCoords);
-    } else {
-      console.log("No street data available for proximity check");
-    }
+      console.log("=== LOCATION UPDATE DEBUG ===");
+      console.log("Current street ID:", this.currentStreetId);
+      console.log("Street data exists:", !!this.streetData);
+      console.log(
+        "Street data features count:",
+        this.streetData?.features?.length || 0
+      );
+      console.log("User coordinates:", newUserCoords);
+      // console.log("Has location permission:", this.hasLocationPermission);
+
+      // Check street proximity
+      if (this.streetData) {
+        this.checkStreetProximity(newUserCoords);
+      } else {
+        console.log("No street data available for proximity check");
+      }
 
       // Fetch new street data if needed
       if (!this.streetData || this.shouldRefreshStreetData(newUserCoords)) {
@@ -823,11 +900,6 @@ public async loadVisitedStreetsFromDatabase(token: string) {
 
       this.previousUserCoords = newUserCoords;
       this.persistData(); // Persist state changes
-
-
-
-      
-
     } catch (error) {
       console.error("Error handling location update:", error);
     }
@@ -854,6 +926,7 @@ public async loadVisitedStreetsFromDatabase(token: string) {
   }
 
   private async fetchStreetData(coords: UserCoords) {
+    this.lastStreetDataFetch = Date.now();
     try {
       const buffer = BUFFER_GETTING_STREETS * 1.5;
       const bbox = [
@@ -934,7 +1007,26 @@ out geom;
     }
   }
 
+  // private shouldRefreshStreetData(newCoords: UserCoords): boolean {
+  //   if (!this.previousUserCoords) return true;
+
+  //   const distance = turf.distance(
+  //     [this.previousUserCoords.longitude, this.previousUserCoords.latitude],
+  //     [newCoords.longitude, newCoords.latitude],
+  //     { units: "kilometers" }
+  //   );
+
+  //   return distance > STREET_DATA_REFRESH_DISTANCE_KM;
+  // }
+
   private shouldRefreshStreetData(newCoords: UserCoords): boolean {
+    const now = Date.now();
+
+    // Prevent too frequent requests
+    if (now - this.lastStreetDataFetch < this.MIN_FETCH_INTERVAL_MS) {
+      return false;
+    }
+
     if (!this.previousUserCoords) return true;
 
     const distance = turf.distance(
@@ -942,200 +1034,207 @@ out geom;
       [newCoords.longitude, newCoords.latitude],
       { units: "kilometers" }
     );
-
     return distance > STREET_DATA_REFRESH_DISTANCE_KM;
   }
 
-
   private checkStreetProximity(userCoords: UserCoords) {
-  if (!this.streetData || !this.streetData.features.length) {
-    console.log("No street data available for proximity check");
-    return;
-  }
-
-  const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
-  const proximityThresholdKm = STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
-
-  console.log("=== STREET PROXIMITY CHECK ===");
-  console.log("User point:", [userCoords.longitude, userCoords.latitude]);
-  console.log("Proximity threshold (km):", proximityThresholdKm);
-  console.log("Total streets to check:", this.streetData.features.length);
-
-  let foundStreet: string | null = null;
-  let closestDistance = Infinity;
-  let closestStreetName = null;
-  let checkedStreets = 0;
-  let validStreets = 0;
-
-  this.streetData.features.forEach((street) => {
-    checkedStreets++;
-    try {
-      if (!street.geometry.coordinates || street.geometry.coordinates.length < 2) {
-        console.log(`Street ${street.id} has invalid coordinates`);
-        return;
-      }
-
-      validStreets++;
-      const streetLine = turf.lineString(street.geometry.coordinates);
-      const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
-        units: "kilometers",
-      });
-
-      // Log details for very close streets
-      if (distanceKm <= proximityThresholdKm * 2) { // Double threshold for debugging
-        console.log(`Street ${street.id} (${street.properties?.name || 'Unnamed'}): ${distanceKm}km away`);
-      }
-
-      if (distanceKm <= proximityThresholdKm && distanceKm < closestDistance) {
-        closestDistance = distanceKm;
-        foundStreet = street.id;
-        closestStreetName = street.properties?.name || "Unnamed";
-        console.log(`NEW CLOSEST: ${foundStreet} (${closestStreetName}) at ${distanceKm}km`);
-      }
-    } catch (error) {
-      console.warn(`Error processing street ${street.id}:`, error);
+    if (!this.streetData || !this.streetData.features.length) {
+      console.log("No street data available for proximity check");
+      return;
     }
-  });
 
-  console.log("=== PROXIMITY CHECK RESULTS ===");
-  console.log("Checked streets:", checkedStreets);
-  console.log("Valid streets:", validStreets);
-  console.log("Closest distance:", closestDistance);
-  console.log("Found street:", foundStreet);
-  console.log("Current street before change:", this.currentStreetId);
+    const userPoint = turf.point([userCoords.longitude, userCoords.latitude]);
+    const proximityThresholdKm =
+      STREET_PROXIMITY_THRESHOLD_METERS / METERS_IN_KILOMETER;
 
-  if (foundStreet && foundStreet !== this.currentStreetId) {
-    console.log(`STREET CHANGE: ${this.currentStreetId} -> ${foundStreet}`);
-    this.handleStreetChange(foundStreet, userCoords);
-  } else if (!foundStreet && this.currentStreetId) {
-    console.log(`USER LEFT STREET: ${this.currentStreetId} -> null`);
-    this.handleStreetChange(null, userCoords);
-  } else if (!foundStreet) {
-    console.log("User not on any street");
-  } else {
-    console.log(`User still on same street: ${foundStreet}`);
-  }
-}
+    console.log("=== STREET PROXIMITY CHECK ===");
+    console.log("User point:", [userCoords.longitude, userCoords.latitude]);
+    console.log("Proximity threshold (km):", proximityThresholdKm);
+    console.log("Total streets to check:", this.streetData.features.length);
 
+    let foundStreet: string | null = null;
+    let closestDistance = Infinity;
+    let closestStreetName = null;
+    let checkedStreets = 0;
+    let validStreets = 0;
 
+    this.streetData.features.forEach((street) => {
+      checkedStreets++;
+      try {
+        if (
+          !street.geometry.coordinates ||
+          street.geometry.coordinates.length < 2
+        ) {
+          console.log(`Street ${street.id} has invalid coordinates`);
+          return;
+        }
 
-private handleStreetChange(newStreetId: string | null, coords: UserCoords) {
-  const now = Date.now();
-  console.log(`=== STREET CHANGE: ${this.currentStreetId} -> ${newStreetId} ===`);
+        validStreets++;
+        const streetLine = turf.lineString(street.geometry.coordinates);
+        const distanceKm = turf.pointToLineDistance(userPoint, streetLine, {
+          units: "kilometers",
+        });
 
-  // Handle leaving current street
-  if (this.currentStreetId && this.currentStreetId !== newStreetId) {
-    const exitTime = now;
-    const entryTime = this.streetEntryTime || now;
-    const duration = Math.floor((exitTime - entryTime) / 1000);
+        if (distanceKm <= proximityThresholdKm * 2) {
+          // console.log(
+          //   `Street ${street.id} (${street.properties?.name || "Unnamed"}): ${distanceKm}km away`
+          // );
+        }
 
-    // Update the last visited street with duration
-    this.visitedStreets = this.visitedStreets.map((street, index) => {
-      if (
-        index === this.visitedStreets.length - 1 &&
-        street.streetId === this.currentStreetId
-      ) {
-        return { ...street, duration };
+        if (
+          distanceKm <= proximityThresholdKm &&
+          distanceKm < closestDistance
+        ) {
+          closestDistance = distanceKm;
+          foundStreet = street.id;
+          closestStreetName = street.properties?.name || "Unnamed";
+          console.log(
+            `NEW CLOSEST: ${foundStreet} (${closestStreetName}) at ${distanceKm}km`
+          );
+        }
+      } catch (error) {
+        console.warn(`Error processing street ${street.id}:`, error);
       }
-      return street;
     });
 
-    // Update visit statistics
-    this.updateStreetVisitStats(this.currentStreetId, duration);
+    console.log("=== PROXIMITY CHECK RESULTS ===");
+    console.log("Checked streets:", checkedStreets);
+    console.log("Valid streets:", validStreets);
+    console.log("Closest distance:", closestDistance);
+    console.log("Found street:", foundStreet);
+    console.log("Current street before change:", this.currentStreetId);
 
+    if (foundStreet && foundStreet !== this.currentStreetId) {
+      console.log(`STREET CHANGE: ${this.currentStreetId} -> ${foundStreet}`);
+      this.handleStreetChange(foundStreet, userCoords);
+    } else if (!foundStreet && this.currentStreetId) {
+      console.log(`USER LEFT STREET: ${this.currentStreetId} -> null`);
+      this.handleStreetChange(null, userCoords);
+    } else if (!foundStreet) {
+      console.log("User not on any street");
+    } else {
+      console.log(`User still on same street: ${foundStreet}`);
+    }
+  }
+
+  private handleStreetChange(newStreetId: string | null, coords: UserCoords) {
+    const now = Date.now();
     console.log(
-      `User left street ${this.currentStreetId}, spent ${duration} seconds`
+      `=== STREET CHANGE: ${this.currentStreetId} -> ${newStreetId} ===`
     );
+
+    // Handle leaving current street
+    if (this.currentStreetId && this.currentStreetId !== newStreetId) {
+      const exitTime = now;
+      const entryTime = this.streetEntryTime || now;
+      const duration = Math.floor((exitTime - entryTime) / 1000);
+
+      // Update the last visited street with duration
+      this.visitedStreets = this.visitedStreets.map((street, index) => {
+        if (
+          index === this.visitedStreets.length - 1 &&
+          street.streetId === this.currentStreetId
+        ) {
+          return { ...street, duration };
+        }
+        return street;
+      });
+
+      // Update visit statistics
+      this.updateStreetVisitStats(this.currentStreetId, duration);
+
+      console.log(
+        `User left street ${this.currentStreetId}, spent ${duration} seconds`
+      );
+    }
+
+    // Handle entering new street
+    if (newStreetId && newStreetId !== this.currentStreetId) {
+      const street = this.streetData?.features.find(
+        (s) => s.id === newStreetId
+      );
+      const streetName =
+        street?.properties?.name || `Unknown Street ${newStreetId}`;
+
+      const visitedStreet: VisitedStreet = {
+        streetId: newStreetId,
+        streetName,
+        timestamp: now,
+        coordinates: coords,
+      };
+
+      this.visitedStreets.push(visitedStreet);
+      this.allVisitedStreetIds.add(newStreetId);
+
+      // Update visit count
+      this.updateStreetVisitCount(newStreetId);
+
+      this.streetEntryTime = now;
+      console.log(`User entered street: ${streetName} (${newStreetId})`);
+      console.log(`Session streets: ${this.visitedStreets.length}`);
+      console.log(`Total visited streets: ${this.allVisitedStreetIds.size}`);
+    }
+
+    // Set the new street ID AFTER handling the change
+    this.currentStreetId = newStreetId;
+
+    // Notify listeners with updated state
+    this.streetChangeListeners.forEach((listener) =>
+      listener(newStreetId, coords)
+    );
+
+    this.persistData();
   }
 
-  // Handle entering new street
-  if (newStreetId && newStreetId !== this.currentStreetId) {
-    const street = this.streetData?.features.find(
-      (s) => s.id === newStreetId
-    );
-    const streetName =
-      street?.properties?.name || `Unknown Street ${newStreetId}`;
+  // Fix the updateStreetVisitCount method to ensure proper notifications
+  private updateStreetVisitCount(streetId: string) {
+    const existing = this.streetVisitCounts.get(streetId);
+    const now = Date.now();
 
-    const visitedStreet: VisitedStreet = {
-      streetId: newStreetId,
-      streetName,
-      timestamp: now,
-      coordinates: coords,
-    };
+    if (existing) {
+      const updated: StreetVisitData = {
+        ...existing,
+        visitCount: existing.visitCount + 1,
+        lastVisit: now,
+      };
+      this.streetVisitCounts.set(streetId, updated);
+      console.log(`Updated visit count for ${streetId}: ${updated.visitCount}`);
 
-    this.visitedStreets.push(visitedStreet);
-    this.allVisitedStreetIds.add(newStreetId);
+      // Notify listeners
+      this.visitCountUpdateListeners.forEach((listener) =>
+        listener(streetId, updated)
+      );
+    } else {
+      const newData: StreetVisitData = {
+        visitCount: 1,
+        firstVisit: now,
+        lastVisit: now,
+        totalTimeSpent: 0,
+        averageTimeSpent: 0,
+      };
+      this.streetVisitCounts.set(streetId, newData);
+      console.log(`Created new visit data for ${streetId}: first visit`);
 
-    // Update visit count
-    this.updateStreetVisitCount(newStreetId);
-
-    this.streetEntryTime = now;
-    console.log(`User entered street: ${streetName} (${newStreetId})`);
-    console.log(`Session streets: ${this.visitedStreets.length}`);
-    console.log(`Total visited streets: ${this.allVisitedStreetIds.size}`);
+      // Notify listeners
+      this.visitCountUpdateListeners.forEach((listener) =>
+        listener(streetId, newData)
+      );
+    }
   }
 
-  // Set the new street ID AFTER handling the change
-  this.currentStreetId = newStreetId;
-  
-  // Notify listeners with updated state
-  this.streetChangeListeners.forEach((listener) =>
-    listener(newStreetId, coords)
-  );
-  
-  this.persistData();
-}
-
-// Fix the updateStreetVisitCount method to ensure proper notifications
-private updateStreetVisitCount(streetId: string) {
-  const existing = this.streetVisitCounts.get(streetId);
-  const now = Date.now();
-
-  if (existing) {
-    const updated: StreetVisitData = {
-      ...existing,
-      visitCount: existing.visitCount + 1,
-      lastVisit: now,
+  // Add a method to get current state for debugging
+  public getDebugState() {
+    return {
+      currentStreetId: this.currentStreetId,
+      streetDataFeatures: this.streetData?.features?.length || 0,
+      visitedStreetsCount: this.visitedStreets.length,
+      allVisitedStreetIdsCount: this.allVisitedStreetIds.size,
+      streetVisitCountsSize: this.streetVisitCounts.size,
+      isTracking: this.isTracking(),
+      hasStreetData: !!this.streetData,
+      hasUserLocation: !!this.previousUserCoords,
     };
-    this.streetVisitCounts.set(streetId, updated);
-    console.log(`Updated visit count for ${streetId}: ${updated.visitCount}`);
-
-    // Notify listeners
-    this.visitCountUpdateListeners.forEach((listener) =>
-      listener(streetId, updated)
-    );
-  } else {
-    const newData: StreetVisitData = {
-      visitCount: 1,
-      firstVisit: now,
-      lastVisit: now,
-      totalTimeSpent: 0,
-      averageTimeSpent: 0,
-    };
-    this.streetVisitCounts.set(streetId, newData);
-    console.log(`Created new visit data for ${streetId}: first visit`);
-
-    // Notify listeners
-    this.visitCountUpdateListeners.forEach((listener) =>
-      listener(streetId, newData)
-    );
   }
-}
-
-// Add a method to get current state for debugging
-public getDebugState() {
-  return {
-    currentStreetId: this.currentStreetId,
-    streetDataFeatures: this.streetData?.features?.length || 0,
-    visitedStreetsCount: this.visitedStreets.length,
-    allVisitedStreetIdsCount: this.allVisitedStreetIds.size,
-    streetVisitCountsSize: this.streetVisitCounts.size,
-    isTracking: this.isTracking(),
-    hasStreetData: !!this.streetData,
-    hasUserLocation: !!this.previousUserCoords,
-  };
-}
-
 
   private updateStreetVisitStats(streetId: string, duration: number) {
     const existing = this.streetVisitCounts.get(streetId);
@@ -1272,17 +1371,15 @@ public getDebugState() {
       entryLongitude: street.coordinates.longitude,
     }));
   }
-  
 
   // Public getters & setters
   public getCurrentStreetId(): string | null {
     return this.currentStreetId;
   }
 
-    public setCurrentStreetId(streetId:string)  {
-     this.currentStreetId = streetId;
+  public setCurrentStreetId(streetId: string) {
+    this.currentStreetId = streetId;
   }
-
 
   public getStreetData(): StreetData | null {
     return this.streetData;
@@ -1292,7 +1389,6 @@ public getDebugState() {
     return [...this.visitedStreets];
   }
 
-  //! no DB call to get the streets???
   public getAllVisitedStreetIds(): Set<string> {
     return new Set(this.allVisitedStreetIds);
   }
@@ -1433,4 +1529,44 @@ public getDebugState() {
       return false;
     }
   }
+
+  public clearAllListeners(): void {
+    this.locationUpdateListeners = [];
+    this.streetChangeListeners = [];
+    this.visitCountUpdateListeners = [];
+    this.activeHoursUpdateListeners = [];
+    this.permissionStatusListeners = [];
+  }
+
+ public async destroy(token: string | null = null): Promise<void> {
+  try {
+    // Stop location tracking with proper token for data saving
+    if (token) {
+      await this.stopLocationTracking(token);
+    } else {
+      // At minimum, stop tracking without server sync
+      this.stopActiveHoursTracking();
+      if (this.locationSubscription) {
+        this.locationSubscription.remove();
+        this.locationSubscription = null;
+      }
+    }
+
+    // Clear all listeners
+    this.clearAllListeners();
+
+    // Clean up intervals
+    if (this.activeHoursInterval) {
+      clearInterval(this.activeHoursInterval);
+      this.activeHoursInterval = null;
+    }
+
+    // Reset singleton instance if needed
+    LocationTrackingService.instance = null;
+    
+    console.log('LocationTrackingService destroyed');
+  } catch (error) {
+    console.error('Error during service destruction:', error);
+  }
+}
 }

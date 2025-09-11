@@ -190,27 +190,7 @@ const MapTrackingPanel = memo(
 
             <View className="border-t border-white/10 pt-3">
               <View className="flex gap-4">
-                <View className="flex-row justify-around">
-                  <View className="items-center">
-                    <Text className="text-xl font-bold text-accent mb-0.5">
-                      {sessionCountVisitedStreets}
-                    </Text>
-                    <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
-                      SESSION STREETS
-                    </Text>
-                  </View>
-                  <View className="items-center">
-                    <Text className="text-xl font-bold text-accent mb-0.5">
-                      {allCountVisitedStreets}
-                    </Text>
-                    <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
-                      TOTAL STREETS
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Most visited streets section - only show if we have data */}
-                {mostVisitedStreets.length > 0 && (
+                    {mostVisitedStreets.length > 0 && (
                   <View className="bg-white/5 border border-white/10 rounded-xl p-3">
                     <Text className="text-gray-400 text-xs mb-2 font-semibold tracking-wide">
                       MOST VISITED STREETS
@@ -242,13 +222,12 @@ const MapTrackingPanel = memo(
                   </View>
                 )}
 
-                {/* Streets by time spent section - only show if we have data */}
                 {streetsByTimeSpent.length > 0 && (
                   <View className="bg-white/5 border border-white/10 rounded-xl p-3">
                     <Text className="text-gray-400 text-xs mb-2 font-semibold tracking-wide">
                       MOST TIME SPENT
                     </Text>
-                    {streetsByTimeSpent.slice(0, 3).map(({ streetId, visitData }) => {
+                    {streetsByTimeSpent.slice(0, 3).map(({ streetId, visitData }:{streetId:string}) => {
                       const street = streetData?.features.find(
                         (f) => f.id === streetId
                       );
@@ -284,6 +263,25 @@ const MapTrackingPanel = memo(
                     </Text>
                   </View>
                 )}
+
+                 <View className="flex-row justify-around border-t border-white/10 pt-3">
+                  <View className="items-center">
+                    <Text className="text-xl font-bold text-accent mb-0.5">
+                      {sessionCountVisitedStreets}
+                    </Text>
+                    <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
+                      SESSION STREETS
+                    </Text>
+                  </View>
+                  <View className="items-center">
+                    <Text className="text-xl font-bold text-accent mb-0.5">
+                      {allCountVisitedStreets}
+                    </Text>
+                    <Text className="text-[10px] text-gray-400 font-semibold tracking-wide">
+                      TOTAL STREETS
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>

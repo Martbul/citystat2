@@ -28,7 +28,7 @@ const StreetTrackingMap = () => {
     allVisitedStreetIds,
     startTracking,
     initializeData,
-    stopTracking,
+    destroyService,
     isTracking,
     hasLocationPermission,
     requestLocationPermission,
@@ -46,8 +46,58 @@ const StreetTrackingMap = () => {
   const mapRef = useRef<MapView>(null);
   const { getToken } = useAuth();
 
-  useEffect(() => {
-    const initializeComponentData = async () => {
+  // useEffect(() => {
+  //   const initializeComponentData = async () => {
+  //     if (initializationComplete) return;
+      
+  //     console.log("=== INITIALIZATION START ===");
+  //     console.log("isLoading:", isLoading);
+  //     console.log("userData:", !!userData);
+  //     console.log("hasLocationPermission:", hasLocationPermission);
+  //     console.log("isTracking:", isTracking);
+
+  //     try {
+  //       // Step 1: Initialize data (this includes permission check and server sync)
+  //       console.log("Step 1: Initializing data...");
+  //       await initializeData();
+        
+  //       // Step 2: Start tracking if not already tracking and we have permission
+  //       if (!isTracking && hasLocationPermission) {
+  //         console.log("Step 2: Starting tracking...");
+  //         await startTracking(true);
+  //         console.log("Tracking started successfully");
+  //       } else if (!hasLocationPermission) {
+  //         console.log("Step 2: Skipping tracking start - no location permission");
+  //       } else {
+  //         console.log("Step 2: Tracking already active");
+  //       }
+        
+  //       setInitializationComplete(true);
+  //       console.log("=== INITIALIZATION COMPLETE ===");
+        
+  //     } catch (error) {
+  //       console.error("Initialization failed:", error);
+  //       Alert.alert("Error", "Failed to initialize location services");
+  //     }
+  //   };
+
+  //   // Only initialize if we have user data and haven't completed initialization
+  //   if (userData && !initializationComplete) {
+  //     initializeComponentData();
+  //   }
+
+  //   return () => {
+  //     console.log("Cleanup function running");
+  //     if (isTracking) {
+  //       console.log("About to stop tracking");
+  //       stopTracking().catch(console.error);
+  //     }
+  //   };
+  // }, [userData, isTracking, hasLocationPermission, initializationComplete]);
+
+  // Initialization effect (runs when userData changes)
+useEffect(() => {
+  const initializeComponentData = async () => {
       if (initializationComplete) return;
       
       console.log("=== INITIALIZATION START ===");
@@ -86,24 +136,36 @@ const StreetTrackingMap = () => {
       initializeComponentData();
     }
 
-    return () => {
-      console.log("Cleanup function running");
-      if (isTracking) {
-        console.log("About to stop tracking");
-        stopTracking().catch(console.error);
+
+}, [userData, initializationComplete,hasLocationPermission]);
+
+ useEffect(() => {
+  return () => {
+    console.log("Component unmounting - cleaning up via provider");
+    
+    const cleanup = async () => {
+      try {
+        await destroyService();
+      } catch (error) {
+        console.error("Provider cleanup error:", error);
       }
     };
-  }, [userData, isTracking, hasLocationPermission, initializationComplete]);
+    
+    cleanup();
+  };
+}, []); // Empty array = only on unmount
 
   // Update highlighted streets when current street changes
   useEffect(() => {
     setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
   }, [currentStreetId]);
 
-  // Debug logging for state changes
   useEffect(() => {
-    console.log("=== STATE UPDATE DEBUG ===");
+
+    console.log("=== STATE UPDATE DEBUG ==============================================");
     console.log("currentStreetId:", currentStreetId);
+        console.log("visitedStreets:", visitedStreets);
+
     console.log("visitedStreets length:", visitedStreets.length);
     console.log("allVisitedStreetIds size:", allVisitedStreetIds.size);
     console.log("streetData available:", !!streetData);

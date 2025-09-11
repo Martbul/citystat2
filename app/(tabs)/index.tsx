@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   TouchableOpacity,
   View,
@@ -6,6 +6,7 @@ import {
   Dimensions,
   FlatList,
   StatusBar,
+  RefreshControl,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import Fontisto from "@expo/vector-icons/Fontisto";
@@ -37,15 +38,28 @@ export default function HomeScreen() {
 
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { isSignedIn, isLoaded, user} = useUser();
   const { userData, refreshUserData } = useUserData();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     console.log("refreshing user data");
     refreshUserData();
   }, [user?.id]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      console.log("Pull to refresh triggered");
+      await refreshUserData();
+  
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const openDrawer = () => {
     setIsSideMenuDrawerOpen(true);
@@ -177,6 +191,14 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#c8f751"]} 
+            tintColor="#c8f751" 
+          />
+        }
       />
     </SafeAreaView>
   );

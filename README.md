@@ -112,7 +112,17 @@ Predictive patterns: Where you’re most likely to be at a given time.
 
 
 NOW FIX: 
-street_visit_stat in db is empty
+too much write operations with often server sync???
+traking is sometimes inactive ?? why 
+most time spent in map menu pane is displayed wrong and probsave in db wrong
+duration filed in db in visited_streets in useless cause total_time_spent and avg_time+spend exist
+in server duration is used to calculate thestreet distance
+dublicated visited street ids
+dont show suggestion if no users
+points are wrong
+visited streets dispy a single street miltioke times
+make the sessions longer and if a street is already in a session do not add visited_count to it
+dont add visit_COUNT TO A STREET IF USERS HASNT left it 
 if user is not in the bbox of the city he has chosen do not save visited streets or street_visit_stat or activeHours - noting
 wrong time in lastLogin & lastActivity and prob. in many more(prob. some timezones shit)
 

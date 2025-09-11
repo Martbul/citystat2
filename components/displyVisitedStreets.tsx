@@ -14,6 +14,7 @@ export default function VisitedStreetsLayer({
   const visitedFeatures = useMemo<Feature<Geometry>[]>(() => {
     if (!streetData?.features) return [];
     const visitedIds = visitedStreets.map((s) => s.streetId);
+    //! dublicated visited street ids
     console.log("debugging visited streets component",visitedIds )
     return streetData.features.filter((f) =>
       visitedIds.includes(f.id as string)

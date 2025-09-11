@@ -55,16 +55,10 @@ export interface FetchedVisitedStreet {
   entryLongitude: number;
 }
 
-export interface StreetVisitData {
-  visitCount: number;
-  firstVisit: number;
-  lastVisit: number;
-  totalTimeSpent: number; // in seconds
-  averageTimeSpent: number;
-}
+
 
 export interface MapTrackingPanelProps {
-  isLocationSubscrActive: string;
+  isLocationSubscrActive: "Active" | "Inactive";
   currentStreetId: string | null;
   streetData: StreetData | null;
   sessionCountVisitedStreets: number;
@@ -88,4 +82,20 @@ export interface ActiveHoursData {
   totalActiveHours: number;
   currentSessionStart: number | null;
   dailyActiveTime: Map<string, number>;
+}
+
+export interface StreetDataResponse {
+  averageTimeSpent: number;
+  durationSeconds: number;
+  entryLatitude: string;
+  entryLongitude: string;
+  entryTimestamp: number;
+  exitTimestamp: number;
+  firstVisit: number;
+  lastVisit: number;
+  sessionId: string;
+  streetId: string;
+  streetName: string;
+  totalTimeSpent: number;
+  visitCount: number;
 }
