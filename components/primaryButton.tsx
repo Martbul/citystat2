@@ -23,12 +23,18 @@ export default function PrimaryButton(props: {
       className="w-full bg-lightPrimaryAccent mt-6 py-3 rounded-lg flex-row items-center justify-center"
       onPress={handlePress}
     >
-      <View className="flex-row items-center justify-center gap-2">
-        {props.icon && props.icon}
-        <Text className="text-lightPrimaryText font-semibold text-center">
+      {props.icon ? (
+        <View className="flex-row items-center justify-center gap-2">
+          {props.icon}
+          <Text className="text-lightPrimaryText font-semibold">
+            {props.heading}
+          </Text>
+        </View>
+      ) : (
+        <Text className="text-lightPrimaryText font-semibold text-center w-full">
           {props.heading}
         </Text>
-      </View>
+      )}
     </TouchableOpacity>
   );
 }

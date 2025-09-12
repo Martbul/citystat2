@@ -5,6 +5,8 @@ import { useState } from "react";
 import InputBox from "@/components/inputBox";
 import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
+import { useUserData } from "@/Providers/UserDataProvider";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -15,6 +17,9 @@ export default function SignUpScreen() {
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState<any[]>([]);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const { onboardingUserDetails } = useLocalSearchParams();
+  const { updateUserDetails } = useUserData();
 
   const onEmailChange = (val: string) => {
     setEmailAddress(val);
@@ -67,7 +72,14 @@ export default function SignUpScreen() {
 
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/(tutorial)/tutorial");
+        ///! dont redirect to tutoarial
+        //! redirect to tabs and simultaniously make a req to the server that you will not await(imean the user will instantly go to the home screen and then the req will finish)
+        const onboardingDetailsString = Array.isArray(onboardingUserDetails)
+          ? onboardingUserDetails[0]
+          : onboardingUserDetails;
+        await updateUserDetails(onboardingDetailsString);
+
+        router.replace("/(tabs)");
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }

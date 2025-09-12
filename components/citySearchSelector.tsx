@@ -18,7 +18,6 @@ import {
   RowLayout,
 } from "./dev";
 
-// City Search Result Interface
 export interface CityResult {
   name: string;
   country: string;
@@ -129,11 +128,6 @@ export const CitySearchSelector = ({
 
   return (
     <View className="flex-1 my-6 py-6">
-      <PageTitle className="text-center mb-4">Choose Your City</PageTitle>
-      <BodyText className="text-center mb-6 text-textGray">
-        Search for any city worldwide to start exploring
-      </BodyText>
-
       {/* Search Input */}
       <View className="mb-6">
         <View className="relative">

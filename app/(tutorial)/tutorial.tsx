@@ -30,7 +30,7 @@ import {
 } from "react-native";
 import { Alert, useCustomAlert, AlertHelpers } from '@/components/alert';
 const { width } = Dimensions.get("window");
-const TutorialScreen = () => {
+const OnboardingScreen = () => {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
   
@@ -98,24 +98,12 @@ const TutorialScreen = () => {
     }
 
     try {
-      // const updatedDetails = {
-      //   ...userDetails,
-      //   cityName: userDetails.selectedCity.name,
-      //   cityCountry: userDetails.selectedCity.country,
-      //   cityState: userDetails.selectedCity.state,
-      //   cityCoords: {
-      //     lat: userDetails.selectedCity.lat,
-      //     lng: userDetails.selectedCity.lon,
-      //   },
-      // };
-
           const updatedDetails = {
       firstName: userDetails.firstName,
       lastName: userDetails.lastName,
       userName: userDetails.userName,
-      imageUrl: userDetails.imageURL, // Note: backend expects "imageUrl" not "imageURL"
+      imageUrl: userDetails.imageURL, 
       completedTutorial: userDetails.completedTutorial,
-      // Send as selectedCity object to match backend expectation
       selectedCity: {
         name: userDetails.selectedCity.name,
         country: userDetails.selectedCity.country,
@@ -126,7 +114,7 @@ const TutorialScreen = () => {
       }
     };
 
-      await updateUserDetails(updatedDetails);
+        await updateUserDetails(updatedDetails);
       router.replace("/(tabs)");
     } catch (error) {
       console.log(error);
@@ -289,7 +277,7 @@ const TutorialScreen = () => {
   );
 };
 
-export default TutorialScreen;
+export default OnboardingScreen;
 
 const PrimaryButton = ({
   onPress,

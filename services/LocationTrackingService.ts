@@ -155,7 +155,7 @@ export class LocationTrackingService {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private async loadPersistedData() {
+  public async loadPersistedData() {
     try {
       // Load street data
       const streetDataStr = await AsyncStorage.getItem(STREET_DATA_STORAGE_KEY);
@@ -1567,6 +1567,277 @@ out geom;
     console.log('LocationTrackingService destroyed');
   } catch (error) {
     console.error('Error during service destruction:', error);
+  }
+}
+
+// Add this to your LocationTrackingService.ts
+
+// Add these new methods to your LocationTrackingService class:
+
+/**
+ * Request both foreground and background location permissions during onboarding
+ * This should be called during the onboarding flow
+ */
+public async requestFullLocationPermissions(token: string | null): Promise<{
+  foregroundGranted: boolean;
+  backgroundGranted: boolean;
+  success: boolean;
+}> {
+  try {
+    console.log("Requesting full location permissions...");
+    
+    // Step 1: Request foreground permissions first
+    const foregroundResult = await Location.requestForegroundPermissionsAsync();
+    const foregroundGranted = foregroundResult.status === 'granted';
+    
+    console.log("Foreground permission:", foregroundGranted);
+    
+    if (!foregroundGranted) {
+      // Save rejection to database
+      if (token) {
+        await this.savePermissionStatus(token, false);
+      }
+      this.setHasLocationPermission(false);
+      return {
+        foregroundGranted: false,
+        backgroundGranted: false,
+        success: false
+      };
+    }
+
+    // Step 2: Request background permissions
+    let backgroundGranted = false;
+    try {
+      const backgroundResult = await Location.requestBackgroundPermissionsAsync();
+      backgroundGranted = backgroundResult.status === 'granted';
+      console.log("Background permission:", backgroundGranted);
+    } catch (backgroundError) {
+      console.warn("Background permission request failed:", backgroundError);
+      // Continue with foreground-only if background fails
+    }
+
+    // Step 3: Save permission status to database
+    const overallSuccess = foregroundGranted; // We consider it success if foreground is granted
+    if (token) {
+      await this.savePermissionStatus(token, overallSuccess);
+      await this.saveBackgroundPermissionStatus(token, backgroundGranted);
+    }
+
+    // Step 4: Update local state
+    this.setHasLocationPermission(overallSuccess);
+
+    console.log("Permission request completed:", {
+      foregroundGranted,
+      backgroundGranted,
+      success: overallSuccess
+    });
+
+    return {
+      foregroundGranted,
+      backgroundGranted,
+      success: overallSuccess
+    };
+
+  } catch (error) {
+    console.error("Error requesting full location permissions:", error);
+    
+    // Save rejection to database if possible
+    if (token) {
+      try {
+        await this.savePermissionStatus(token, false);
+        await this.saveBackgroundPermissionStatus(token, false);
+      } catch (saveError) {
+        console.error("Failed to save permission rejection:", saveError);
+      }
+    }
+
+    this.setHasLocationPermission(false);
+    return {
+      foregroundGranted: false,
+      backgroundGranted: false,
+      success: false
+    };
+  }
+}
+
+/**
+ * Check if user has already granted permissions (to avoid asking again)
+ */
+public async checkExistingPermissions(token: string | null): Promise<{
+  hasStoredPermission: boolean;
+  hasSystemPermission: boolean;
+  hasBackgroundPermission: boolean;
+  needsPermissionRequest: boolean;
+}> {
+  try {
+    // Check stored permission status from database
+    let hasStoredPermission = false;
+    let hasBackgroundStoredPermission = false;
+    
+    if (token) {
+      hasStoredPermission = await this.loadPermissionStatus(token) === true;
+      hasBackgroundStoredPermission = await this.loadBackgroundPermissionStatus(token) === true;
+    }
+
+    // Check current system permissions
+    const foregroundStatus = await Location.getForegroundPermissionsAsync();
+    const backgroundStatus = await Location.getBackgroundPermissionsAsync();
+    
+    const hasSystemPermission = foregroundStatus.status === 'granted';
+    const hasBackgroundPermission = backgroundStatus.status === 'granted';
+
+    // Determine if we need to request permissions
+    const needsPermissionRequest = !hasStoredPermission || !hasSystemPermission;
+
+    console.log("Permission status check:", {
+      hasStoredPermission,
+      hasBackgroundStoredPermission,
+      hasSystemPermission,
+      hasBackgroundPermission,
+      needsPermissionRequest
+    });
+
+    return {
+      hasStoredPermission,
+      hasSystemPermission,
+      hasBackgroundPermission,
+      needsPermissionRequest
+    };
+
+  } catch (error) {
+    console.error("Error checking existing permissions:", error);
+    return {
+      hasStoredPermission: false,
+      hasSystemPermission: false,
+      hasBackgroundPermission: false,
+      needsPermissionRequest: true
+    };
+  }
+}
+
+/**
+ * Save background permission status to database
+ */
+private async saveBackgroundPermissionStatus(token: string, hasBackgroundPermission: boolean) {
+  try {
+    await apiService.saveLocationPermission(hasBackgroundPermission, token);
+    console.log("Background permission status saved to database:", hasBackgroundPermission);
+  } catch (error) {
+    console.error("Error saving background permission status:", error);
+  }
+}
+
+/**
+ * Load background permission status from database
+ */
+private async loadBackgroundPermissionStatus(token: string): Promise<boolean | null> {
+  try {
+    const saved = await apiService.getLocationPermission(token);
+    console.log("Loaded background permission status:", saved);
+    return saved === true;
+  } catch (error) {
+    console.error("Error loading background permission status:", error);
+    return null;
+  }
+}
+
+/**
+ * Initialize permissions during app startup (enhanced version)
+ */
+public async initializePermissionsEnhanced(token: string | null) {
+  try {
+    if (!token) return;
+
+    // Check what permissions we have
+    const permissionStatus = await this.checkExistingPermissions(token);
+    
+    if (!permissionStatus.needsPermissionRequest) {
+      console.log("User already has permissions - setting up tracking");
+      this.setHasLocationPermission(true);
+      return;
+    }
+
+    // If stored permission is true but system permission is false, 
+    // it means user revoked permission in system settings
+    if (permissionStatus.hasStoredPermission && !permissionStatus.hasSystemPermission) {
+      console.log("Permission was revoked in system settings");
+      // Update database to reflect current state
+      await this.savePermissionStatus(token, false);
+      this.setHasLocationPermission(false);
+      return;
+    }
+
+    // If we reach here, user needs to go through permission flow
+    console.log("User needs to complete permission setup");
+    this.setHasLocationPermission(false);
+
+  } catch (error) {
+    console.error("Error initializing enhanced permissions:", error);
+    this.setHasLocationPermission(false);
+  }
+}
+
+/**
+ * Start tracking with automatic background setup if permissions are available
+ */
+public async startLocationTrackingEnhanced(token: string | null) {
+  try {
+    const permissionStatus = await this.checkExistingPermissions(token);
+    
+    if (!permissionStatus.hasSystemPermission) {
+      throw new Error("Location permission not granted");
+    }
+
+    // Start basic location tracking
+    this.startActiveHoursTracking();
+
+    // Get initial location
+    const initialLocation = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+      timeInterval: TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
+    });
+
+    this.handleLocationUpdate(initialLocation);
+
+    // Start foreground location watching
+    const subscription = await Location.watchPositionAsync(
+      {
+        accuracy: LOCATION_ACCURACY,
+        timeInterval: LOCATION_UPDATE_INTERVAL_MS,
+        distanceInterval: LOCATION_DISTANCE_THRESHOLD_M,
+      },
+      (location) => {
+        this.handleLocationUpdate(location);
+      }
+    );
+
+    this.locationSubscription = subscription;
+
+    // Automatically start background tracking if permission is available
+    if (permissionStatus.hasBackgroundPermission) {
+      try {
+        await this.startBackgroundLocationUpdates();
+        console.log("Background location tracking started automatically");
+      } catch (backgroundError) {
+        console.warn("Failed to start background tracking:", backgroundError);
+        // Continue with foreground tracking
+      }
+    } else {
+      console.log("Background permission not available - using foreground tracking only");
+    }
+
+    console.log("Enhanced location tracking started successfully");
+    
+  } catch (error) {
+    // Clean up if something went wrong
+    if (this.locationSubscription) {
+      this.locationSubscription.remove();
+      this.locationSubscription = null;
+    }
+    this.stopActiveHoursTracking();
+
+    console.error("Error starting enhanced location tracking:", error);
+    throw error;
   }
 }
 }

@@ -7,6 +7,7 @@ import {
   FlatList,
   StatusBar,
   RefreshControl,
+  Text,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import Fontisto from "@expo/vector-icons/Fontisto";
@@ -38,7 +39,7 @@ export default function HomeScreen() {
 
   const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
     useSideMenusDrawer();
-  const { isSignedIn, isLoaded, user} = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
   const { userData, refreshUserData } = useUserData();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -53,7 +54,6 @@ export default function HomeScreen() {
     try {
       console.log("Pull to refresh triggered");
       await refreshUserData();
-  
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {
@@ -109,9 +109,10 @@ export default function HomeScreen() {
   }
 
   if (userData && userData.completedTutorial === false) {
-    router.replace("/tutorial");
+    router.replace("/(tutorial)/tutorial");
     return null;
   }
+
 
   const sections = [
     { id: "header", type: "header" },
@@ -124,7 +125,7 @@ export default function HomeScreen() {
       return (
         <SafeAreaView>
           <StatusBar backgroundColor="#fafafa" barStyle="dark-content" />
-          <View className="mx-4 mt-3 rounded-b-2xl gap-4" >
+          <View className="mx-4 mt-3 rounded-b-2xl gap-4">
             <View className="flex-row justify-between items-center">
               <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
@@ -149,6 +150,14 @@ export default function HomeScreen() {
             </View>
 
             <QuickStats />
+
+            <TouchableOpacity onPress={() =>     router.push("/(onboarding)/onboarding")
+}>
+              <View> 
+                              <Text className="text-black"> To Onboarding</Text>
+
+              </View>
+            </TouchableOpacity>
 
             <DashboardMenu />
 
@@ -191,12 +200,12 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
-          refreshControl={
+        refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#c8f751"]} 
-            tintColor="#c8f751" 
+            colors={["#c8f751"]}
+            tintColor="#c8f751"
           />
         }
       />

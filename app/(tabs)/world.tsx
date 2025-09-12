@@ -4,7 +4,13 @@ import { useUserData } from "@/Providers/UserDataProvider";
 import { useLocationTracking } from "@/Providers/LocationTrackingProvider";
 
 import Mapbox, { Camera, MapView, ShapeSource } from "@rnmapbox/maps";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import CenterCameraOnUserButton from "@/components/centerCameraOnUserButton";
@@ -41,65 +47,76 @@ const StreetTrackingMap = () => {
   const [mapZoom, setMapZoom] = useState(13);
   const [highlightedStreets, setHighlightedStreets] = useState<string[]>([]);
   const [initializationComplete, setInitializationComplete] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false); // Add this state
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
+  const isMountedRef = useRef(true); // Track component mount status
+
   const { getToken } = useAuth();
 
-  // useEffect(() => {
-  //   const initializeComponentData = async () => {
-  //     if (initializationComplete) return;
-      
-  //     console.log("=== INITIALIZATION START ===");
-  //     console.log("isLoading:", isLoading);
-  //     console.log("userData:", !!userData);
-  //     console.log("hasLocationPermission:", hasLocationPermission);
-  //     console.log("isTracking:", isTracking);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-  //     try {
-  //       // Step 1: Initialize data (this includes permission check and server sync)
-  //       console.log("Step 1: Initializing data...");
-  //       await initializeData();
-        
-  //       // Step 2: Start tracking if not already tracking and we have permission
-  //       if (!isTracking && hasLocationPermission) {
-  //         console.log("Step 2: Starting tracking...");
-  //         await startTracking(true);
-  //         console.log("Tracking started successfully");
-  //       } else if (!hasLocationPermission) {
-  //         console.log("Step 2: Skipping tracking start - no location permission");
-  //       } else {
-  //         console.log("Step 2: Tracking already active");
-  //       }
-        
-  //       setInitializationComplete(true);
-  //       console.log("=== INITIALIZATION COMPLETE ===");
-        
-  //     } catch (error) {
-  //       console.error("Initialization failed:", error);
-  //       Alert.alert("Error", "Failed to initialize location services");
-  //     }
-  //   };
+  // Memoize map configuration to prevent unnecessary re-renders
+  const mapConfiguration = useMemo(
+    () => ({
+      styleURL: Mapbox.StyleURL.Street,
+      zoomLevel: 13,
+      centerCoordinate: userLocation
+        ? [userLocation.longitude, userLocation.latitude]
+        : [23.3219, 42.6977],
+    }),
+    [userLocation]
+  );
 
-  //   // Only initialize if we have user data and haven't completed initialization
-  //   if (userData && !initializationComplete) {
-  //     initializeComponentData();
-  //   }
+  // Safe camera operations - check if component is mounted and refs exist
+  const safeCameraOperation = useCallback(
+    (operation: () => void) => {
+      if (isMountedRef.current && cameraRef.current && isMapReady) {
+        try {
+          operation();
+        } catch (error) {
+          console.warn("Camera operation failed:", error);
+        }
+      }
+    },
+    [isMapReady]
+  );
 
-  //   return () => {
-  //     console.log("Cleanup function running");
-  //     if (isTracking) {
-  //       console.log("About to stop tracking");
-  //       stopTracking().catch(console.error);
-  //     }
-  //   };
-  // }, [userData, isTracking, hasLocationPermission, initializationComplete]);
+  const centerOnUser = useCallback(() => {
+    if (userLocation) {
+      safeCameraOperation(() => {
+        cameraRef.current?.setCamera({
+          centerCoordinate: [userLocation.longitude, userLocation.latitude],
+          zoomLevel: 15,
+          animationDuration: 1000,
+        });
+      });
+    }
+  }, [userLocation, safeCameraOperation]);
 
-  // Initialization effect (runs when userData changes)
-useEffect(() => {
-  const initializeComponentData = async () => {
-      if (initializationComplete) return;
-      
+  // Handle map ready state
+  const handleMapReady = useCallback(() => {
+    console.log("Map loaded and ready");
+    setIsMapReady(true);
+  }, []);
+
+  // Handle camera changes with error boundary
+  const handleCameraChanged = useCallback((state: any) => {
+    if (isMountedRef.current && state?.properties?.zoom) {
+      setMapZoom(state.properties.zoom);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initializeComponentData = async () => {
+      if (initializationComplete || !userData) return;
+
       console.log("=== INITIALIZATION START ===");
       console.log("isLoading:", isLoading);
       console.log("userData:", !!userData);
@@ -110,24 +127,29 @@ useEffect(() => {
         // Step 1: Initialize data (this includes permission check and server sync)
         console.log("Step 1: Initializing data...");
         await initializeData();
-        
+
         // Step 2: Start tracking if not already tracking and we have permission
         if (!isTracking && hasLocationPermission) {
           console.log("Step 2: Starting tracking...");
           await startTracking(true);
           console.log("Tracking started successfully");
         } else if (!hasLocationPermission) {
-          console.log("Step 2: Skipping tracking start - no location permission");
+          console.log(
+            "Step 2: Skipping tracking start - no location permission"
+          );
         } else {
           console.log("Step 2: Tracking already active");
         }
-        
-        setInitializationComplete(true);
-        console.log("=== INITIALIZATION COMPLETE ===");
-        
+
+        if (isMountedRef.current) {
+          setInitializationComplete(true);
+          console.log("=== INITIALIZATION COMPLETE ===");
+        }
       } catch (error) {
         console.error("Initialization failed:", error);
-        Alert.alert("Error", "Failed to initialize location services");
+          if (isMountedRef.current) {
+          Alert.alert("Error", "Failed to initialize location services");
+        }
       }
     };
 
@@ -135,25 +157,19 @@ useEffect(() => {
     if (userData && !initializationComplete) {
       initializeComponentData();
     }
+  }, [userData, initializationComplete, hasLocationPermission]);
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      console.log("Component unmounting - cleaning up");
+      isMountedRef.current = false;
 
-
-}, [userData, initializationComplete,hasLocationPermission]);
-
- useEffect(() => {
-  return () => {
-    console.log("Component unmounting - cleaning up via provider");
-    
-    const cleanup = async () => {
-      try {
-        await destroyService();
-      } catch (error) {
-        console.error("Provider cleanup error:", error);
-      }
+      // Clean up any pending operations
+      setTimeout(() => {
+        destroyService().catch(console.error);
+      }, 100);
     };
-    
-    cleanup();
-  };
-}, []); // Empty array = only on unmount
+  }, []);
 
   // Update highlighted streets when current street changes
   useEffect(() => {
@@ -161,24 +177,35 @@ useEffect(() => {
   }, [currentStreetId]);
 
   useEffect(() => {
-
-    console.log("=== STATE UPDATE DEBUG ==============================================");
+    console.log(
+      "=== STATE UPDATE DEBUG =============================================="
+    );
     console.log("currentStreetId:", currentStreetId);
-        console.log("visitedStreets:", visitedStreets);
+    console.log("visitedStreets:", visitedStreets);
 
     console.log("visitedStreets length:", visitedStreets.length);
     console.log("allVisitedStreetIds size:", allVisitedStreetIds.size);
     console.log("streetData available:", !!streetData);
-    console.log("streetData features count:", streetData?.features?.length || 0);
+    console.log(
+      "streetData features count:",
+      streetData?.features?.length || 0
+    );
     console.log("hasLocationPermission:", hasLocationPermission);
     console.log("isTracking:", isTracking);
-  }, [currentStreetId, visitedStreets, allVisitedStreetIds, streetData, hasLocationPermission, isTracking]);
+  }, [
+    currentStreetId,
+    visitedStreets,
+    allVisitedStreetIds,
+    streetData,
+    hasLocationPermission,
+    isTracking,
+  ]);
 
   const handleRequestLocationPermission = useCallback(async () => {
     try {
       const token = await getToken();
       const granted = await requestLocationPermission(token);
-      
+
       if (granted) {
         console.log("Permission granted, starting tracking...");
         // After permission is granted, start tracking
@@ -198,16 +225,6 @@ useEffect(() => {
       return false;
     }
   }, [requestLocationPermission, getToken, isTracking, startTracking]);
-
-  const centerOnUser = useCallback(() => {
-    if (userLocation && cameraRef.current) {
-      cameraRef.current.setCamera({
-        centerCoordinate: [userLocation.longitude, userLocation.latitude],
-        zoomLevel: 15,
-        animationDuration: 1000,
-      });
-    }
-  }, [userLocation]);
 
   const toggleMapMenu = useCallback(() => {
     setIsMapMenuOpen((prev) => !prev);
@@ -247,137 +264,97 @@ useEffect(() => {
         style={styles.map}
         zoomEnabled
         rotateEnabled
-        styleURL={Mapbox.StyleURL.Street}
-        onDidFinishLoadingMap={() => console.log("Map loaded")}
-        onCameraChanged={(state) => {
-          setMapZoom(state.properties.zoom);
-        }}
+        styleURL={mapConfiguration.styleURL}
+        onDidFinishLoadingMap={handleMapReady}
+        onCameraChanged={handleCameraChanged}
       >
-        <Mapbox.Images
-          images={{
-            "user-location": require("../../assets/images/icon.png"),
-          }}
-        />
-        <Camera
-          ref={cameraRef}
-          zoomLevel={13}
-          centerCoordinate={
-            userLocation
-              ? [userLocation.longitude, userLocation.latitude]
-              : [23.3219, 42.6977]
-          }
-          followUserLocation={isFollowingUser}
-        />
-
-        {userLocation && hasLocationPermission && (
-          <Mapbox.ShapeSource
-            id="userLocationSource"
-            shape={{
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [userLocation.longitude, userLocation.latitude],
-              },
-              properties: {},
-            }}
-          >
-            <Mapbox.SymbolLayer
-              id="userLocationSymbol"
-              style={{
-                iconImage: "user-location",
-                iconSize: 0.06,
-                iconAllowOverlap: true,
-                iconIgnorePlacement: true,
-                iconAnchor: "bottom",
-              }}
-            />
-          </Mapbox.ShapeSource>
-        )}
-
-        {streetData && mapZoom >= 11 && (
+        {/* Only render map content after map is ready */}
+        {isMapReady && (
           <>
-            {/* All streets with dynamic coloring */}
-            {/* <ShapeSource
-              id="allStreetsSource"
-              shape={streetData}
-              onPress={(event) => {
-                console.log("Street pressed:", event.features[0]?.id);
+            <Mapbox.Images
+              images={{
+                "user-location": require("../../assets/images/icon.png"),
               }}
-            >
-              <Mapbox.LineLayer
-                id="all_streets_layer"
-                style={{
-                  lineColor: [
-                    "case",
-                    ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
-                    "#797979",
-                    [
-                      "in",
-                      ["to-string", ["get", "id"]],
-                      ["literal", Array.from(allVisitedStreetIds)],
-                    ],
-                    "#8B00FF", // Visited streets
-                    "rgba(0, 0, 0, 0)", // Unvisited streets
-                  ],
-                  lineWidth: [
-                    "case",
-                    ["==", ["to-string", ["get", "id"]], currentStreetId || ""],
-                    3, // Current street thicker
-                    [
-                      "in",
-                      ["to-string", ["get", "id"]],
-                      ["literal", highlightedStreets],
-                    ],
-                    3, // Highlighted streets
-                    2, // Default width
-                  ],
-                  lineOpacity: 0.7,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }}
-              />
-            </ShapeSource>
-
-              } */}
-
-              {currentStreetId &&
-              streetData.features.some((f) => f.id === currentStreetId) && (
-                <ShapeSource
-                  id="currentStreetHighlight"
-                  shape={{
-                    type: "FeatureCollection",
-                    features: streetData.features.filter(
-                      (street) => street.id === currentStreetId
-                    ),
-                  }}
-                >
-                  <Mapbox.LineLayer
-                    id="current_street_highlight"
-                    style={{
-                      lineColor: "#c8f751",
-                      lineWidth: 6,
-                      lineOpacity: 0.8,
-                      lineCap: "round",
-                      lineJoin: "round",
-                    }}
-                  />
-                </ShapeSource>
-              )}
-
-            <VisitedStreetsLayer
-              visitedStreets={visitedStreets}
-              streetData={streetData}
             />
+            
+            <Camera
+              ref={cameraRef}
+              zoomLevel={mapConfiguration.zoomLevel}
+              centerCoordinate={mapConfiguration.centerCoordinate}
+              followUserLocation={isFollowingUser}
+            />
+
+            {/* User location marker */}
+            {userLocation && hasLocationPermission && (
+              <Mapbox.ShapeSource
+                id="userLocationSource"
+                shape={{
+                  type: "Feature",
+                  geometry: {
+                    type: "Point",
+                    coordinates: [userLocation.longitude, userLocation.latitude],
+                  },
+                  properties: {},
+                }}
+              >
+                <Mapbox.SymbolLayer
+                  id="userLocationSymbol"
+                  style={{
+                    iconImage: "user-location",
+                    iconSize: 0.06,
+                    iconAllowOverlap: true,
+                    iconIgnorePlacement: true,
+                    iconAnchor: "bottom",
+                  }}
+                />
+              </Mapbox.ShapeSource>
+            )}
+
+            {/* Street layers */}
+            {streetData && mapZoom >= 11 && (
+              <>
+                {/* Current street highlight */}
+                {currentStreetId && streetData.features.some((f) => f.id === currentStreetId) && (
+                  <ShapeSource
+                    id="currentStreetHighlight"
+                    shape={{
+                      type: "FeatureCollection",
+                      features: streetData.features.filter(
+                        (street) => street.id === currentStreetId
+                      ),
+                    }}
+                  >
+                    <Mapbox.LineLayer
+                      id="current_street_highlight"
+                      style={{
+                        lineColor: "#c8f751",
+                        lineWidth: 6,
+                        lineOpacity: 0.8,
+                        lineCap: "round",
+                        lineJoin: "round",
+                      }}
+                    />
+                  </ShapeSource>
+                )}
+
+                <VisitedStreetsLayer
+                  visitedStreets={visitedStreets}
+                  streetData={streetData}
+                />
+              </>
+            )}
           </>
         )}
       </MapView>
 
-      {!isMapMenuOpen && (
+        {isMapReady && !isMapMenuOpen && (
         <CenterCameraOnUserButton
           userLocation={userLocation}
           centerOnUser={centerOnUser}
         />
       )}
+
+    
 
       {!hasLocationPermission && !isLoading && userData && (
         <LocationEnablerPanel

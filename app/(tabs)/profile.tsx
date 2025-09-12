@@ -158,7 +158,7 @@ export default function ProfileScreen() {
             <ClickableCard onPress={() => router.push("/(screens)/friends")}>
               <RowLayout className="">
                 <IconContainer color="green">
-                  <Ionicons name="people" size={20} color="#10B981" />
+                  <Ionicons name="people" size={20} color="#10b981e7" />
                 </IconContainer>
                 <CardTitle className="ml-4">Your Friends</CardTitle>
               </RowLayout>
