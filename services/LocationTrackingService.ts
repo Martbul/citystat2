@@ -1570,42 +1570,16 @@ out geom;
   }
 }
 
-// Add this to your LocationTrackingService.ts
-
-// Add these new methods to your LocationTrackingService class:
 
 /**
  * Request both foreground and background location permissions during onboarding
- * This should be called during the onboarding flow
  */
 public async requestFullLocationPermissions(token: string | null): Promise<{
-  foregroundGranted: boolean;
   backgroundGranted: boolean;
   success: boolean;
 }> {
   try {
-    console.log("Requesting full location permissions...");
-    
-    // Step 1: Request foreground permissions first
-    const foregroundResult = await Location.requestForegroundPermissionsAsync();
-    const foregroundGranted = foregroundResult.status === 'granted';
-    
-    console.log("Foreground permission:", foregroundGranted);
-    
-    if (!foregroundGranted) {
-      // Save rejection to database
-      if (token) {
-        await this.savePermissionStatus(token, false);
-      }
-      this.setHasLocationPermission(false);
-      return {
-        foregroundGranted: false,
-        backgroundGranted: false,
-        success: false
-      };
-    }
-
-    // Step 2: Request background permissions
+  
     let backgroundGranted = false;
     try {
       const backgroundResult = await Location.requestBackgroundPermissionsAsync();
@@ -1613,43 +1587,21 @@ public async requestFullLocationPermissions(token: string | null): Promise<{
       console.log("Background permission:", backgroundGranted);
     } catch (backgroundError) {
       console.warn("Background permission request failed:", backgroundError);
-      // Continue with foreground-only if background fails
     }
 
-    // Step 3: Save permission status to database
-    const overallSuccess = foregroundGranted; // We consider it success if foreground is granted
-    if (token) {
-      await this.savePermissionStatus(token, overallSuccess);
-      await this.saveBackgroundPermissionStatus(token, backgroundGranted);
-    }
-
-    // Step 4: Update local state
-    this.setHasLocationPermission(overallSuccess);
-
+let overallSuccess =   backgroundGranted
     console.log("Permission request completed:", {
-      foregroundGranted,
       backgroundGranted,
       success: overallSuccess
     });
 
     return {
-      foregroundGranted,
       backgroundGranted,
       success: overallSuccess
     };
 
   } catch (error) {
     console.error("Error requesting full location permissions:", error);
-    
-    // Save rejection to database if possible
-    if (token) {
-      try {
-        await this.savePermissionStatus(token, false);
-        await this.saveBackgroundPermissionStatus(token, false);
-      } catch (saveError) {
-        console.error("Failed to save permission rejection:", saveError);
-      }
-    }
 
     this.setHasLocationPermission(false);
     return {

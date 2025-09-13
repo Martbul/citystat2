@@ -119,16 +119,35 @@ class ApiService {
     });
   }
 
-  async updateUserDetails(
-    updates: Partial<UserData>,
-    token: string
-  ): Promise<UserData> {
-    return this.makeRequest<UserData>("/api/user/details", {
+   async updateUserDetails(
+  updates: Partial<UserData>,
+  token: string
+): Promise<UserData> {
+  console.log('🔵 updateUserDetails called with:', {
+    updates,
+    tokenExists: !!token,
+    tokenLength: token?.length
+  });
+  
+  const url = "/api/user/details";
+  console.log('🔵 Making request to:', url);
+  
+  try {
+    const result = await this.makeRequest<UserData>(url, {
       method: "PUT",
       token,
       body: JSON.stringify(updates),
     });
+    
+    console.log('🟢 updateUserDetails success:', result);
+    return result;
+  } catch (error) {
+    console.error('🔴 updateUserDetails error:', error);
+    throw error;
   }
+}
+
+
 
   async updateUserProfile(updates: any, token: string): Promise<UserData> {
     console.log("In updateUserProfile, updates: " + updates);

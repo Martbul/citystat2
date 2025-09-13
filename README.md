@@ -117,6 +117,14 @@ remove the imail verificationfrom clerk(why making it harder for your users)
 
 
 NOW FIX: 
+add filetringon the searched users in the topdrawer
+userSearch should serach by username, first last name, city and so on...(currently searches only be userName)
+searchUsers should give users that match100% if not 100% match then the closest to the search(currently it isdisplying only 100% match)
+the app doesnt work offline(if user do not have networ access disply aller to start their wifi/mobile data)
+sign in req, then server 503 error but user redirected to home screen(this should not happen, when server down suer should stayat sig in screen)
+make the sign up and onboarding as easy as possible(clerk with google auth)
+use the search icon in the home screento serach users and ther profiles
+complete edit profile
 added location acceptance in user details so update server to handle it in the suer details request
 before tracking was tured on when getting the location, now that location is enabled in the onboarding tracking should be truned on in the initialization of the map(check background location access and start the location)
 in the best case the app works, often there is big inconcistency in every part of it

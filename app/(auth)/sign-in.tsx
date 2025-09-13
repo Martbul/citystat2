@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -76,7 +76,11 @@ export default function Page() {
   };
 
   return (
-    <SafeAreaView className="flex-1 justify-center p-8  bg-lightBackground">
+    <SafeAreaView className="flex-1 bg-lightBackground">
+        <KeyboardAvoidingView
+                  behavior={Platform.OS === "ios" ? "padding" : undefined}
+                  className="flex-1 justify-center p-8 "
+                >
       <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
         Sign in
       </Text>
@@ -142,14 +146,15 @@ export default function Page() {
         </Text>
       </TouchableOpacity>
 
-      <View className="flex flex-row justify-center items-center mt-6">
+      <View className="flex flex-col justify-center items-center mt-6">
         <Text className="text-sm text-lightBlackText">
           Don't have an account?
         </Text>
-        <Link href="/sign-up">
-          <Text className="text-sm text-lightPrimaryAccent"> Sign up</Text>
+        <Link href="/(onboarding)/onboarding">
+          <Text className="text-base text-lightPrimaryAccent">Sign up</Text>
         </Link>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

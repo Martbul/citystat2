@@ -12,8 +12,8 @@
   );
 
   // 2. HEADER WITH GRADIENT BACKGROUND
-  export const GradientHeader = ({ children }: { children: React.ReactNode }) => (
-    <View className="flex flex-row items-center justify-end gap-3 px-4 pt-8 pb-9 bg-gradient-to-br from-panelDark to-panelDarker">
+  export const GradientHeader = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+    <View className={`flex flex-row items-center justify-end gap-3 px-4 pt-8 pb-9 bg-gradient-to-br from-panelDark to-panelDarker  ${className}`}>
       {children}
     </View>
   );

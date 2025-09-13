@@ -31,7 +31,7 @@ export default function QuickStats() {
     fetchings();
   }, [userData]);
 
-  if (isLoading) {
+  if (isLoading && city=="Unknown") {
     return (
       <View style={{ paddingVertical: 16, alignItems: "center" }}>
         <Spinner />

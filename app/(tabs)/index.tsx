@@ -12,7 +12,6 @@ import {
 import Entypo from "@expo/vector-icons/Entypo";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useSideMenusDrawer } from "@/Providers/SideMenuDrawerProvider";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,14 +30,20 @@ import { ChartRadar } from "@/components/charts/radarChart";
 import { SuggestedExplorersSection } from "@/components/suggestedUsersSection";
 import { DashboardMenu } from "@/components/dashboardMenu";
 import QuickStats from "@/components/quickStats";
+import { useMenusDrawer } from "@/Providers/MenuDrawerProvider";
+import { UserSearcherDrawer } from "@/components/drawers/userSearcherDrawer";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  const { isSideMenuDrawerOpen, setIsSideMenuDrawerOpen } =
-    useSideMenusDrawer();
+  const {
+    isSideMenuDrawerOpen,
+    isTopSearchDrawerOpen,
+    setIsSideMenuDrawerOpen,
+    setIsTopSearchDrawerOpen,
+  } = useMenusDrawer();
   const { isSignedIn, isLoaded, user } = useUser();
   const { userData, refreshUserData } = useUserData();
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
@@ -61,7 +66,7 @@ export default function HomeScreen() {
     }
   };
 
-  const openDrawer = () => {
+  const openSideDrawer = () => {
     setIsSideMenuDrawerOpen(true);
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -77,7 +82,7 @@ export default function HomeScreen() {
     ]).start();
   };
 
-  const closeDrawer = () => {
+  const closeSideDrawer = () => {
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: -screenWidth * 0.8,
@@ -91,6 +96,39 @@ export default function HomeScreen() {
       }),
     ]).start(() => {
       setIsSideMenuDrawerOpen(false);
+    });
+  };
+
+  const openTopDrawer = () => {
+    setIsTopSearchDrawerOpen(true);
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 0.5,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeTopDrawer = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -screenWidth * 0.8,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsTopSearchDrawerOpen(false);
     });
   };
 
@@ -108,11 +146,10 @@ export default function HomeScreen() {
     console.log("User is signed in: " + user.id);
   }
 
-  if (userData && userData.completedTutorial === false) {
-    router.replace("/(tutorial)/tutorial");
-    return null;
-  }
-
+  // if (!userData ) {
+  //   router.replace("/(auth)/sign-in");
+  //   return null;
+  // }
 
   const sections = [
     { id: "header", type: "header" },
@@ -127,37 +164,30 @@ export default function HomeScreen() {
           <StatusBar backgroundColor="#fafafa" barStyle="dark-content" />
           <View className="mx-4 mt-3 rounded-b-2xl gap-4">
             <View className="flex-row justify-between items-center">
-              <TouchableOpacity onPress={openDrawer} className="mr-4 mt-1">
+              <TouchableOpacity onPress={openSideDrawer} className="mr-4 mt-1">
                 <Entypo name="menu" size={26} color="#333333" />
               </TouchableOpacity>
 
-              <View className="flex-row gap-3">
-                <HeaderButton onPress={() => console.log("Search pressed")}>
+              <TouchableOpacity className="flex-row gap-3">
+                <HeaderButton onPress={openTopDrawer}>
                   <Fontisto name="search" size={22} color="#1F2937" />
                 </HeaderButton>
 
-                <HeaderButton
+                {/* //! for v2 */}
+                {/* <HeaderButton
                   onPress={() => router.push("/(screens)/challenges")}
                 >
                   <FontAwesome6 name="star" size={22} color="black" />
-                </HeaderButton>
-                <HeaderButton
+                </HeaderButton> */}
+                {/* <HeaderButton
                   onPress={() => router.push("/(screens)/notifications")}
                 >
                   <Ionicons name="notifications" size={24} color="#1F2937" />
-                </HeaderButton>
-              </View>
+                </HeaderButton> */}
+              </TouchableOpacity>
             </View>
 
             <QuickStats />
-
-            <TouchableOpacity onPress={() =>     router.push("/(onboarding)/onboarding")
-}>
-              <View> 
-                              <Text className="text-black"> To Onboarding</Text>
-
-              </View>
-            </TouchableOpacity>
 
             <DashboardMenu />
 
@@ -190,7 +220,16 @@ export default function HomeScreen() {
           isSideMenuDrawerOpen={isSideMenuDrawerOpen}
           slideAnim={slideAnim}
           overlayOpacity={overlayOpacity}
-          closeDrawer={closeDrawer}
+          closeDrawer={closeSideDrawer}
+        />
+      )}
+
+      {isTopSearchDrawerOpen && (
+        <UserSearcherDrawer
+          isTopSearchDrawerOpen={isTopSearchDrawerOpen}
+          slideAnim={slideAnim}
+          overlayOpacity={overlayOpacity}
+          closeDrawer={closeTopDrawer}
         />
       )}
 

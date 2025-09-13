@@ -78,6 +78,15 @@ export default function screensRoutesLayout() {
           headerShown: false,
         }}
       />
+
+        <Stack.Screen
+        name="searchUsers"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      
     </Stack>
   );
 }

@@ -1,4 +1,10 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -7,6 +13,7 @@ import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { useUserData } from "@/Providers/UserDataProvider";
+import { UserDetailsUpdateReq } from "@/types/user";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -19,7 +26,7 @@ export default function SignUpScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const { onboardingUserDetails } = useLocalSearchParams();
-  const { updateUserDetails } = useUserData();
+  const { updateUserDetails, setPendingOnboardingUpdate } = useUserData();
 
   const onEmailChange = (val: string) => {
     setEmailAddress(val);
@@ -61,7 +68,6 @@ export default function SignUpScreen() {
       }
     }
   };
-
   const onVerifyPress = async () => {
     if (!isLoaded) return;
 
@@ -72,19 +78,24 @@ export default function SignUpScreen() {
 
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
-        ///! dont redirect to tutoarial
-        //! redirect to tabs and simultaniously make a req to the server that you will not await(imean the user will instantly go to the home screen and then the req will finish)
-        const onboardingDetailsString = Array.isArray(onboardingUserDetails)
+        console.log("successful signup");
+
+        const onboardingDetailsString: UserDetailsUpdateReq = Array.isArray(
+          onboardingUserDetails
+        )
           ? onboardingUserDetails[0]
           : onboardingUserDetails;
-        await updateUserDetails(onboardingDetailsString);
+
+        console.log(
+          "Setting pending onboarding data:",
+          onboardingDetailsString
+        );
+        setPendingOnboardingUpdate(onboardingDetailsString);
 
         router.replace("/(tabs)");
-      } else {
-        console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
+      console.error("❌ Verification error:", JSON.stringify(err, null, 2));
       setErrors([{ longMessage: "Invalid verification code or other error." }]);
     }
   };
@@ -100,25 +111,32 @@ export default function SignUpScreen() {
   if (pendingVerification) {
     return (
       <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
-        <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
-          Verify your email
-        </Text>
-
-        <InputBox
-          val={code}
-          valSetFunc={setCode}
-          placeholderTest="Verification code"
-          icon={<MaterialIcons name="verified-user" size={24} color="black" />}
-        />
-
-        <TouchableOpacity
-          onPress={onVerifyPress}
-          className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg mt-4"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1 justify-center p-8 "
         >
-          <Text className="text-lg font-medium text-lightBlackText">
-            Verify
+          <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
+            Verify your email
           </Text>
-        </TouchableOpacity>
+
+          <InputBox
+            val={code}
+            valSetFunc={setCode}
+            placeholderTest="Verification code"
+            icon={
+              <MaterialIcons name="verified-user" size={24} color="black" />
+            }
+          />
+
+          <TouchableOpacity
+            onPress={onVerifyPress}
+            className="flex justify-center items-center bg-lightPrimaryAccent py-3 rounded-lg mt-4"
+          >
+            <Text className="text-lg font-medium text-lightBlackText">
+              Verify
+            </Text>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -129,69 +147,74 @@ export default function SignUpScreen() {
 
   return (
     <SafeAreaView className="flex-1 p-8 justify-center bg-lightBackground">
-      <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
-        Create your account
-      </Text>
-
-      <View className="flex gap-2">
-        <InputBox
-          val={emailAddress}
-          valSetFunc={onEmailChange}
-          placeholderTest="Email"
-          icon={<Feather name="mail" size={20} color="black" />}
-        />
-        {emailErrors?.map((error, index) => (
-          <Text key={`email-${index}`} className="text-red-500 text-sm">
-            {error.longMessage || error.message}
-          </Text>
-        ))}
-
-        <InputBox
-          val={password}
-          valSetFunc={onPasswordChange}
-          placeholderTest="Password"
-          icon={<Feather name="lock" size={24} color="black" />}
-          icon2={
-            isPasswordVisible ? (
-              <FontAwesome name="eye-slash" size={24} color="black" />
-            ) : (
-              <FontAwesome name="eye" size={24} color="black" />
-            )
-          }
-          icon2PressFunc={toggleShowPassword}
-          secureTextEntry={!isPasswordVisible}
-        />
-
-        {passwordErrors?.map((error, index) => (
-          <Text key={`pass-${index}`} className="text-red-500 text-sm">
-            {error.longMessage || error.message}
-          </Text>
-        ))}
-      </View>
-
-      {generalErrors?.map((error, index) => (
-        <Text key={`gen-${index}`} className="text-red-500 text-sm mt-1">
-          {error.longMessage || error.message}
-        </Text>
-      ))}
-
-      <TouchableOpacity
-        onPress={onSignUpPress}
-        className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1 justify-center p-8 "
       >
-        <Text className="text-base font-semibold text-lightBlackText">
-          Continue
+        <Text className="mb-6 text-2xl font-bold text-center text-lightBlackText">
+          Create your account
         </Text>
-      </TouchableOpacity>
 
-      <View className="flex flex-row justify-center items-center mt-6">
-        <Text className="text-sm text-lightBlackText">
-          Already have an account?
-        </Text>
-        <Link href="/sign-in">
-          <Text className="text-sm text-lightPrimaryAccent"> Sign in</Text>
-        </Link>
-      </View>
+        <View className="flex gap-2">
+          <InputBox
+            val={emailAddress}
+            valSetFunc={onEmailChange}
+            placeholderTest="Email"
+            icon={<Feather name="mail" size={20} color="black" />}
+          />
+          {emailErrors?.map((error, index) => (
+            <Text key={`email-${index}`} className="text-red-500 text-sm">
+              {error.longMessage || error.message}
+            </Text>
+          ))}
+
+          <InputBox
+            val={password}
+            valSetFunc={onPasswordChange}
+            placeholderTest="Password"
+            icon={<Feather name="lock" size={24} color="black" />}
+            icon2={
+              isPasswordVisible ? (
+                <FontAwesome name="eye-slash" size={24} color="black" />
+              ) : (
+                <FontAwesome name="eye" size={24} color="black" />
+              )
+            }
+            icon2PressFunc={toggleShowPassword}
+            secureTextEntry={!isPasswordVisible}
+          />
+
+          {passwordErrors?.map((error, index) => (
+            <Text key={`pass-${index}`} className="text-red-500 text-sm">
+              {error.longMessage || error.message}
+            </Text>
+          ))}
+        </View>
+
+        {generalErrors?.map((error, index) => (
+          <Text key={`gen-${index}`} className="text-red-500 text-sm mt-1">
+            {error.longMessage || error.message}
+          </Text>
+        ))}
+
+        <TouchableOpacity
+          onPress={onSignUpPress}
+          className="bg-lightPrimaryAccent py-4 rounded-lg flex items-center justify-center mt-3"
+        >
+          <Text className="text-base font-semibold text-lightBlackText">
+            Continue
+          </Text>
+        </TouchableOpacity>
+
+        <View className="flex flex-row justify-center items-center mt-6">
+          <Text className="text-sm text-lightBlackText">
+            Already have an account?
+          </Text>
+          <Link href="/sign-in">
+            <Text className="text-sm text-lightPrimaryAccent"> Sign in</Text>
+          </Link>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

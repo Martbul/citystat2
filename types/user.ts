@@ -297,6 +297,17 @@ export interface TimeSpentLocationCategory {
   locationCategory?: LocationCategory;
 }
 
+export interface UserDetailsUpdateReq {
+  firstName:string;
+  lastName:string;
+  userName:string;
+  imageUrl:string;
+  completedTutorial:boolean;
+  isLocationTrackingEnabled: boolean;
+  selectedCity:any
+
+}
+
 export interface UserDataContextType {
   // --- Core state ---
   userData: UserData | null;
@@ -320,12 +331,7 @@ export interface UserDataContextType {
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
   refreshUserData: () => Promise<void>;
   updateUserDetails: (
-    updates: Partial<
-      Omit<
-        UserData,
-        "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
-      >
-    >
+    updates:UserDetailsUpdateReq
   ) => Promise<void>;
   updateSettings: (
     settings: Partial<Omit<Settings, "id" | "createdAt" | "updatedAt">>
@@ -363,4 +369,5 @@ export interface UserDataContextType {
   // --- Permissions ---
   getLocationPermission: () => Promise<any>;
   saveLocationPermission: (hasPermission: boolean) => Promise<any>;
+  setPendingOnboardingUpdate:  (data: any) => void
 }

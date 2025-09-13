@@ -20,7 +20,7 @@ export default function TabLayout() {
     }
 
     if (userData && !userData.completedTutorial) {
-      router.replace("/(tutorial)/tutorial");
+      router.replace("/(onboarding)/onboarding");
       return;
     }
   }, [isSignedIn, userData, router]);

@@ -11,6 +11,18 @@ export default function InputBox(props: {
   secureTextEntry?: boolean;
 }) {
   return (
+
+    // <View className="px-4 mb-3 mt-8">
+    //         <RowLayout className="bg-white rounded-2xl px-4 py-3 border border-gray-100">
+    //           <AntDesign name="search1" size={20} color="#6B7280" />
+    //           <TextInput
+    //             placeholder="Search"
+    //             placeholderTextColor="#9ca3af"
+    //             className="flex-1 text-lg ml-3 text-textDark"
+    //           />
+    //         </RowLayout>
+    //       </View>
+
     <View className="flex flex-row items-center bg-white rounded-3xl px-4 py-3 border border-gray-200 shadow-sm">
       {props.icon && (
         <View className="flex items-center justify-center mr-1 ">
@@ -22,7 +34,7 @@ export default function InputBox(props: {
         value={props.val}
         placeholder={props.placeholderTest}
         onChangeText={props.valSetFunc}
-        placeholderTextColor="#9CA3AF" // text-gray-400
+        placeholderTextColor="#9CA3AF"
         className="flex-1 text-base text-textBlack"
         secureTextEntry={props.secureTextEntry}
       />

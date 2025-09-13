@@ -3,7 +3,6 @@ import { Stack } from "expo-router";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { TailwindProvider } from "tailwindcss-react-native";
-import { SideMenuDrawerProvider } from "@/Providers/SideMenuDrawerProvider";
 import { UserDataProvider } from "@/Providers/UserDataProvider";
 import "react-native-reanimated";
 
@@ -11,6 +10,7 @@ import "../global.css";
 import ErrorBoundary from "@/components/errorBoundary";
 import { StatusBar } from "react-native";
 import { LocationTrackingProvider } from "@/Providers/LocationTrackingProvider";
+import { DrawerProvider } from "@/Providers/MenuDrawerProvider";
 
 
 export default function RootLayout() {
@@ -34,8 +34,12 @@ export default function RootLayout() {
         <UserDataProvider>
           <LocationTrackingProvider>
             <TailwindProvider>
-              <SideMenuDrawerProvider>
+              <DrawerProvider>
                 <Stack>
+                   <Stack.Screen
+                    name="(onboarding)"
+                    options={{ headerShown: false }}
+                  />
                   <Stack.Screen
                     name="(tabs)"
                     options={{ headerShown: false }}
@@ -48,15 +52,7 @@ export default function RootLayout() {
                     name="(settings)"
                     options={{ headerShown: false }}
                   />
-
-                  <Stack.Screen
-                    name="(tutorial)"
-                    options={{ headerShown: false }}
-                  />
-                    <Stack.Screen
-                    name="(onboarding)"
-                    options={{ headerShown: false }}
-                  />
+                   
                   <Stack.Screen
                     name="(auth)"
                     options={{ headerShown: false }}
@@ -64,7 +60,7 @@ export default function RootLayout() {
                   <Stack.Screen name="+not-found" />
                 </Stack>
                 <StatusBar />
-              </SideMenuDrawerProvider>
+              </DrawerProvider>
             </TailwindProvider>
           </LocationTrackingProvider>
         </UserDataProvider>

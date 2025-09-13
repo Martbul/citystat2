@@ -75,7 +75,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [foundUsers, setFoundUsers] = useState<UserData[] | []>([]);
-
+const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
   const loadingRef = useRef(false);
 
   // Helper function to handle API calls with loading/error states
@@ -192,6 +192,26 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isSignedIn]);
 
+
+  // Add this useEffect to handle pending updates
+useEffect(() => {
+  if (pendingOnboardingData && userData?.id && !isLoading) {
+    console.log("Applying pending onboarding data:", pendingOnboardingData);
+    updateUserDetails(pendingOnboardingData)
+      .then(() => {
+        console.log("Successfully applied pending onboarding data");
+        setPendingOnboardingData(null);
+      })
+      .catch((error) => {
+        console.error("Failed to apply pending onboarding data:", error);
+      });
+  }
+}, [pendingOnboardingData, userData?.id, isLoading]);
+
+const setPendingOnboardingUpdate = useCallback((data: any) => {
+  setPendingOnboardingData(data);
+}, []);
+
   const settings = useMemo(() => {
     //! possible error
     const apiSettings = userData?.Settings || userData?.settings;
@@ -201,27 +221,78 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
       : defaultSettings;
   }, [userData]);
 
+
   const updateUserDetails = useCallback(
-    async (
-      updates: Partial<
-        Omit<
-          UserData,
-          "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
-        >
+  async (
+    updates: Partial<
+      Omit<
+        UserData,
+        "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
       >
-    ): Promise<void> => {
-      if (!user?.id) return;
-
-      const token = await getToken();
-      if (!token) return;
-
+    >
+  ): Promise<void> => {
+    console.log("🔵 updateUserDetails ENTRY - updates:", updates);
+    console.log("🔵 updateUserDetails ENTRY - user?.id:", user?.id);
+    
+    if (!user?.id) {
+      console.error("❌ EARLY RETURN: No user ID available");
+      return;
+    }
+    
+    console.log("🔵 About to get token...");
+    const token = await getToken();
+    console.log("🔵 Got token:", !!token, "Length:", token?.length);
+    
+    if (!token) {
+      console.error("❌ EARLY RETURN: No token available");
+      return;
+    }
+    
+    console.log("🔵 About to call withLoadingAndError...");
+    
+    try {
       await withLoadingAndError(
-        () => apiService.updateUserDetails(updates, token),
-        (updatedData) => setUserData(updatedData)
+        async () => {
+          console.log("🔵 INSIDE withLoadingAndError callback - calling apiService.updateUserDetails");
+          const result = await apiService.updateUserDetails(updates, token);
+          console.log("🟢 apiService.updateUserDetails returned:", result);
+          return result;
+        },
+        (updatedData) => {
+          console.log("🟢 withLoadingAndError success callback - updatedData:", updatedData);
+          setUserData(updatedData);
+        }
       );
-    },
-    [user?.id, getToken, withLoadingAndError]
-  );
+      console.log("🟢 withLoadingAndError completed successfully");
+    } catch (error) {
+      console.error("❌ withLoadingAndError threw error:", error);
+      throw error;
+    }
+  },
+  [user?.id, getToken, withLoadingAndError]
+);
+
+  // const updateUserDetails = useCallback(
+  //   async (
+  //     updates: Partial<
+  //       Omit<
+  //         UserData,
+  //         "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
+  //       >
+  //     >
+  //   ): Promise<void> => {
+  //     if (!user?.id) return;
+
+  //     const token = await getToken();
+  //     if (!token) return;
+
+  //     await withLoadingAndError(
+  //       () => apiService.updateUserDetails(updates, token),
+  //       (updatedData) => setUserData(updatedData)
+  //     );
+  //   },
+  //   [user?.id, getToken, withLoadingAndError]
+  // );
 
   const updateSettings = useCallback(
     async (
@@ -876,6 +947,7 @@ const contextValue: UserDataContextType = useMemo(
     // --- Permissions ---
     getLocationPermission,
     saveLocationPermission,
+    setPendingOnboardingUpdate
   }),
   [
     userData,
@@ -913,6 +985,7 @@ const contextValue: UserDataContextType = useMemo(
 
     getLocationPermission,
     saveLocationPermission,
+    setPendingOnboardingUpdate
   ]
 );
 

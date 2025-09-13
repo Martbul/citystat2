@@ -6,7 +6,14 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View, Image, StatusBar } from "react-native";
+import {
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  StatusBar,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Friends() {
@@ -20,7 +27,7 @@ export default function Friends() {
       if (userData?.id) {
         const data = await getFriends();
         console.log("Friends data:", data);
-        setFriends(data); 
+        setFriends(data);
       }
     };
     getFnds();
@@ -71,10 +78,7 @@ export default function Friends() {
       >
         <View className="flex-row items-center space-x-4">
           <View className="w-14 h-14 bg-lightSurface rounded-full flex items-center justify-center">
-            <Image
-              className="w-12 h-12"
-              source={{ uri: item.imageUrl }}
-            />
+            <Image className="w-12 h-12" source={{ uri: item.imageUrl }} />
           </View>
           <Text className="text-gray-800 text-base font-medium">
             {item.userName || "Unknown User"}
@@ -86,8 +90,13 @@ export default function Friends() {
   };
 
   const renderEmptyComponent = () => {
-    console.log("Rendering empty component. Friends length:", friends.length, "Search:", search);
-    
+    console.log(
+      "Rendering empty component. Friends length:",
+      friends.length,
+      "Search:",
+      search
+    );
+
     if (isLoading) {
       return (
         <View className="flex-1 items-center justify-center py-8">
@@ -126,8 +135,8 @@ export default function Friends() {
 
   return (
     <SafeAreaView className="flex-1 bg-lightBackground">
-            <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
-      
+      <StatusBar barStyle="light-content" backgroundColor="#ebebeb" />
+
       <Header
         title="Friends"
         secondActionTitle="Add friends"
@@ -149,7 +158,7 @@ export default function Friends() {
           renderItem={renderFriendItem}
           ListEmptyComponent={renderEmptyComponent}
           refreshing={isLoading}
-          onRefresh={handleRefresh} 
+          onRefresh={handleRefresh}
           showsVerticalScrollIndicator={false}
         />
       </View>

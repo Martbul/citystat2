@@ -7,6 +7,8 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -128,90 +130,95 @@ export const CitySearchSelector = ({
 
   return (
     <View className="flex-1 my-6 py-6">
-      {/* Search Input */}
-      <View className="mb-6">
-        <View className="relative">
-          <TextInput
-            className="w-full border border-gray-200 rounded-2xl px-6 py-4 pr-12 text-lg bg-white text-textDark"
-            placeholder="Search for a city..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onFocus={() => searchQuery.length > 1 && setShowResults(true)}
-          />
-          <View className="absolute right-4 top-4">
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#6B7280" />
-            ) : (
-              <Ionicons name="search" size={24} color="#6B7280" />
-            )}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
+      >
+        {/* Search Input */}
+        <View className="mb-6">
+          <View className="relative">
+            <TextInput
+              className="w-full border border-gray-200 rounded-2xl px-6 py-4 pr-12 text-lg bg-white text-textDark"
+              placeholder="Search for a city..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => searchQuery.length > 1 && setShowResults(true)}
+            />
+            <View className="absolute right-4 top-4">
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#6B7280" />
+              ) : (
+                <Ionicons name="search" size={24} color="#6B7280" />
+              )}
+            </View>
           </View>
-        </View>
 
-        {/* Selected City Display */}
-        {selectedCity && !showResults && (
-          <Card className="mt-4 border-2 border-accent bg-accent/5">
-            <RowLayout className="justify-between">
-              <RowLayout>
-                <IconContainer size="medium" color="accent">
-                  <Ionicons name="checkmark-circle" size={20} color="white" />
-                </IconContainer>
-                <View className="ml-4">
-                  <Text className="text-accent text-lg font-bold">
-                    {selectedCity.name}
-                  </Text>
-                  <MutedText>
-                    {selectedCity.state
-                      ? `${selectedCity.state}, ${selectedCity.country}`
-                      : selectedCity.country}
-                  </MutedText>
-                </View>
+          {/* Selected City Display */}
+          {selectedCity && !showResults && (
+            <Card className="mt-4 border-2 border-accent bg-accent/5">
+              <RowLayout className="justify-between">
+                <RowLayout>
+                  <IconContainer size="medium" color="accent">
+                    <Ionicons name="checkmark-circle" size={20} color="white" />
+                  </IconContainer>
+                  <View className="ml-4">
+                    <Text className="text-accent text-lg font-bold">
+                      {selectedCity.name}
+                    </Text>
+                    <MutedText>
+                      {selectedCity.state
+                        ? `${selectedCity.state}, ${selectedCity.country}`
+                        : selectedCity.country}
+                    </MutedText>
+                  </View>
+                </RowLayout>
+                <TouchableOpacity
+                  onPress={() => {
+                    onCitySelect(null as any);
+                    setSearchQuery("");
+                  }}
+                >
+                  <IconContainer size="small" color="neutral">
+                    <Ionicons name="close" size={16} color="#6B7280" />
+                  </IconContainer>
+                </TouchableOpacity>
               </RowLayout>
-              <TouchableOpacity
-                onPress={() => {
-                  onCitySelect(null as any);
-                  setSearchQuery("");
-                }}
-              >
-                <IconContainer size="small" color="neutral">
-                  <Ionicons name="close" size={16} color="#6B7280" />
-                </IconContainer>
-              </TouchableOpacity>
-            </RowLayout>
-          </Card>
-        )}
-      </View>
-
-      {/* Search Results */}
-      {showResults && searchResults.length > 0 && (
-        <View className="flex-1">
-          <FlatList
-            data={searchResults}
-            renderItem={renderCityItem}
-            keyExtractor={(item, index) => `${item.lat}-${item.lon}-${index}`}
-            showsVerticalScrollIndicator={false}
-            className="flex-1"
-          />
+            </Card>
+          )}
         </View>
-      )}
 
-      {/* No Results Message */}
-      {showResults &&
-        searchResults.length === 0 &&
-        !isLoading &&
-        searchQuery.length > 1 && (
-          <View className="flex-1 justify-center items-center">
-            <IconContainer size="large" color="neutral">
-              <Ionicons name="location-outline" size={28} color="#6B7280" />
-            </IconContainer>
-            <Text className="text-textGray text-lg text-center mt-4">
-              No cities found for "{searchQuery}"
-            </Text>
-            <MutedText className="text-center mt-2">
-              Try searching with a different spelling or check for typos
-            </MutedText>
+        {/* Search Results */}
+        {showResults && searchResults.length > 0 && (
+          <View className="flex-1">
+            <FlatList
+              data={searchResults}
+              renderItem={renderCityItem}
+              keyExtractor={(item, index) => `${item.lat}-${item.lon}-${index}`}
+              showsVerticalScrollIndicator={false}
+              className="flex-1"
+            />
           </View>
         )}
+
+        {/* No Results Message */}
+        {showResults &&
+          searchResults.length === 0 &&
+          !isLoading &&
+          searchQuery.length > 1 && (
+            <View className="flex-1 justify-center items-center">
+              <IconContainer size="large" color="neutral">
+                <Ionicons name="location-outline" size={28} color="#6B7280" />
+              </IconContainer>
+              <Text className="text-textGray text-lg text-center mt-4">
+                No cities found for "{searchQuery}"
+              </Text>
+              <MutedText className="text-center mt-2">
+                Try searching with a different spelling or check for typos
+              </MutedText>
+            </View>
+          )}
+      </KeyboardAvoidingView>
     </View>
   );
 };
