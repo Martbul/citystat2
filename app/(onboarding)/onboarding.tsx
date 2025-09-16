@@ -155,21 +155,50 @@ const OnboardingScreen = () => {
 
   const handleLocPerm = async () => {
     try {
-      const granted = await requestFullLocationPermissions();
+      console.log("=== ONBOARDING PERMISSION FLOW ===");
+      console.log("Calling requestFullLocationPermissions...");
 
-      if (granted) {
+      const granted = await requestFullLocationPermissions();
+      console.log("Permission request completed. Result:", granted);
+      console.log("- backgroundGranted:", granted.backgroundGranted);
+      console.log("- success:", granted.success);
+
+      // Check success first (foreground permission is enough)
+      if (granted.success) {
+        console.log(
+          "✅ Permission granted! Setting isLocationTrackingEnabled = true"
+        );
         setUserDetails((prev) => ({
           ...prev,
           isLocationTrackingEnabled: true,
         }));
+
+        if (granted.backgroundGranted) {
+          console.log("🎉 BONUS: Background permission also granted!");
+        } else {
+          console.log(
+            "ℹ️ Only foreground permission granted (background denied)"
+          );
+        }
       } else {
+        console.log(
+          "❌ Permission denied! Setting isLocationTrackingEnabled = false"
+        );
+        setUserDetails((prev) => ({
+          ...prev,
+          isLocationTrackingEnabled: false,
+        }));
         Alert.alert(
-          "Permission Denied",
-          "You need to enable location tracking for better results."
+          "Permission Required",
+          "Location access is needed to track your city exploration. Please grant permission to continue."
         );
       }
     } catch (error) {
-      console.error("Error requesting location permission:", error);
+      console.error("❌ Error in handleLocPerm:", error);
+      setUserDetails((prev) => ({
+        ...prev,
+        isLocationTrackingEnabled: false,
+      }));
       Alert.alert("Error", "Failed to request location permission.");
     }
   };

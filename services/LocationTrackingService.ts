@@ -1496,8 +1496,6 @@ out geom;
     );
   }
 
-
-
   public addPermissionRequestNeededListener(listener: () => void) {
     this.permissionRequestNeededListeners.push(listener);
   }
@@ -1549,36 +1547,69 @@ out geom;
   }
 
   /**
-   * Request both foreground and background location permissions during onboarding
+   * DEBUG VERSION: Let's see exactly what's happening with permissions
    */
   public async requestBackgroundLocationPermissions(): Promise<{
     backgroundGranted: boolean;
     success: boolean;
   }> {
     try {
-      let backgroundGranted = false;
-      try {
-        const backgroundResult =
-          await Location.requestBackgroundPermissionsAsync();
-        backgroundGranted = backgroundResult.status === "granted";
-        console.log("Background permission:", backgroundGranted);
-      } catch (backgroundError) {
-        console.warn("Background permission request failed:", backgroundError);
+      console.log("=== PERMISSION REQUEST DEBUG ===");
+
+      // Step 1: Check current status before requesting
+      const initialForeground = await Location.getForegroundPermissionsAsync();
+      const initialBackground = await Location.getBackgroundPermissionsAsync();
+      console.log("BEFORE REQUEST:");
+      console.log("- Foreground status:", initialForeground.status);
+      console.log("- Background status:", initialBackground.status);
+
+      // Step 2: Request foreground first (required by some platforms)
+      console.log("STEP 1: Requesting foreground permission...");
+      const foregroundResult =
+        await Location.requestForegroundPermissionsAsync();
+      console.log("Foreground request result:", foregroundResult);
+
+      if (foregroundResult.status !== "granted") {
+        console.log("❌ FOREGROUND DENIED - Cannot proceed to background");
+        this.setHasLocationPermission(false);
+        return {
+          backgroundGranted: false,
+          success: false,
+        };
       }
 
-      let overallSuccess = backgroundGranted;
-      console.log("Permission request completed:", {
-        backgroundGranted,
-        success: overallSuccess,
-      });
+      console.log("✅ FOREGROUND GRANTED");
+
+      // Step 3: Now request background
+      console.log("STEP 2: Requesting background permission...");
+      const backgroundResult =
+        await Location.requestBackgroundPermissionsAsync();
+      console.log("Background request result:", backgroundResult);
+
+      const backgroundGranted = backgroundResult.status === "granted";
+
+      // Step 4: Final status check
+      const finalForeground = await Location.getForegroundPermissionsAsync();
+      const finalBackground = await Location.getBackgroundPermissionsAsync();
+      console.log("AFTER REQUEST:");
+      console.log("- Final foreground status:", finalForeground.status);
+      console.log("- Final background status:", finalBackground.status);
+
+      // Success if we have at least foreground
+      const success = finalForeground.status === "granted";
+
+      this.setHasLocationPermission(success);
+
+      console.log("=== PERMISSION SUMMARY ===");
+      console.log("Background granted:", backgroundGranted);
+      console.log("Success (has foreground):", success);
 
       return {
         backgroundGranted,
-        success: overallSuccess,
+        success,
       };
     } catch (error) {
-      console.error("Error requesting full location permissions:", error);
-
+      console.error("❌ ERROR IN PERMISSION REQUEST:", error);
       this.setHasLocationPermission(false);
       return {
         backgroundGranted: false,
@@ -1586,10 +1617,62 @@ out geom;
       };
     }
   }
-
   /**
    * Check if user has already granted permissions (to avoid asking again)
-   */
+  //  */
+  // public async checkExistingPermissions(token: string | null): Promise<{
+  //   hasStoredPermission: boolean;
+  //   hasSystemPermission: boolean;
+  //   hasBackgroundPermission: boolean;
+  //   needsPermissionRequest: boolean;
+  // }> {
+  //   try {
+  //     // Check stored permission status from database
+  //     let hasStoredPermission = false;
+  //     let hasBackgroundStoredPermission = false;
+
+  //     if (token) {
+  //       hasStoredPermission = (await this.loadPermissionStatus(token)) === true;
+  //       hasBackgroundStoredPermission =
+  //         (await this.loadBackgroundPermissionStatus(token)) === true;
+  //     }
+
+  //     // Check current system permissions
+  //     const foregroundStatus = await Location.getForegroundPermissionsAsync();
+  //     const backgroundStatus = await Location.getBackgroundPermissionsAsync();
+
+  //     const hasSystemPermission = foregroundStatus.status === "granted";
+  //     const hasBackgroundPermission = backgroundStatus.status === "granted";
+
+  //     // Determine if we need to request permissions
+  //     const needsPermissionRequest =
+  //       !hasStoredPermission || !hasSystemPermission;
+
+  //     console.log("Permission status check:", {
+  //       hasStoredPermission,
+  //       hasBackgroundStoredPermission,
+  //       hasSystemPermission,
+  //       hasBackgroundPermission,
+  //       needsPermissionRequest,
+  //     });
+
+  //     return {
+  //       hasStoredPermission,
+  //       hasSystemPermission,
+  //       hasBackgroundPermission,
+  //       needsPermissionRequest,
+  //     };
+  //   } catch (error) {
+  //     console.error("Error checking existing permissions:", error);
+  //     return {
+  //       hasStoredPermission: false,
+  //       hasSystemPermission: false,
+  //       hasBackgroundPermission: false,
+  //       needsPermissionRequest: true,
+  //     };
+  //   }
+  // }
+
   public async checkExistingPermissions(token: string | null): Promise<{
     hasStoredPermission: boolean;
     hasSystemPermission: boolean;
@@ -1599,12 +1682,9 @@ out geom;
     try {
       // Check stored permission status from database
       let hasStoredPermission = false;
-      let hasBackgroundStoredPermission = false;
 
       if (token) {
         hasStoredPermission = (await this.loadPermissionStatus(token)) === true;
-        hasBackgroundStoredPermission =
-          (await this.loadBackgroundPermissionStatus(token)) === true;
       }
 
       // Check current system permissions
@@ -1614,13 +1694,11 @@ out geom;
       const hasSystemPermission = foregroundStatus.status === "granted";
       const hasBackgroundPermission = backgroundStatus.status === "granted";
 
-      // Determine if we need to request permissions
-      const needsPermissionRequest =
-        !hasStoredPermission || !hasSystemPermission;
+      // ✅ FIXED: Only need permission request if user hasn't stored permission
+      const needsPermissionRequest = !hasStoredPermission;
 
       console.log("Permission status check:", {
         hasStoredPermission,
-        hasBackgroundStoredPermission,
         hasSystemPermission,
         hasBackgroundPermission,
         needsPermissionRequest,
@@ -1684,44 +1762,80 @@ out geom;
   /**
    * Initialize permissions during app startup (enhanced version)
    */
+  // public async checkAndinitializePermissions(token: string | null) {
+  //   try {
+  //     if (!token) return;
+
+  //     // Check current permissions
+  //     const permissionStatus = await this.checkExistingPermissions(token);
+  //     console.log("PERMISSION STATUS", permissionStatus);
+
+  //     if (permissionStatus.needsPermissionRequest === false) {
+  //       console.log("User already has permissions - setting up tracking");
+  //       this.setHasLocationPermission(true);
+  //       return;
+  //     }
+
+  //     // If stored permission is true but system permission is false,
+  //     // it means user revoked permission in system settings
+  //     if (
+  //       permissionStatus.hasStoredPermission &&
+  //       !permissionStatus.hasSystemPermission
+  //     ) {
+  //       console.log("Permission was revoked in system settings");
+  //       // Update database to reflect current state
+  //       await this.savePermissionStatus(token, false);
+  //       this.setHasLocationPermission(false);
+  //       // Notify that user needs to re-grant permissions
+  //       this.notifyPermissionRequestNeeded();
+  //       return;
+  //     }
+
+  //     // If we reach here, user needs to go through permission flow
+  //     console.log("User needs to complete permission setup");
+  //     this.setHasLocationPermission(false);
+  //     // Notify listeners that permission request is needed
+  //     this.notifyPermissionRequestNeeded();
+  //   } catch (error) {
+  //     console.error("Error initializing enhanced permissions:", error);
+  //     this.setHasLocationPermission(false);
+  //     // Even on error, might need to show permission request UI
+  //     this.notifyPermissionRequestNeeded();
+  //   }
+  // }
+  /**
+   * FIXED: Permission checking that won't overwrite database permission
+   */
   public async checkAndinitializePermissions(token: string | null) {
     try {
       if (!token) return;
 
-      // Check current permissions
       const permissionStatus = await this.checkExistingPermissions(token);
       console.log("PERMISSION STATUS", permissionStatus);
 
-      if (permissionStatus.needsPermissionRequest === false) {
-        console.log("User already has permissions - setting up tracking");
+      // ✅ FIXED: If user has stored permission, respect it and set up tracking
+      if (permissionStatus.hasStoredPermission) {
+        console.log("User previously granted permission - setting up tracking");
         this.setHasLocationPermission(true);
         return;
       }
 
-      // If stored permission is true but system permission is false,
-      // it means user revoked permission in system settings
-      if (
-        permissionStatus.hasStoredPermission &&
-        !permissionStatus.hasSystemPermission
-      ) {
-        console.log("Permission was revoked in system settings");
-        // Update database to reflect current state
-        await this.savePermissionStatus(token, false);
-        this.setHasLocationPermission(false);
-        // Notify that user needs to re-grant permissions
-        this.notifyPermissionRequestNeeded();
-        return;
-      }
+      // ❌ REMOVED THIS PROBLEMATIC BLOCK (this was overwriting the database):
+      // if (permissionStatus.hasStoredPermission && !permissionStatus.hasSystemPermission) {
+      //   console.log("Permission was revoked in system settings");
+      //   await this.savePermissionStatus(token, false); // ← This was the bug!
+      //   this.setHasLocationPermission(false);
+      //   this.notifyPermissionRequestNeeded();
+      //   return;
+      // }
 
-      // If we reach here, user needs to go through permission flow
+      // No stored permission - show permission setup
       console.log("User needs to complete permission setup");
       this.setHasLocationPermission(false);
-      // Notify listeners that permission request is needed
       this.notifyPermissionRequestNeeded();
     } catch (error) {
-      console.error("Error initializing enhanced permissions:", error);
+      console.error("Error initializing permissions:", error);
       this.setHasLocationPermission(false);
-      // Even on error, might need to show permission request UI
       this.notifyPermissionRequestNeeded();
     }
   }
