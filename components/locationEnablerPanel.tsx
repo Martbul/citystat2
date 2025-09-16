@@ -3,7 +3,13 @@ import React, { memo } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface LocationEnablerPanelProps {
-  requestLocationPermission: () => Promise<boolean>;
+  requestLocationPermission: () => Promise<
+    | false
+    | {
+        backgroundGranted: boolean;
+        success: boolean;
+      }
+  >;
 }
 
 const LocationEnablerPanel = memo(

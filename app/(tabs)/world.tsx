@@ -1,8 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useUserData } from "@/Providers/UserDataProvider";
 import { useLocationTracking } from "@/Providers/LocationTrackingProvider";
-
 import Mapbox, { Camera, MapView, ShapeSource } from "@rnmapbox/maps";
 import React, {
   useCallback,
@@ -12,7 +10,6 @@ import React, {
   useState,
 } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
 import CenterCameraOnUserButton from "@/components/centerCameraOnUserButton";
 import LocationEnablerPanel from "@/components/locationEnablerPanel";
 import VisitedStreetsLayer from "@/components/displyVisitedStreets";
@@ -36,10 +33,12 @@ const StreetTrackingMap = () => {
     initializeData,
     destroyService,
     isTracking,
-    hasLocationPermission,
-    requestLocationPermission,
+    hasBackgroundPermission,
     getMostVisitedStreets,
     getStreetsByTimeSpent,
+    requestFullLocationPermissions,
+    showPermissionPanel,
+    setShowPermissionPanel,
   } = useLocationTracking();
 
   const [isFollowingUser, setIsFollowingUser] = useState(false);
@@ -120,20 +119,22 @@ const StreetTrackingMap = () => {
       console.log("=== INITIALIZATION START ===");
       console.log("isLoading:", isLoading);
       console.log("userData:", !!userData);
-      console.log("hasLocationPermission:", hasLocationPermission);
+      console.log("hasBackgroundPermission:", hasBackgroundPermission);
       console.log("isTracking:", isTracking);
 
       try {
+
+        // await checkExistingPermissions();
         // Step 1: Initialize data (this includes permission check and server sync)
         console.log("Step 1: Initializing data...");
         await initializeData();
 
         // Step 2: Start tracking if not already tracking and we have permission
-        if (!isTracking && hasLocationPermission) {
+        if (!isTracking && hasBackgroundPermission) {
           console.log("Step 2: Starting tracking...");
           await startTracking(true);
           console.log("Tracking started successfully");
-        } else if (!hasLocationPermission) {
+        } else if (!hasBackgroundPermission) {
           console.log(
             "Step 2: Skipping tracking start - no location permission"
           );
@@ -157,7 +158,7 @@ const StreetTrackingMap = () => {
     if (userData && !initializationComplete) {
       initializeComponentData();
     }
-  }, [userData, initializationComplete, hasLocationPermission]);
+  }, [userData, initializationComplete, hasBackgroundPermission]);
   // Cleanup effect
   useEffect(() => {
     return () => {
@@ -172,39 +173,39 @@ const StreetTrackingMap = () => {
   }, []);
 
   // Update highlighted streets when current street changes
-  useEffect(() => {
-    setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
-  }, [currentStreetId]);
+  // useEffect(() => {
+  //   setHighlightedStreets(currentStreetId ? [currentStreetId] : []);
+  // }, [currentStreetId]);
 
-  useEffect(() => {
-    console.log(
-      "=== STATE UPDATE DEBUG =============================================="
-    );
-    console.log("currentStreetId:", currentStreetId);
-    console.log("visitedStreets:", visitedStreets);
+  // useEffect(() => {
+  //   console.log(
+  //     "=== STATE UPDATE DEBUG =============================================="
+  //   );
+  //   console.log("currentStreetId:", currentStreetId);
+  //   console.log("visitedStreets:", visitedStreets);
 
-    console.log("visitedStreets length:", visitedStreets.length);
-    console.log("allVisitedStreetIds size:", allVisitedStreetIds.size);
-    console.log("streetData available:", !!streetData);
-    console.log(
-      "streetData features count:",
-      streetData?.features?.length || 0
-    );
-    console.log("hasLocationPermission:", hasLocationPermission);
-    console.log("isTracking:", isTracking);
-  }, [
-    currentStreetId,
-    visitedStreets,
-    allVisitedStreetIds,
-    streetData,
-    hasLocationPermission,
-    isTracking,
-  ]);
+  //   console.log("visitedStreets length:", visitedStreets.length);
+  //   console.log("allVisitedStreetIds size:", allVisitedStreetIds.size);
+  //   console.log("streetData available:", !!streetData);
+  //   console.log(
+  //     "streetData features count:",
+  //     streetData?.features?.length || 0
+  //   );
+  //   console.log("hasBackgroundPermission:", hasBackgroundPermission);
+  //   console.log("isTracking:", isTracking);
+  // }, [
+  //   currentStreetId,
+  //   visitedStreets,
+  //   allVisitedStreetIds,
+  //   streetData,
+  //   hasBackgroundPermission,
+  //   isTracking,
+  // ]);
 
   const handleRequestLocationPermission = useCallback(async () => {
+    //this is fot when the app knows that the user doesnt have pers so just should get it as in the onboarding
     try {
-      const token = await getToken();
-      const granted = await requestLocationPermission(token);
+      const granted = await requestFullLocationPermissions();
 
       if (granted) {
         console.log("Permission granted, starting tracking...");
@@ -224,7 +225,13 @@ const StreetTrackingMap = () => {
       Alert.alert("Error", "Failed to request location permission");
       return false;
     }
-  }, [requestLocationPermission, getToken, isTracking, startTracking]);
+  }, [
+    requestFullLocationPermissions,
+    getToken,
+    isTracking,
+    startTracking,
+    setShowPermissionPanel,
+  ]);
 
   const toggleMapMenu = useCallback(() => {
     setIsMapMenuOpen((prev) => !prev);
@@ -234,7 +241,6 @@ const StreetTrackingMap = () => {
     setIsMapMenuOpen(false);
   }, []);
 
-  // Get analytics data for the menu with debugging
   const getMostVisitedData = useCallback(() => {
     const data = getMostVisitedStreets(5);
     console.log("Most visited streets data:", data.length);
@@ -276,7 +282,7 @@ const StreetTrackingMap = () => {
                 "user-location": require("../../assets/images/icon.png"),
               }}
             />
-            
+
             <Camera
               ref={cameraRef}
               zoomLevel={mapConfiguration.zoomLevel}
@@ -285,14 +291,17 @@ const StreetTrackingMap = () => {
             />
 
             {/* User location marker */}
-            {userLocation && hasLocationPermission && (
+            {userLocation && hasBackgroundPermission && (
               <Mapbox.ShapeSource
                 id="userLocationSource"
                 shape={{
                   type: "Feature",
                   geometry: {
                     type: "Point",
-                    coordinates: [userLocation.longitude, userLocation.latitude],
+                    coordinates: [
+                      userLocation.longitude,
+                      userLocation.latitude,
+                    ],
                   },
                   properties: {},
                 }}
@@ -314,28 +323,29 @@ const StreetTrackingMap = () => {
             {streetData && mapZoom >= 11 && (
               <>
                 {/* Current street highlight */}
-                {currentStreetId && streetData.features.some((f) => f.id === currentStreetId) && (
-                  <ShapeSource
-                    id="currentStreetHighlight"
-                    shape={{
-                      type: "FeatureCollection",
-                      features: streetData.features.filter(
-                        (street) => street.id === currentStreetId
-                      ),
-                    }}
-                  >
-                    <Mapbox.LineLayer
-                      id="current_street_highlight"
-                      style={{
-                        lineColor: "#c8f751",
-                        lineWidth: 6,
-                        lineOpacity: 0.8,
-                        lineCap: "round",
-                        lineJoin: "round",
+                {currentStreetId &&
+                  streetData.features.some((f) => f.id === currentStreetId) && (
+                    <ShapeSource
+                      id="currentStreetHighlight"
+                      shape={{
+                        type: "FeatureCollection",
+                        features: streetData.features.filter(
+                          (street) => street.id === currentStreetId
+                        ),
                       }}
-                    />
-                  </ShapeSource>
-                )}
+                    >
+                      <Mapbox.LineLayer
+                        id="current_street_highlight"
+                        style={{
+                          lineColor: "#c8f751",
+                          lineWidth: 6,
+                          lineOpacity: 0.8,
+                          lineCap: "round",
+                          lineJoin: "round",
+                        }}
+                      />
+                    </ShapeSource>
+                  )}
 
                 <VisitedStreetsLayer
                   visitedStreets={visitedStreets}
@@ -347,22 +357,20 @@ const StreetTrackingMap = () => {
         )}
       </MapView>
 
-        {isMapReady && !isMapMenuOpen && (
+      {isMapReady && !isMapMenuOpen && (
         <CenterCameraOnUserButton
           userLocation={userLocation}
           centerOnUser={centerOnUser}
         />
       )}
 
-    
-
-      {!hasLocationPermission && !isLoading && userData && (
+      {showPermissionPanel && !isLoading && userData && (
         <LocationEnablerPanel
           requestLocationPermission={handleRequestLocationPermission}
         />
       )}
 
-      {userLocation && hasLocationPermission && isMapMenuOpen && (
+      {userLocation && hasBackgroundPermission && isMapMenuOpen && (
         <MapTrackingPanel
           isLocationSubscrActive={isTracking ? "Active" : "Inactive"}
           currentStreetId={currentStreetId}

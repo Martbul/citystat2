@@ -47,18 +47,14 @@ interface LocationTrackingContextType {
   isTracking: boolean;
 
   // Permission status
-  hasLocationPermission: boolean;
-    hasBackgroundPermission: boolean;
+  hasBackgroundPermission: boolean;
 
   requestLocationPermission: (token: string | null) => Promise<boolean>;
 
   initializeData: () => Promise<void>;
   destroyService: (token?: string | null) => Promise<void>;
-  
- 
-  // Enhanced permission methods
+
   requestFullLocationPermissions: () => Promise<{
-    foregroundGranted: boolean;
     backgroundGranted: boolean;
     success: boolean;
   }>;
@@ -68,15 +64,17 @@ interface LocationTrackingContextType {
     hasBackgroundPermission: boolean;
     needsPermissionRequest: boolean;
   }>;
-  
+
   // Permission status
-  
+
   // Enhanced initialization
   initializeForOnboarding: () => Promise<void>;
   completeLocationOnboarding: (granted: boolean) => Promise<void>;
-  
+
   // Enhanced tracking
   startLocationTrackingEnhanced: () => Promise<void>;
+  showPermissionPanel: boolean;
+  setShowPermissionPanel: (show: boolean) => void;
 }
 
 const LocationTrackingContext =
@@ -97,10 +95,10 @@ export const LocationTrackingProvider: React.FC<
     new Set()
   );
   const [isTracking, setIsTracking] = useState(false);
-  const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [totalActiveHours, setTotalActiveHours] = useState(0);
   const [currentSessionDuration, setCurrentSessionDuration] = useState(0);
   const [hasBackgroundPermission, setHasBackgroundPermission] = useState(false);
+  const [showPermissionPanel, setShowPermissionPanel] = useState(false);
   const locationService = LocationTrackingService.getInstance();
   const { getToken } = useAuth();
 
@@ -113,7 +111,7 @@ export const LocationTrackingProvider: React.FC<
   useEffect(() => {
     const handlePermissionStatusUpdate = (hasPermission: boolean) => {
       console.log("Permission status updated:", hasPermission);
-      setHasLocationPermission(hasPermission);
+      setHasBackgroundPermission(hasPermission);
     };
 
     const handleLocationUpdate = (location: UserCoords) => {
@@ -152,12 +150,20 @@ export const LocationTrackingProvider: React.FC<
       setTotalActiveHours(activeHours);
     };
 
+   const handlePermissionRequestNeeded = () => {
+     console.log("Permission request needed - showing permission panel");
+     setShowPermissionPanel(true);
+   };
+
     // Add listeners
     locationService.addLocationUpdateListener(handleLocationUpdate);
     locationService.addStreetChangeListener(handleStreetChange);
     locationService.addVisitCountUpdateListener(handleVisitCountUpdate);
     locationService.addActiveHoursUpdateListener(handleActiveHoursUpdate);
     locationService.addPermissionStatusListener(handlePermissionStatusUpdate);
+    locationService.addPermissionRequestNeededListener(
+      handlePermissionRequestNeeded
+    );
 
     // Initialize state from service
     const initializeFromService = () => {
@@ -196,6 +202,10 @@ export const LocationTrackingProvider: React.FC<
     // Cleanup listeners on unmount
     return () => {
       locationService.removeLocationUpdateListener(handleLocationUpdate);
+      locationService.removePermissionRequestNeededListener(
+        handlePermissionRequestNeeded
+      );
+
       locationService.removeStreetChangeListener(handleStreetChange);
       locationService.removeVisitCountUpdateListener(handleVisitCountUpdate);
       locationService.removeActiveHoursUpdateListener(handleActiveHoursUpdate);
@@ -206,18 +216,17 @@ export const LocationTrackingProvider: React.FC<
     };
   }, [triggerUpdate]);
 
-
   const startTracking = useCallback(async (enableBackground: boolean) => {
     try {
       await locationService.startLocationTracking(enableBackground);
       setIsTracking(true);
-      setHasLocationPermission(true);
+      setHasBackgroundPermission(true);
       setCurrentSessionDuration(0);
 
       console.log("Tracking started successfully");
     } catch (error) {
       console.error("Failed to start tracking:", error);
-      setHasLocationPermission(false);
+      setHasBackgroundPermission(false);
       throw error;
     }
   }, []);
@@ -232,18 +241,22 @@ export const LocationTrackingProvider: React.FC<
       console.error("Failed to stop tracking:", error);
       throw error;
     }
+
   }, [getToken]);
 
+
+  
+
   const requestLocationPermission = async (
-    token: string | null
   ): Promise<boolean> => {
     try {
-      const granted = await locationService.requestLocationPermission(token);
-      setHasLocationPermission(granted);
-      return granted;
+      const result =
+        await locationService.requestBackgroundLocationPermissions();
+      setHasBackgroundPermission(result.backgroundGranted);
+      return result.backgroundGranted;
     } catch (error) {
       console.error("Permission denied:", error);
-      setHasLocationPermission(false);
+      setHasBackgroundPermission(false);
       return false;
     }
   };
@@ -293,21 +306,18 @@ export const LocationTrackingProvider: React.FC<
 
   const requestFullLocationPermissions = useCallback(async () => {
     try {
-      const token = await getToken();
-      const result = await locationService.requestFullLocationPermissions(token);
-      
-      setHasLocationPermission(result.success);
+      const result =
+        await locationService.requestBackgroundLocationPermissions();
+
       setHasBackgroundPermission(result.backgroundGranted);
-      
+      setShowPermissionPanel(false)
       return result;
     } catch (error) {
       console.error("Failed to request full permissions:", error);
-      setHasLocationPermission(false);
       setHasBackgroundPermission(false);
       return {
-        foregroundGranted: false,
         backgroundGranted: false,
-        success: false
+        success: false,
       };
     }
   }, [getToken]);
@@ -316,11 +326,13 @@ export const LocationTrackingProvider: React.FC<
     try {
       const token = await getToken();
       const status = await locationService.checkExistingPermissions(token);
-      
+
       // Update local state based on results
-      setHasLocationPermission(status.hasSystemPermission && status.hasStoredPermission);
+      setHasBackgroundPermission(
+        status.hasSystemPermission && status.hasStoredPermission
+      );
       setHasBackgroundPermission(status.hasBackgroundPermission);
-      
+
       return status;
     } catch (error) {
       console.error("Failed to check existing permissions:", error);
@@ -328,7 +340,7 @@ export const LocationTrackingProvider: React.FC<
         hasStoredPermission: false,
         hasSystemPermission: false,
         hasBackgroundPermission: false,
-        needsPermissionRequest: true
+        needsPermissionRequest: true,
       };
     }
   }, [getToken]);
@@ -340,7 +352,7 @@ export const LocationTrackingProvider: React.FC<
 
   //     // Load basic data without requiring permissions
   //     await locationService.loadPersistedData();
-      
+
   //     // Check current permission status
   //     await checkExistingPermissions();
 
@@ -356,19 +368,18 @@ export const LocationTrackingProvider: React.FC<
   //   try {
   //     const token = await getToken();
   //     if(!token) return
-      
+
   //     if (granted) {
   //       // Initialize full data and start tracking
   //       await locationService.initializeData(token);
-        
+
   //       // Update onboarding status in database
   //       await apiService.saveLocationPermission(
   //          true, token);
-        
+
   //       console.log("Location onboarding completed successfully");
   //     } else {
-       
-        
+
   //       console.log("User declined location permissions");
   //     }
   //   } catch (error) {
@@ -391,14 +402,12 @@ export const LocationTrackingProvider: React.FC<
     }
   }, [getToken]);
 
-  // Update the existing initializeData method to use enhanced permissions
   const initializeData = useCallback(async () => {
     try {
       const token = await getToken();
       console.log("Initializing data with token:", !!token);
 
-      // Use enhanced permission initialization
-      await locationService.initializePermissionsEnhanced(token);
+      await locationService.checkAndinitializePermissions(token);
       await locationService.initializeData(token);
 
       // Update state from service
@@ -411,7 +420,7 @@ export const LocationTrackingProvider: React.FC<
       console.log("Enhanced data initialized successfully");
     } catch (error) {
       console.error("Failed to initialize enhanced data:", error);
-      setHasLocationPermission(false);
+      setHasBackgroundPermission(false);
       setHasBackgroundPermission(false);
       throw error;
     }
@@ -472,26 +481,21 @@ export const LocationTrackingProvider: React.FC<
     isTracking,
 
     // Permission status
-    hasLocationPermission,
+    hasBackgroundPermission,
     requestLocationPermission,
 
     // Data
     initializeData,
     destroyService,
- 
+
     requestFullLocationPermissions,
     checkExistingPermissions,
-    hasBackgroundPermission,
-    
-    // Enhanced initialization
-    // initializeForOnboarding,
-    // completeLocationOnboarding,
-    
-    // Enhanced tracking
-    startLocationTrackingEnhanced,
-  }
-  ;
 
+
+    startLocationTrackingEnhanced,
+    showPermissionPanel,
+    setShowPermissionPanel,
+  };
   return (
     <LocationTrackingContext.Provider value={contextValue}>
       {children}

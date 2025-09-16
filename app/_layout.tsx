@@ -36,7 +36,8 @@ export default function RootLayout() {
             <TailwindProvider>
               <DrawerProvider>
                 <Stack>
-                   <Stack.Screen
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
                     name="(onboarding)"
                     options={{ headerShown: false }}
                   />
@@ -52,7 +53,7 @@ export default function RootLayout() {
                     name="(settings)"
                     options={{ headerShown: false }}
                   />
-                   
+
                   <Stack.Screen
                     name="(auth)"
                     options={{ headerShown: false }}

@@ -369,5 +369,4 @@ export interface UserDataContextType {
   // --- Permissions ---
   getLocationPermission: () => Promise<any>;
   saveLocationPermission: (hasPermission: boolean) => Promise<any>;
-  setPendingOnboardingUpdate:  (data: any) => void
 }

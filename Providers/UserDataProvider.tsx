@@ -63,22 +63,19 @@ const defaultSettings: Omit<
 // add raning for his town, for his friends
 // add ranking overall, overall percentage, most killomets, most streets
 
-
 //! add checksin the db fr dulicates, in a single sesshion in the clients there may not be dublicates but then in the overlal visited strees there can dublicate ids
 
 export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   const { user, isSignedIn } = useUser();
   const { getToken } = useAuth();
 
-  // Core state
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [foundUsers, setFoundUsers] = useState<UserData[] | []>([]);
-const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
   const loadingRef = useRef(false);
+  
 
-  // Helper function to handle API calls with loading/error states
   const withLoadingAndError = useCallback(
     async <T,>(
       apiCall: () => Promise<T>,
@@ -134,11 +131,9 @@ const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
         let fetchedUserData: UserData;
 
         try {
-          // Try to fetch existing user
           fetchedUserData = await apiService.fetchUser(token);
           console.log("User found:", fetchedUserData.id);
         } catch (error: any) {
-          // If user doesn't exist, create new one
           if (error.message === "USER_NOT_FOUND") {
             console.log("User not found, creating new user");
 
@@ -163,7 +158,7 @@ const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
             fetchedUserData = await apiService.createUser(newUserData, token);
             console.log("New user created:", fetchedUserData);
           } else {
-            console.log("errr: " +  error)
+            console.log("errr: " + error);
             throw error;
           }
         }
@@ -184,7 +179,6 @@ const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
     loadUserData();
   }, [isSignedIn, user?.id]);
 
-  // Clear data on sign out
   useEffect(() => {
     if (!isSignedIn) {
       setUserData(null);
@@ -192,26 +186,7 @@ const [pendingOnboardingData, setPendingOnboardingData] = useState<any>(null);
     }
   }, [isSignedIn]);
 
-
-  // Add this useEffect to handle pending updates
-useEffect(() => {
-  if (pendingOnboardingData && userData?.id && !isLoading) {
-    console.log("Applying pending onboarding data:", pendingOnboardingData);
-    updateUserDetails(pendingOnboardingData)
-      .then(() => {
-        console.log("Successfully applied pending onboarding data");
-        setPendingOnboardingData(null);
-      })
-      .catch((error) => {
-        console.error("Failed to apply pending onboarding data:", error);
-      });
-  }
-}, [pendingOnboardingData, userData?.id, isLoading]);
-
-const setPendingOnboardingUpdate = useCallback((data: any) => {
-  setPendingOnboardingData(data);
-}, []);
-
+  
   const settings = useMemo(() => {
     //! possible error
     const apiSettings = userData?.Settings || userData?.settings;
@@ -221,78 +196,60 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       : defaultSettings;
   }, [userData]);
 
-
   const updateUserDetails = useCallback(
-  async (
-    updates: Partial<
-      Omit<
-        UserData,
-        "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
+    async (
+      updates: Partial<
+        Omit<
+          UserData,
+          "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
+        >
       >
-    >
-  ): Promise<void> => {
-    console.log("🔵 updateUserDetails ENTRY - updates:", updates);
-    console.log("🔵 updateUserDetails ENTRY - user?.id:", user?.id);
-    
-    if (!user?.id) {
-      console.error("❌ EARLY RETURN: No user ID available");
-      return;
-    }
-    
-    console.log("🔵 About to get token...");
-    const token = await getToken();
-    console.log("🔵 Got token:", !!token, "Length:", token?.length);
-    
-    if (!token) {
-      console.error("❌ EARLY RETURN: No token available");
-      return;
-    }
-    
-    console.log("🔵 About to call withLoadingAndError...");
-    
-    try {
-      await withLoadingAndError(
-        async () => {
-          console.log("🔵 INSIDE withLoadingAndError callback - calling apiService.updateUserDetails");
-          const result = await apiService.updateUserDetails(updates, token);
-          console.log("🟢 apiService.updateUserDetails returned:", result);
-          return result;
-        },
-        (updatedData) => {
-          console.log("🟢 withLoadingAndError success callback - updatedData:", updatedData);
-          setUserData(updatedData);
-        }
-      );
-      console.log("🟢 withLoadingAndError completed successfully");
-    } catch (error) {
-      console.error("❌ withLoadingAndError threw error:", error);
-      throw error;
-    }
-  },
-  [user?.id, getToken, withLoadingAndError]
-);
+    ): Promise<void> => {
+      console.log("🔵 updateUserDetails ENTRY - updates:", updates);
+      console.log("🔵 updateUserDetails ENTRY - user?.id:", user?.id);
 
-  // const updateUserDetails = useCallback(
-  //   async (
-  //     updates: Partial<
-  //       Omit<
-  //         UserData,
-  //         "id" | "createdAt" | "updatedAt" | "cityStats" | "settings"
-  //       >
-  //     >
-  //   ): Promise<void> => {
-  //     if (!user?.id) return;
+      if (!user?.id) {
+        console.error("❌ EARLY RETURN: No user ID available");
+        return;
+      }
 
-  //     const token = await getToken();
-  //     if (!token) return;
+      console.log("🔵 About to get token...");
+      const token = await getToken();
+      console.log("🔵 Got token:", !!token, "Length:", token?.length);
 
-  //     await withLoadingAndError(
-  //       () => apiService.updateUserDetails(updates, token),
-  //       (updatedData) => setUserData(updatedData)
-  //     );
-  //   },
-  //   [user?.id, getToken, withLoadingAndError]
-  // );
+      if (!token) {
+        console.error("❌ EARLY RETURN: No token available");
+        return;
+      }
+
+      console.log("🔵 About to call withLoadingAndError...");
+
+      try {
+        await withLoadingAndError(
+          async () => {
+            console.log(
+              "🔵 INSIDE withLoadingAndError callback - calling apiService.updateUserDetails"
+            );
+            const result = await apiService.updateUserDetails(updates, token);
+            console.log("🟢 apiService.updateUserDetails returned:", result);
+            return result;
+          },
+          (updatedData) => {
+            console.log(
+              "🟢 withLoadingAndError success callback - updatedData:",
+              updatedData
+            );
+            setUserData(updatedData);
+          }
+        );
+        console.log("🟢 withLoadingAndError completed successfully");
+      } catch (error) {
+        console.error("❌ withLoadingAndError threw error:", error);
+        throw error;
+      }
+    },
+    [user?.id, getToken, withLoadingAndError]
+  );
 
   const updateSettings = useCallback(
     async (
@@ -324,7 +281,6 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       (data) => setUserData(data)
     );
   }, [user?.id, getToken, withLoadingAndError]);
-
 
   const addFriendByUser = useCallback(
     async (friendUser: UserData): Promise<boolean> => {
@@ -408,8 +364,6 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
     [user?.id, getToken, withLoadingAndError]
   );
 
-  
-
   const updateUserField = useCallback(
     async (field: string, value: any): Promise<void> => {
       if (!user?.id) return;
@@ -477,7 +431,8 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
 
       return friends;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Getting friends failed";
+      const errorMessage =
+        err instanceof Error ? err.message : "Getting friends failed";
       setError(errorMessage);
       console.error("Getting friends error:", err);
       return [];
@@ -487,8 +442,79 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
   }, [user?.id, getToken]);
 
   const fetchOtherUserProfile = useCallback(
-  async (otherUserId: string): Promise<any> => {
-    if (!otherUserId || !user?.id) {
+    async (otherUserId: string): Promise<any> => {
+      if (!otherUserId || !user?.id) {
+        return null;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = await getToken();
+        if (!token) return null;
+
+        const profileData = await apiService.fetchOtherUserProfile(
+          otherUserId,
+          token
+        );
+
+        console.log("Friends profile:", profileData);
+
+        return profileData;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch otherUserId profile";
+        setError(errorMessage);
+        console.error("Error otherUserId friend profile:", err);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [user?.id, getToken]
+  );
+
+  const saveLocationPermission = useCallback(
+    async (hasPermission: boolean): Promise<any> => {
+      if (!hasPermission || !user?.id) {
+        return null;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = await getToken();
+        if (!token) return null;
+
+        const success = await apiService.saveLocationPermission(
+          hasPermission,
+          token
+        );
+
+        console.log("Saved location permissions", success);
+
+        return success;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to save location permissions";
+        setError(errorMessage);
+        console.error("Error while saving location permissions:", err);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [user?.id, getToken]
+  );
+
+  const getLocationPermission = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
       return null;
     }
 
@@ -499,171 +525,87 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       const token = await getToken();
       if (!token) return null;
 
-      const profileData = await apiService.fetchOtherUserProfile(otherUserId, token);
-      
-      console.log("Friends profile:", profileData);
-      
-      return profileData;
+      const success = await apiService.getLocationPermission(token);
+
+      console.log("Got location permissions", success);
+
+      return success;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch otherUserId profile";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to get location permissions";
       setError(errorMessage);
-      console.error("Error otherUserId friend profile:", err);
+      console.error("Error while getting location permissions:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
-  },
-  [user?.id, getToken]
+  }, [user?.id, getToken]);
+
+  const saveVisitedStreets = useCallback(
+    async (visitedStreets: SaveVisitedStreetsRequest): Promise<any> => {
+      if (!visitedStreets || !user?.id) {
+        return null;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = await getToken();
+        if (!token) return null;
+        console.log("-----------visitedStreets ", visitedStreets);
+
+        const success = await apiService.saveVisitedStreets(
+          visitedStreets,
+          token
+        );
+
+        console.log("Saved visitedStreets ", success);
+
+        return success;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to save visitedStreets";
+        setError(errorMessage);
+        console.error("Error while saving visitedStreets:", err);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [user?.id, getToken]
   );
-  
 
-    const saveLocationPermission = useCallback(
-      async (hasPermission: boolean): Promise<any> => {
-        if (!hasPermission || !user?.id) {
-          return null;
-        }
+  const fetchVisitedStreets = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
 
-        try {
-          setIsLoading(true);
-          setError(null);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-          const token = await getToken();
-          if (!token) return null;
+      const token = await getToken();
+      if (!token) return null;
 
-          const success = await apiService.saveLocationPermission(
-            hasPermission,
-            token
-          );
+      const success = await apiService.fetchVisitedStreets(token);
 
-          console.log("Saved location permissions", success);
+      console.log("fetchVisitedStreets", success);
 
-          return success;
-        } catch (err) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to save location permissions";
-          setError(errorMessage);
-          console.error("Error while saving location permissions:", err);
-          return null;
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      [user?.id, getToken]
-    );
-  
-  
-    const getLocationPermission = useCallback(
-      async (): Promise<any> => {
-        if (!user?.id) {
-          return null;
-        }
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch Visited Streets";
+      setError(errorMessage);
+      console.error("Error while fetching visited streets:", err); //! getting error here
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
 
-        try {
-          setIsLoading(true);
-          setError(null);
-
-          const token = await getToken();
-          if (!token) return null;
-
-          const success = await apiService.getLocationPermission(
-            token
-          );
-
-          console.log("Got location permissions", success);
-
-          return success;
-        } catch (err) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to get location permissions";
-          setError(errorMessage);
-          console.error("Error while getting location permissions:", err);
-          return null;
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      [user?.id, getToken]
-    );
-  
-  
-    const saveVisitedStreets = useCallback(
-      async (visitedStreets: SaveVisitedStreetsRequest): Promise<any> => {
-        if (!visitedStreets || !user?.id) {
-          return null;
-        }
-
-        try {
-          setIsLoading(true);
-          setError(null);
-
-          const token = await getToken();
-          if (!token) return null;
-                    console.log("-----------visitedStreets ", visitedStreets);
-
-
-          const success = await apiService.saveVisitedStreets(
-            visitedStreets,
-            token
-          );
-
-          console.log("Saved visitedStreets ", success);
-
-          return success;
-        } catch (err) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to save visitedStreets";
-          setError(errorMessage);
-          console.error("Error while saving visitedStreets:", err);
-          return null;
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      [user?.id, getToken]
-    );
-  
-
-   const fetchVisitedStreets = useCallback(
-     async (): Promise<any> => {
-       if (!user?.id) {
-         return null;
-       }
-
-       try {
-         setIsLoading(true);
-         setError(null);
-
-         const token = await getToken();
-         if (!token) return null;
-
-         const success = await apiService.fetchVisitedStreets(token);
-
-         console.log("fetchVisitedStreets", success);
-
-         return success;
-       } catch (err) {
-         const errorMessage =
-           err instanceof Error
-             ? err.message
-             : "Failed to fetch Visited Streets";
-         setError(errorMessage);
-         console.error("Error while fetching visited streets:", err); //! getting error here
-         return null;
-       } finally {
-         setIsLoading(false);
-       }
-     },
-     [user?.id, getToken]
-   );
-  
-  
-  
   const fetchUsersSameCity = useCallback(async (): Promise<any> => {
     if (!user?.id) {
       return null;
@@ -683,17 +625,17 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       return success;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch users in the same city";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch users in the same city";
       setError(errorMessage);
-      console.error("Error while fetching users in the same city:", err); 
+      console.error("Error while fetching users in the same city:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
 
-
-  
   const fetchRank = useCallback(async (): Promise<any> => {
     if (!user?.id) {
       return null;
@@ -715,14 +657,12 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch rank";
       setError(errorMessage);
-      console.error("Error while fetching rank:", err); 
+      console.error("Error while fetching rank:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
-  
-
 
   const fetchRankProgress = useCallback(async (): Promise<any> => {
     if (!user?.id) {
@@ -745,15 +685,12 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch rank progress";
       setError(errorMessage);
-      console.error("Error while fetching rank progress:", err); 
+      console.error("Error while fetching rank progress:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
-
-
-  
 
   const fetchGlobalLeaderboard = useCallback(async (): Promise<any> => {
     if (!user?.id) {
@@ -774,18 +711,16 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       return success;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch global leaderboard";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch global leaderboard";
       setError(errorMessage);
-      console.error("Error while fetching global leaderboard:", err); 
+      console.error("Error while fetching global leaderboard:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
-  
-
-
-  
 
   const fetchLocalLeaderboard = useCallback(async (): Promise<any> => {
     if (!user?.id) {
@@ -806,79 +741,73 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
       return success;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch local leaderboard";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch local leaderboard";
       setError(errorMessage);
-      console.error("Error while fetching local leaderboard:", err); 
+      console.error("Error while fetching local leaderboard:", err);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, getToken]);
-  
 
-   const get2MainStats = useCallback(async (): Promise<any> => {
-     if (!user?.id) {
-       return null;
-     }
+  const get2MainStats = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
 
-     try {
-       setIsLoading(true);
-       setError(null);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-       const token = await getToken();
-       if (!token) return null;
+      const token = await getToken();
+      if (!token) return null;
 
-       const success = await apiService.get2MainStats(token);
+      const success = await apiService.get2MainStats(token);
 
-       console.log("2 main stats ", success);
+      console.log("2 main stats ", success);
 
-       return success;
-     } catch (err) {
-       const errorMessage =
-         err instanceof Error
-           ? err.message
-           : "Failed to fetch 2 main stats";
-       setError(errorMessage);
-       console.error("Error while fetching 2 main stats: ", err);
-       return null;
-     } finally {
-       setIsLoading(false);
-     }
-   }, [user?.id, getToken]);
-  
-  
-  
-  
-   const getMainRadarChartData = useCallback(async (): Promise<any> => {
-     if (!user?.id) {
-       return null;
-     }
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch 2 main stats";
+      setError(errorMessage);
+      console.error("Error while fetching 2 main stats: ", err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
 
-     try {
-       setIsLoading(true);
-       setError(null);
+  const getMainRadarChartData = useCallback(async (): Promise<any> => {
+    if (!user?.id) {
+      return null;
+    }
 
-       const token = await getToken();
-       if (!token) return null;
+    try {
+      setIsLoading(true);
+      setError(null);
 
-       const success = await apiService.getMainRadarChartData(token);
+      const token = await getToken();
+      if (!token) return null;
 
-       console.log("main chart data ", success);
+      const success = await apiService.getMainRadarChartData(token);
 
-       return success;
-     } catch (err) {
-       const errorMessage =
-         err instanceof Error ? err.message : "Failed to fetch main chart data";
-       setError(errorMessage);
-       console.error("Error while fetching main chart data: ", err);
-       return null;
-     } finally {
-       setIsLoading(false);
-     }
-   }, [user?.id, getToken]);
-  
-  
-  
+      console.log("main chart data ", success);
+
+      return success;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch main chart data";
+      setError(errorMessage);
+      console.error("Error while fetching main chart data: ", err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, getToken]);
+
   // Derived values for backwards compatibility
   const derivedValues = useMemo(
     () => ({
@@ -895,99 +824,99 @@ const setPendingOnboardingUpdate = useCallback((data: any) => {
     [userData]
   );
 
-const contextValue: UserDataContextType = useMemo(
-  () => ({
-    // --- Core state ---
-    userData,
-    settings,
-    isLoading,
-    error,
-    foundUsers,
+  const contextValue: UserDataContextType = useMemo(
+    () => ({
+      // --- Core state ---
+      userData,
+      settings,
+      isLoading,
+      error,
+      foundUsers,
 
-    // --- Derived values ---
-    completedTutorial: derivedValues.completedTutorial,
-    status: derivedValues.status,
-    note: derivedValues.note,
-    friends: derivedValues.friends,
-    cityStats: derivedValues.cityStats,
-    totalKilometers: derivedValues.totalKilometers,
-    cityCoveragePct: derivedValues.cityCoveragePct,
-    daysActive: derivedValues.daysActive,
-    longestStreakDays: derivedValues.longestStreakDays,
+      // --- Derived values ---
+      completedTutorial: derivedValues.completedTutorial,
+      status: derivedValues.status,
+      note: derivedValues.note,
+      friends: derivedValues.friends,
+      cityStats: derivedValues.cityStats,
+      totalKilometers: derivedValues.totalKilometers,
+      cityCoveragePct: derivedValues.cityCoveragePct,
+      daysActive: derivedValues.daysActive,
+      longestStreakDays: derivedValues.longestStreakDays,
 
-    // --- Core methods ---
-    setUserData,
-    refreshUserData,
-    updateUserDetails,
-    updateSettings,
-    updateUserField,
-    updateUserNote,
+      // --- Core methods ---
+      setUserData,
+      refreshUserData,
+      updateUserDetails,
+      updateSettings,
+      updateUserField,
+      updateUserNote,
 
-    // --- Friends ---
-    getFriends,
-    addFriendByUser,
-    removeFriend,
-    searchUsers,
-    fetchOtherUserProfile,
+      // --- Friends ---
+      getFriends,
+      addFriendByUser,
+      removeFriend,
+      searchUsers,
+      fetchOtherUserProfile,
 
-    // --- City / Stats ---
-    fetchVisitedStreets,
-    saveVisitedStreets,
-    get2MainStats,
-    getMainRadarChartData,
-    updateCityStats,
-    fetchUsersSameCity,
+      // --- City / Stats ---
+      fetchVisitedStreets,
+      saveVisitedStreets,
+      get2MainStats,
+      getMainRadarChartData,
+      updateCityStats,
+      fetchUsersSameCity,
 
-    // --- Leaderboards & Rankings ---
-    fetchLocalLeaderboard,
-    fetchGlobalLeaderboard,
-    fetchRank,
-    fetchRankProgress,
+      // --- Leaderboards & Rankings ---
+      fetchLocalLeaderboard,
+      fetchGlobalLeaderboard,
+      fetchRank,
+      fetchRankProgress,
 
-    // --- Permissions ---
-    getLocationPermission,
-    saveLocationPermission,
-    setPendingOnboardingUpdate
-  }),
-  [
-    userData,
-    settings,
-    isLoading,
-    error,
-    foundUsers,
+      // --- Permissions ---
+      getLocationPermission,
+      saveLocationPermission,
+      // setPendingOnboardingUpdate,
+    }),
+    [
+      userData,
+      settings,
+      isLoading,
+      error,
+      foundUsers,
 
-    derivedValues,
+      derivedValues,
 
-    setUserData,
-    refreshUserData,
-    updateUserDetails,
-    updateSettings,
-    updateUserField,
-    updateUserNote,
+      setUserData,
+      refreshUserData,
+      updateUserDetails,
+      updateSettings,
+      updateUserField,
+      updateUserNote,
 
-    getFriends,
-    addFriendByUser,
-    removeFriend,
-    searchUsers,
-    fetchOtherUserProfile,
+      getFriends,
+      addFriendByUser,
+      removeFriend,
+      searchUsers,
+      fetchOtherUserProfile,
 
-    fetchVisitedStreets,
-    saveVisitedStreets,
-    get2MainStats,
-    getMainRadarChartData,
-    updateCityStats,
-    fetchUsersSameCity,
+      fetchVisitedStreets,
+      saveVisitedStreets,
+      get2MainStats,
+      getMainRadarChartData,
+      updateCityStats,
+      fetchUsersSameCity,
 
-    fetchLocalLeaderboard,
-    fetchGlobalLeaderboard,
-    fetchRank,
-    fetchRankProgress,
+      fetchLocalLeaderboard,
+      fetchGlobalLeaderboard,
+      fetchRank,
+      fetchRankProgress,
 
-    getLocationPermission,
-    saveLocationPermission,
-    setPendingOnboardingUpdate
-  ]
-);
+      getLocationPermission,
+      saveLocationPermission,
+      // setPendingOnboardingUpdate,
+    ]
+  );
 
   return (
     <UserDataContext.Provider value={contextValue}>

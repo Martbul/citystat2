@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -16,38 +16,28 @@ import {
 } from "react-native";
 import {
   BodyText,
-  IconContainer,
   MutedText,
   PageContainer,
   PageTitle,
   SectionSpacing,
 } from "@/components/dev";
-import { Feather, Ionicons, AntDesign } from "@expo/vector-icons";
+import {  Ionicons, AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useUserData } from "@/Providers/UserDataProvider";
-import PrimaryButton from "@/components/primaryButton";
 import {
   CityResult,
   CitySearchSelector,
 } from "@/components/citySearchSelector";
 import { AlertHelpers, useCustomAlert } from "@/components/alert";
 import { useLocationTracking } from "@/Providers/LocationTrackingProvider";
-import LocationEnablerPanel from "@/components/locationEnablerPanel";
 import OnboardingLocationEnablerPanel from "@/components/onboardingLocationEnablerPanel";
 import { UserDetailsUpdateReq } from "@/types/user";
 
 const { width } = Dimensions.get("window");
 
-interface OnboardingData {
-  workoutFrequency: string;
-  allowNotifications: boolean;
-  rolloverCalories: boolean;
-}
-
 const OnboardingScreen = () => {
   const router = useRouter();
   const { showAlert } = useCustomAlert();
-  const { requestFullLocationPermissions, initializeForOnboarding } =
+  const { requestFullLocationPermissions} =
     useLocationTracking();
   const scrollViewRef = useRef<ScrollViewType>(null);
 
@@ -136,7 +126,7 @@ const OnboardingScreen = () => {
   const canProceed = (page: number) => {
     switch (page) {
       case 0:
-        return true; // Welcome page
+        return true; 
       case 1:
         return userDetails.selectedCity !== null;
       case 2:
@@ -149,9 +139,7 @@ const OnboardingScreen = () => {
       case 4:
         return userDetails.isLocationTrackingEnabled;
       case 5:
-        return true; // Rollover page
-      case 6:
-        return true; // Rollover page
+        return true; 
       default:
         return false;
     }
@@ -190,8 +178,7 @@ const OnboardingScreen = () => {
     const isEnabled = canProceed(pageIndex);
 
     const handlePress = () => {
-      if (pageIndex === 6) {
-        console.log("HANDLECOMPLETE ONBOARDING");
+      if (pageIndex === 5) {
         handleComplete();
       } else {
         goToPage(pageIndex + 1);
@@ -212,7 +199,7 @@ const OnboardingScreen = () => {
               isEnabled ? "text-white" : "text-gray-500"
             }`}
           >
-            {pageIndex === 6 ? "Get Started" : "Continue"}
+            {pageIndex === 5 ? "Get Started" : "Continue"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -234,7 +221,7 @@ const OnboardingScreen = () => {
           <View className="flex-1 mx-4 h-1 bg-gray-200 rounded-full overflow-hidden">
             <View
               className="h-full bg-accent rounded-full transition-all duration-300"
-              style={{ width: `${((currentPage + 1) / 7) * 100}%` }}
+              style={{ width: `${((currentPage + 1) / 6) * 100}%` }}
             />
           </View>
         </View>
@@ -430,40 +417,7 @@ const OnboardingScreen = () => {
           <ContinueButton pageIndex={5} />
         </View>
 
-        <View className="w-screen px-6 py-8 pb-24">
-          <View className="flex-1 justify-center items-center">
-            <Text className="text-6xl font-bold text-textDark mb-8">100%</Text>
-            <PageTitle className="text-center mb-4">
-              Everything is set. Sign up and start tracking
-            </PageTitle>
 
-            <View className="bg-textDark rounded-2xl p-6 w-full max-w-sm mb-8">
-              <Text className="text-white text-lg font-semibold mb-4">
-                Most useful stats
-              </Text>
-
-              <View className="space-y-3 gap-2">
-                {[
-                  "City Coverage",
-                  "Most Visited Places",
-                  "Kilometers per Day",
-                  "Time Spend",
-                ].map((item) => (
-                  <View
-                    key={item}
-                    className="flex-row items-center justify-between "
-                  >
-                    <Text className="text-white text-base">• {item}</Text>
-                    <View className="w-6 h-6 bg-white rounded-full items-center justify-center">
-                      <Ionicons name="checkmark" size={16} color="#1F2937" />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-          <ContinueButton pageIndex={6} />
-        </View>
       </ScrollView>
     </PageContainer>
   );
