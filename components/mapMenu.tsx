@@ -1,6 +1,4 @@
 import {
-  AntDesign,
-  FontAwesome5,
   Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
@@ -8,7 +6,6 @@ import * as Location from "expo-location";
 import React, { useEffect, useState, memo, useCallback } from "react";
 import {
   GestureResponderEvent,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -30,7 +27,6 @@ const MapTrackingPanel = memo(
     sessionCountVisitedStreets,
     allCountVisitedStreets,
     mostVisitedStreets = [],
-    currentStreetVisitData,
     streetsByTimeSpent = [],
     onClose,
   }: MapTrackingPanelProps) => {
@@ -227,7 +223,8 @@ const MapTrackingPanel = memo(
                     <Text className="text-gray-400 text-xs mb-2 font-semibold tracking-wide">
                       MOST TIME SPENT
                     </Text>
-                    {streetsByTimeSpent.slice(0, 3).map(({ streetId, visitData }:{streetId:string}) => {
+                    {streetsByTimeSpent.slice(0, 3).map(({ streetId, visitData }: { streetId: string }) => {
+                      console.log("-----------------+ ", visitData)
                       const street = streetData?.features.find(
                         (f) => f.id === streetId
                       );

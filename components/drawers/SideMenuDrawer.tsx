@@ -55,7 +55,7 @@ const SideMenuDrawer = ({
         pointerEvents={isSideMenuDrawerOpen ? "auto" : "none"}
       >
         <SafeAreaView className="flex-1 bg-lightSurface mt-1">
-          <View className="relative flex-row items-center justify-center  p-4 py-6  border-b border-gray-200 dark:border-gray-700">
+          <View className="relative flex-row items-center justify-center  p-4 py-6  ">
             <TouchableOpacity
               onPress={closeDrawer}
               className="absolute left-4"
@@ -68,7 +68,7 @@ const SideMenuDrawer = ({
 
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/profile")}
-            className="p-4 border-b border-gray-200 dark:border-gray-700"
+            className="p-4 rounded-lg bg-white mx-4"
           >
             <View className="flex-row items-center">
               {/* Avatar */}
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: screenWidth * 0.85, // 85% of screen width
+    width: screenWidth * 0.85,
     backgroundColor: "#ffffff",
     zIndex: 20,
     elevation: 5,

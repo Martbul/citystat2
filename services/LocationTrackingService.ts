@@ -12,14 +12,11 @@ import {
   METERS_IN_KILOMETER,
   MIN_MOVEMENT_DISTANCE_METERS,
   STREET_DATA_REFRESH_DISTANCE_KM,
-  STREET_LOGGING_DISTANCE_METERS,
   STREET_PROXIMITY_THRESHOLD_METERS,
-  TIME_DB_SAVE_NEW_VISITED_STREETS_MILISECONDS,
   TIME_OBTAINING_NEW_LOCATION_MILISECONDS,
 } from "@/constants/world";
 import type {
   ActiveHoursData,
-  FetchedVisitedStreet,
   SaveVisitedStreetsRequest,
   Street,
   StreetData,
@@ -28,7 +25,6 @@ import type {
   UserCoords,
   VisitedStreet,
   VisitedStreetRequest,
-  // StreetVisitCount,
 } from "@/types/world";
 import { apiService } from "./api";
 
@@ -285,37 +281,6 @@ export class LocationTrackingService {
 
     console.log("Stopped active hours tracking");
   }
-
-  // private updateActiveHours() {
-  //   if (!this.activeHoursData.currentSessionStart) return;
-
-  //   const now = Date.now();
-  //   const sessionDuration = now - this.activeHoursData.currentSessionStart;
-  //   const hoursToAdd = sessionDuration / (1000 * 60 * 60); // Convert to hours
-
-  //   // Update total active hours
-  //   this.activeHoursData.totalActiveHours += hoursToAdd;
-
-  //   // Update daily active time
-  //   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
-  //   const currentDailyTime =
-  //     this.activeHoursData.dailyActiveTime.get(today) || 0;
-  //   this.activeHoursData.dailyActiveTime.set(
-  //     today,
-  //     currentDailyTime + Math.floor(sessionDuration / 1000) // Store daily time in seconds
-  //   );
-
-  //   // Reset session start for next interval
-  //   this.activeHoursData.currentSessionStart = now;
-
-  //   // Notify listeners
-  //   this.activeHoursUpdateListeners.forEach((listener) =>
-  //     listener(this.activeHoursData.totalActiveHours)
-  //   );
-
-  //   // Persist the updated data
-  //   this.persistData();
-  // }
 
   private updateActiveHours() {
     if (!this.activeHoursData.currentSessionStart) return;
@@ -1008,17 +973,6 @@ out geom;
     }
   }
 
-  // private shouldRefreshStreetData(newCoords: UserCoords): boolean {
-  //   if (!this.previousUserCoords) return true;
-
-  //   const distance = turf.distance(
-  //     [this.previousUserCoords.longitude, this.previousUserCoords.latitude],
-  //     [newCoords.longitude, newCoords.latitude],
-  //     { units: "kilometers" }
-  //   );
-
-  //   return distance > STREET_DATA_REFRESH_DISTANCE_KM;
-  // }
 
   private shouldRefreshStreetData(newCoords: UserCoords): boolean {
     const now = Date.now();
@@ -1617,61 +1571,8 @@ out geom;
       };
     }
   }
-  /**
-   * Check if user has already granted permissions (to avoid asking again)
-  //  */
-  // public async checkExistingPermissions(token: string | null): Promise<{
-  //   hasStoredPermission: boolean;
-  //   hasSystemPermission: boolean;
-  //   hasBackgroundPermission: boolean;
-  //   needsPermissionRequest: boolean;
-  // }> {
-  //   try {
-  //     // Check stored permission status from database
-  //     let hasStoredPermission = false;
-  //     let hasBackgroundStoredPermission = false;
 
-  //     if (token) {
-  //       hasStoredPermission = (await this.loadPermissionStatus(token)) === true;
-  //       hasBackgroundStoredPermission =
-  //         (await this.loadBackgroundPermissionStatus(token)) === true;
-  //     }
 
-  //     // Check current system permissions
-  //     const foregroundStatus = await Location.getForegroundPermissionsAsync();
-  //     const backgroundStatus = await Location.getBackgroundPermissionsAsync();
-
-  //     const hasSystemPermission = foregroundStatus.status === "granted";
-  //     const hasBackgroundPermission = backgroundStatus.status === "granted";
-
-  //     // Determine if we need to request permissions
-  //     const needsPermissionRequest =
-  //       !hasStoredPermission || !hasSystemPermission;
-
-  //     console.log("Permission status check:", {
-  //       hasStoredPermission,
-  //       hasBackgroundStoredPermission,
-  //       hasSystemPermission,
-  //       hasBackgroundPermission,
-  //       needsPermissionRequest,
-  //     });
-
-  //     return {
-  //       hasStoredPermission,
-  //       hasSystemPermission,
-  //       hasBackgroundPermission,
-  //       needsPermissionRequest,
-  //     };
-  //   } catch (error) {
-  //     console.error("Error checking existing permissions:", error);
-  //     return {
-  //       hasStoredPermission: false,
-  //       hasSystemPermission: false,
-  //       hasBackgroundPermission: false,
-  //       needsPermissionRequest: true,
-  //     };
-  //   }
-  // }
 
   public async checkExistingPermissions(token: string | null): Promise<{
     hasStoredPermission: boolean;
@@ -1759,53 +1660,7 @@ out geom;
     this.permissionRequestNeededListeners.forEach((listener) => listener());
   }
 
-  /**
-   * Initialize permissions during app startup (enhanced version)
-   */
-  // public async checkAndinitializePermissions(token: string | null) {
-  //   try {
-  //     if (!token) return;
-
-  //     // Check current permissions
-  //     const permissionStatus = await this.checkExistingPermissions(token);
-  //     console.log("PERMISSION STATUS", permissionStatus);
-
-  //     if (permissionStatus.needsPermissionRequest === false) {
-  //       console.log("User already has permissions - setting up tracking");
-  //       this.setHasLocationPermission(true);
-  //       return;
-  //     }
-
-  //     // If stored permission is true but system permission is false,
-  //     // it means user revoked permission in system settings
-  //     if (
-  //       permissionStatus.hasStoredPermission &&
-  //       !permissionStatus.hasSystemPermission
-  //     ) {
-  //       console.log("Permission was revoked in system settings");
-  //       // Update database to reflect current state
-  //       await this.savePermissionStatus(token, false);
-  //       this.setHasLocationPermission(false);
-  //       // Notify that user needs to re-grant permissions
-  //       this.notifyPermissionRequestNeeded();
-  //       return;
-  //     }
-
-  //     // If we reach here, user needs to go through permission flow
-  //     console.log("User needs to complete permission setup");
-  //     this.setHasLocationPermission(false);
-  //     // Notify listeners that permission request is needed
-  //     this.notifyPermissionRequestNeeded();
-  //   } catch (error) {
-  //     console.error("Error initializing enhanced permissions:", error);
-  //     this.setHasLocationPermission(false);
-  //     // Even on error, might need to show permission request UI
-  //     this.notifyPermissionRequestNeeded();
-  //   }
-  // }
-  /**
-   * FIXED: Permission checking that won't overwrite database permission
-   */
+  
   public async checkAndinitializePermissions(token: string | null) {
     try {
       if (!token) return;
@@ -1820,7 +1675,7 @@ out geom;
         return;
       }
 
-      // ❌ REMOVED THIS PROBLEMATIC BLOCK (this was overwriting the database):
+      // REMOVED THIS PROBLEMATIC BLOCK (this was overwriting the database):
       // if (permissionStatus.hasStoredPermission && !permissionStatus.hasSystemPermission) {
       //   console.log("Permission was revoked in system settings");
       //   await this.savePermissionStatus(token, false); // ← This was the bug!

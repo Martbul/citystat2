@@ -308,6 +308,17 @@ export interface UserDetailsUpdateReq {
 
 }
 
+
+export interface SearchUser {
+  firstName: string;
+  id: string;
+  imageUrl: string;
+  lastName: string;
+  timestamp: number;
+  userName: string;
+}
+
+
 export interface UserDataContextType {
   // --- Core state ---
   userData: UserData | null;

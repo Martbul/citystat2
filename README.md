@@ -117,6 +117,7 @@ remove the imail verificationfrom clerk(why making it harder for your users)
 
 
 NOW FIX: 
+add Auth error handling
 add filetringon the searched users in the topdrawer
 userSearch should serach by username, first last name, city and so on...(currently searches only be userName)
 searchUsers should give users that match100% if not 100% match then the closest to the search(currently it isdisplying only 100% match)

@@ -6,11 +6,11 @@ export const menuItems = [
     icon: () => <FontAwesome5 name="user-friends" size={20} color="#333" />,
     route: "/friends",
   },
-  {
-    label: "Challenges",
-    icon: () => <FontAwesome6 name="star" size={20} color="black" />,
-    route: "/(screens)/challenges",
-  },
+  // {
+  //   label: "Challenges",
+  //   icon: () => <FontAwesome6 name="star" size={20} color="black" />,
+  //   route: "/(screens)/challenges",
+  // },
   {
     label: "Statistics",
     icon: () => <MaterialIcons name="bar-chart" size={24} color="#333" />,

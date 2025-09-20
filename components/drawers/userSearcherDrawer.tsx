@@ -5,17 +5,13 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
-  StyleSheet,
   FlatList,
-  TextInput,
   Image,
   Alert,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import {
   Card,
-  GradientHeader,
-  HeaderButton,
   MutedText,
   PageContainer,
   RowLayout,
@@ -23,9 +19,10 @@ import {
 } from "../dev";
 import { Feather } from "@expo/vector-icons";
 import { useUserData } from "@/Providers/UserDataProvider";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import InputEditor from "../inputEditor";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SearchUser } from "@/types/user";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -39,14 +36,7 @@ interface RecentSearch {
   type: 'user' | 'general';
 }
 
-interface RecentUser {
-  id: string;
-  userName: string;
-  firstName?: string;
-  lastName?: string;
-  imageUrl?: string;
-  timestamp: number;
-}
+
 
 export const UserSearcherDrawer = ({
   isTopSearchDrawerOpen,
@@ -62,7 +52,7 @@ export const UserSearcherDrawer = ({
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+  const [recentUsers, setRecentUsers] = useState<SearchUser[]>([]);
   const [showingResults, setShowingResults] = useState(false);
   
   const { userData, searchUsers, foundUsers, isLoading } = useUserData();
@@ -120,7 +110,7 @@ export const UserSearcherDrawer = ({
 
   const saveRecentUser = async (user: any) => {
     try {
-      const newUser: RecentUser = {
+      const newUser: SearchUser = {
         id: user.id,
         userName: user.userName,
         firstName: user.firstName,
@@ -182,27 +172,31 @@ export const UserSearcherDrawer = ({
     searchUsers(query);
   };
 
-  const handleUserPress = async (user: any) => {
+  const handleUserPress = async (user: SearchUser) => {
+    console.log("PRESSED UASER::: ", user);
     await saveRecentUser(user);
-    // Navigate to user profile or handle user selection
-    router.push(`/profile/${user.id}`);
+    router.push(`/(screens)/userProfile/${user.id}` as RelativePathString);
     closeDrawer();
   };
 
-  const renderUserItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
+  const renderUserItem = ({ item }: { item: SearchUser }) => (
+    <TouchableOpacity
       onPress={() => handleUserPress(item)}
       className="flex-row items-center justify-between p-4 border-b border-gray-200 bg-white"
     >
       <View className="flex-row items-center flex-1">
         <Image
           source={{
-            uri: item.imageUrl || "https://via.placeholder.com/50x50.png?text=User",
+            uri:
+              item.imageUrl ||
+              "https://via.placeholder.com/50x50.png?text=User",
           }}
           className="w-12 h-12 rounded-full mr-3"
         />
         <View className="flex-1">
-          <Text className="font-semibold text-lg text-textDark">{item.userName}</Text>
+          <Text className="font-semibold text-lg text-textDark">
+            {item.userName}
+          </Text>
           {item.firstName || item.lastName ? (
             <Text className="text-gray-600 text-sm">
               {[item.firstName, item.lastName].filter(Boolean).join(" ")}
@@ -234,7 +228,7 @@ export const UserSearcherDrawer = ({
     </Card>
   );
 
-  const renderRecentUser = ({ item }: { item: RecentUser }) => (
+  const renderRecentUser = ({ item }: { item: SearchUser }) => (
     <Card className="flex-row items-center mb-3">
       <Image
         source={{

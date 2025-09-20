@@ -48,33 +48,18 @@ interface LocationTrackingContextType {
 
   // Permission status
   hasBackgroundPermission: boolean;
+  showPermissionPanel: boolean;
+  setShowPermissionPanel: (show: boolean) => void;
 
-  requestLocationPermission: (token: string | null) => Promise<boolean>;
-
+  // Core methods
   initializeData: () => Promise<void>;
   destroyService: (token?: string | null) => Promise<void>;
 
+  // Permission methods (streamlined)
   requestFullLocationPermissions: () => Promise<{
     backgroundGranted: boolean;
     success: boolean;
   }>;
-  checkExistingPermissions: () => Promise<{
-    hasStoredPermission: boolean;
-    hasSystemPermission: boolean;
-    hasBackgroundPermission: boolean;
-    needsPermissionRequest: boolean;
-  }>;
-
-  // Permission status
-
-  // Enhanced initialization
-  initializeForOnboarding: () => Promise<void>;
-  completeLocationOnboarding: (granted: boolean) => Promise<void>;
-
-  // Enhanced tracking
-  startLocationTrackingEnhanced: () => Promise<void>;
-  showPermissionPanel: boolean;
-  setShowPermissionPanel: (show: boolean) => void;
 }
 
 const LocationTrackingContext =
@@ -246,21 +231,6 @@ export const LocationTrackingProvider: React.FC<
 
 
   
-
-  const requestLocationPermission = async (
-  ): Promise<boolean> => {
-    try {
-      const result =
-        await locationService.requestBackgroundLocationPermissions();
-      setHasBackgroundPermission(result.backgroundGranted);
-      return result.backgroundGranted;
-    } catch (error) {
-      console.error("Permission denied:", error);
-      setHasBackgroundPermission(false);
-      return false;
-    }
-  };
-
   const destroyService = useCallback(
     async (token?: string | null) => {
       try {
@@ -322,86 +292,9 @@ export const LocationTrackingProvider: React.FC<
     }
   }, [getToken]);
 
-  const checkExistingPermissions = useCallback(async () => {
-    try {
-      const token = await getToken();
-      const status = await locationService.checkExistingPermissions(token);
 
-      // Update local state based on results
-      setHasBackgroundPermission(
-        status.hasSystemPermission && status.hasStoredPermission
-      );
-      setHasBackgroundPermission(status.hasBackgroundPermission);
 
-      return status;
-    } catch (error) {
-      console.error("Failed to check existing permissions:", error);
-      return {
-        hasStoredPermission: false,
-        hasSystemPermission: false,
-        hasBackgroundPermission: false,
-        needsPermissionRequest: true,
-      };
-    }
-  }, [getToken]);
-
-  // const initializeForOnboarding = useCallback(async () => {
-  //   try {
-  //     const token = await getToken();
-  //     console.log("Initializing for onboarding with token:", !!token);
-
-  //     // Load basic data without requiring permissions
-  //     await locationService.loadPersistedData();
-
-  //     // Check current permission status
-  //     await checkExistingPermissions();
-
-  //     // Don't start tracking - wait for onboarding completion
-  //     console.log("Onboarding initialization completed");
-  //   } catch (error) {
-  //     console.error("Failed to initialize for onboarding:", error);
-  //     throw error;
-  //   }
-  // }, [getToken, checkExistingPermissions]);
-
-  // const completeLocationOnboarding = useCallback(async (granted: boolean) => {
-  //   try {
-  //     const token = await getToken();
-  //     if(!token) return
-
-  //     if (granted) {
-  //       // Initialize full data and start tracking
-  //       await locationService.initializeData(token);
-
-  //       // Update onboarding status in database
-  //       await apiService.saveLocationPermission(
-  //          true, token);
-
-  //       console.log("Location onboarding completed successfully");
-  //     } else {
-
-  //       console.log("User declined location permissions");
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to complete location onboarding:", error);
-  //     throw error;
-  //   }
-  // }, [getToken]);
-
-  const startLocationTrackingEnhanced = useCallback(async () => {
-    try {
-      const token = await getToken();
-      await locationService.startLocationTrackingEnhanced(token);
-      setIsTracking(true);
-      setCurrentSessionDuration(0);
-      console.log("Enhanced tracking started successfully");
-    } catch (error) {
-      console.error("Failed to start enhanced tracking:", error);
-      setIsTracking(false);
-      throw error;
-    }
-  }, [getToken]);
-
+  
   const initializeData = useCallback(async () => {
     try {
       const token = await getToken();
@@ -454,48 +347,42 @@ export const LocationTrackingProvider: React.FC<
     return locationService.getMonthlyActiveTime();
   }, []);
 
-  const contextValue: LocationTrackingContextType = {
-    // Location state
-    userLocation,
-    currentStreetId,
-    streetData,
-    visitedStreets,
-    allVisitedStreetIds,
+ const contextValue: LocationTrackingContextType = {
+   // Location state
+   userLocation,
+   currentStreetId,
+   streetData,
+   visitedStreets,
+   allVisitedStreetIds,
 
-    // Visit tracking
-    getStreetVisitData,
-    getAllStreetVisitData,
-    getMostVisitedStreets,
-    getStreetsByTimeSpent,
+   // Visit tracking
+   getStreetVisitData,
+   getAllStreetVisitData,
+   getMostVisitedStreets,
+   getStreetsByTimeSpent,
 
-    // Active hours tracking
-    totalActiveHours,
-    currentSessionDuration,
-    getDailyActiveTime,
-    getWeeklyActiveTime,
-    getMonthlyActiveTime,
+   // Active hours tracking
+   totalActiveHours,
+   currentSessionDuration,
+   getDailyActiveTime,
+   getWeeklyActiveTime,
+   getMonthlyActiveTime,
 
-    // Control methods
-    startTracking,
-    stopTracking,
-    isTracking,
+   // Control methods
+   startTracking,
+   stopTracking,
+   isTracking,
 
-    // Permission status
-    hasBackgroundPermission,
-    requestLocationPermission,
+   // Permission status
+   hasBackgroundPermission,
+   showPermissionPanel,
+   setShowPermissionPanel,
 
-    // Data
-    initializeData,
-    destroyService,
-
-    requestFullLocationPermissions,
-    checkExistingPermissions,
-
-
-    startLocationTrackingEnhanced,
-    showPermissionPanel,
-    setShowPermissionPanel,
-  };
+   // Core methods
+   initializeData,
+   destroyService,
+   requestFullLocationPermissions,
+ };
   return (
     <LocationTrackingContext.Provider value={contextValue}>
       {children}
